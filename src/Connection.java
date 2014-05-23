@@ -70,7 +70,7 @@ public class Connection implements Runnable{
                             System.out.println("CHANNEL "+channel);
                         }
                         if (!channel.equals("") && line.startsWith(nick+ " = "+channel)){
-                            if (userList.getLength() > 0) userList.remove(0, userList.getLength()); //large  channels send users in more than one line FIX
+                            if (userList.getLength() > 0) userList.remove(0, userList.getLength()); //large  channels send users in more than one line FIX ...
                             String[] nn = line.split(" ");
                             Arrays.sort(nn);
                             for (int i = 3; i < nn.length; i++){
