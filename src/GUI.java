@@ -26,26 +26,14 @@ public class GUI extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        submitButton = new javax.swing.JButton();
+        chatInputPane = new javax.swing.JTextField();
+        jSplitPane1 = new javax.swing.JSplitPane();
         jScrollPane2 = new javax.swing.JScrollPane();
         chatPane = new javax.swing.JTextPane(doc);
-        chatInputPane = new javax.swing.JTextField();
         jScrollPane1 = new javax.swing.JScrollPane();
         userListPane = new javax.swing.JTextPane(userList);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-
-        submitButton.setText("Submit");
-        submitButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                submitButtonActionPerformed(evt);
-            }
-        });
-
-        chatPane.setEditable(false);
-        jScrollPane2.setViewportView(chatPane);
-        DefaultCaret caret = (DefaultCaret)chatPane.getCaret();
-        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 
         chatInputPane.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
@@ -53,48 +41,43 @@ public class GUI extends javax.swing.JFrame {
             }
         });
 
+        jSplitPane1.setDividerLocation(600);
+        jSplitPane1.setVerifyInputWhenFocusTarget(false);
+
+        chatPane.setEditable(false);
+        jScrollPane2.setViewportView(chatPane);
+        DefaultCaret caret = (DefaultCaret)chatPane.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+
+        jSplitPane1.setLeftComponent(jScrollPane2);
+
         userListPane.setEditable(false);
         userListPane.setAutoscrolls(false);
         userListPane.setFocusable(false);
-        userListPane.setMaximumSize(new java.awt.Dimension(100, 100));
+        userListPane.setMaximumSize(new java.awt.Dimension(25, 25));
         jScrollPane1.setViewportView(userListPane);
+
+        jSplitPane1.setRightComponent(jScrollPane1);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                    .addComponent(chatInputPane, javax.swing.GroupLayout.DEFAULT_SIZE, 575, Short.MAX_VALUE)
-                    .addComponent(jScrollPane2))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(submitButton, javax.swing.GroupLayout.DEFAULT_SIZE, 129, Short.MAX_VALUE)
-                    .addComponent(jScrollPane1)))
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+            .addComponent(chatInputPane)
+            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 729, Short.MAX_VALUE)
+                .addGap(0, 0, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 366, Short.MAX_VALUE)
-                    .addComponent(jScrollPane1))
+                .addComponent(jSplitPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 398, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(submitButton)
-                    .addComponent(chatInputPane, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addComponent(chatInputPane, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
-
-    private void submitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_submitButtonActionPerformed
-
-        try{
-        doc.insertString(doc.getLength(), "test\r\n", null);
-        } catch (BadLocationException e){
-            System.out.println("oops");
-        }
-    }//GEN-LAST:event_submitButtonActionPerformed
 
     private void chatInputPaneKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_chatInputPaneKeyPressed
         if (evt.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER){
@@ -150,7 +133,7 @@ public class GUI extends javax.swing.JFrame {
     private javax.swing.JTextPane chatPane;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JButton submitButton;
+    private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JTextPane userListPane;
     // End of variables declaration//GEN-END:variables
 }

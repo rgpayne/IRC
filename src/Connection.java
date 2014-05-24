@@ -10,6 +10,9 @@ import javax.swing.text.BadLocationException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 
 public class Connection implements Runnable{
@@ -35,7 +38,7 @@ public class Connection implements Runnable{
     }     
     
     public void run(){
-            
+        ArrayList<String> list = new ArrayList<String>();
         try{
             socket = new Socket(server, port);
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -67,17 +70,23 @@ public class Connection implements Runnable{
                         }
                         if (line.startsWith("JOIN :")){
                             channel = line.substring(line.indexOf("#"));
-                            System.out.println("CHANNEL "+channel);
                         }
-                        if (!channel.equals("") && line.startsWith(nick+ " = "+channel)){
-                            if (userList.getLength() > 0) userList.remove(0, userList.getLength()); //large  channels send users in more than one line FIX ...
-                            String[] nn = line.split(" ");
-                            Arrays.sort(nn);
-                            for (int i = 3; i < nn.length; i++){
-                                userList.insertString(userList.getLength(), nn[i]+"\n", null);
-                            }
-                            System.out.println(line);
+                        if (line.startsWith(nick+ " * "+channel) || line.startsWith(nick+ " = "+channel)){
+                                String[] nn = line.split(" ");
+                                list.addAll(Arrays.asList(nn));
+                          
+                        }
+                        if (line.equals(nick + " " + channel + " :End of /NAMES list.")){
+                            SortedSet<String> set = new TreeSet(String.CASE_INSENSITIVE_ORDER);
+                            userList.remove(0, userList.getLength());
+                            set.addAll(list);
+                            Iterator<String> iterator = set.iterator();
+                            while (iterator.hasNext()){
+                                String nextElement = iterator.next();
+                                userList.insertString(userList.getLength(),nextElement+"\n", null);
+                                System.out.println(nextElement);
                             
+                            }                       
                         }
                         else{
                             doc.insertString(doc.getLength(), line+"\n", null);
