@@ -1,5 +1,4 @@
 import java.io.IOException;
-import java.net.SocketException;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.InputStreamReader;
@@ -13,6 +12,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 public class Connection implements Runnable{
@@ -24,13 +25,14 @@ public class Connection implements Runnable{
     String server, host, nick = "rieux", channel = "";
     int port;
     DefaultStyledDocument doc, userList;
-    public ArrayList<String> users;
+    public ArrayList<String> users, list;
     
     public Connection(String server, int port, DefaultStyledDocument doc, DefaultStyledDocument userList){
        this.server = server;
        this.port = port;
        this.doc = doc;
        this.userList = userList;
+       list = new ArrayList<String>();
        
        thread = new Thread(this);
        thread.start();
@@ -41,19 +43,34 @@ public class Connection implements Runnable{
     public void send(String line) throws IOException{
         try{ 
             writer.write(line+"\r\n");
+            writer.flush();
         } catch (IOException e){
             //do nothing
         }
-        
     }
+    public String formatNickname(String nickname){
+        int formatlen = 12;
+        String blank = "";
+        int len = nickname.length();
+        if (len >= formatlen) return nickname;
+        else{
+            for (int i = 0; i < (formatlen - len); i++){
+                blank = blank+" ";
+            }
+            return blank + nickname;
+        }
+    }    
 
     public void parseFromServer(String line) throws IOException, BadLocationException{
-        
         Parser parser = new Parser(line);
         String command = parser.getCommand();
-        
-        if (command.equals("PING")) this.send("PONG :"+ parser.getTrailing());
+        if (command.equals("AWAY")){
+            insertString(parser.getTrailing(), doc);
+            return;
+        }
         if (command.equals("JOIN")){
+            //user joins
+            //update user list
             if (nick.equals(parser.getNick())){
                 String channelName = parser.getTrailing();
                 if (channelName.startsWith("#")){
@@ -61,148 +78,98 @@ public class Connection implements Runnable{
                     insertString(parser.getNick()+" (" + parser.getUser() + "@" + parser.getHost() + ") has joined channel " + parser.getTrailing(), doc);
                 }
             }
+            return;
+        }
+        if (command.equals("PING")){
+            send("PONG :"+ parser.getTrailing());
+            return;
         }
         if (command.equals("PRIVMSG") || command.equals("MSG")){
-            String destination = parser.getMiddle();
-            if (destination.startsWith("#")){
-                String channelName = destination.substring(1);
-                insertString()
-            }
+            insertString((formatNickname("<" + parser.getNick() + ">: ") + parser.getTrailing()).trim(), doc);   
+            return;
         }
-        
+        if (command.equals("QUIT")){
+            //user quits
+            //todo: update user list
+            insertString(parser.getTrailing(), doc);
+            return;
+        }
+        if (command.equals("001") || command.equals("002") || command.equals("003") || command.equals("004") || command.equals("005")){
+            insertString(parser.getTrailing(), doc);
+            return;
+        }
+	else if(command.equals("251") || command.equals("252") || command.equals("253") || command.equals("254") || command.equals("255") || 
+                command.equals("256") || command.equals("257") || command.equals("258") || command.equals("259")){
+            insertString(parser.getTrailing(), doc);
+            return;
+        }
+        if (command.equals("265") || command.equals("266")){
+            insertString(parser.getTrailing(), doc);
+            return;
+        }
+        if (command.equals("331") || command.equals("332")){
+            //  332: Topic, 331: No topic
+            if (command.equals("332")) insertString(parser.getTrailing(), doc);
+            return;
+        }
+        if (command.equals("333")){
+            //who set topic and the time
+            if (command.equals("333")) insertString(parser.getTrailing(), doc);
+            return;            
+        }
+        if (command.equals("353")){
+            String[] nn = parser.getTrailing().split(" ");
+            list.addAll(Arrays.asList(nn));
+            return;
+        }
+        if (command.equals("366")){
+            SortedSet<String> set = new TreeSet(String.CASE_INSENSITIVE_ORDER);
+            userList.remove(0, userList.getLength());
+            set.addAll(list);
+            list = new ArrayList<String>();
+            Iterator<String> iterator = set.iterator();
+            while (iterator.hasNext()){
+                String nextElement = iterator.next();
+                insertString(nextElement, userList);
+            }
+            return;
+            }
+        if (command.equals("371") || command.equals("372") || command.equals("374") || command.equals("375") || command.equals("376")){
+            insertString(parser.getTrailing(), doc);
+            return;
+        }
+        if (command.equals("439")){
+            //Message spamming
+            insertString(parser.getTrailing(), doc);
+            return;
+        }
+        if (command.equals("451")){
+            insertString(parser.getTrailing(), doc);
+            return;
+        }
+        else insertString(line, doc);        
     }
     
-    
-    
-    
-    
-    
-    
-    
     public void run(){
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        /*ArrayList<String> list = new ArrayList<String>();
-        try{
+        try {
             socket = new Socket(server, port);
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-            if (socket != null){
-                //TODO notify of connectivity
-            }
-        } catch (Exception ex){
-            //TODO notify of connection failure
-            return;
-        }   
-        String line = null;
-        try{
+            String line;
             while (socket.isConnected()){
                 writer.write("NICK "+ nick+"\r\n");
                 writer.write("USER "+nick+" 8 * : a bot\r\n");
                 writer.write("join #lmitb\r\n");
                 writer.flush();
                 while ((line = reader.readLine()) != null){
-                   System.out.println(line);
-                   if (line.startsWith("PING ")){
-                       line = line.substring(line.indexOf(" ")+1);
-                       writer.write("Pong " + line.substring(5) + "\n");
-                       writer.flush();
-                       continue; 
-                   }
-                   
-                   if (line.length() > 10 && line.substring(0,10).contains("!") && line.contains("PRIVMSG")){
-                       System.out.println("######"+line);
-                       String nick = line.substring(0,line.indexOf("!"));
-                       line = line.substring(line.indexOf("#"));
-                       String channel = line.substring(0,line.indexOf(" "));
-                       System.out.println(nick+ "       "+channel);
-                   }
-                   
-                   
-                   
-                   line = line.substring(line.indexOf(" "));
-                   
-                    System.out.println(line);
-                    try{
-                       // if (line.substring(0,10).contains("!")){
-                         //   System.out.println(line.substring(0,10));                            
-                       // }
-                        if (line.startsWith("372") || line.startsWith("375") || line.startsWith("376")){
-                            insertString(line.substring(line.indexOf(nick)+nick.length()+1),doc);
-                            continue;
-                        }
-                       // if (line.startsWith("PING ")){
-                         //   //System.out.println(line);
-                           // writer.write("PONG " + line.substring(5) + "\n");
-                            //writer.flush();
-                            //continue;
-                        //}
-                        if (line.startsWith("JOIN :")){
-                            channel = line.substring(line.indexOf("#"));
-                            continue;
-                        }
-                        if (line.startsWith("353 "+nick+ " * "+channel) || line.startsWith("353 "+nick+ " = "+channel)){
-                            line = line.substring(line.indexOf(":")+1);
-                            //System.out.println(line);
-                            String[] nn = line.split(" ");
-                            list.addAll(Arrays.asList(nn));
-                            continue;
-                          
-                        }
-                        if (line.equals("366 "+nick+" "+channel+" :End of /NAMES list.")){
-                            SortedSet<String> set = new TreeSet(String.CASE_INSENSITIVE_ORDER);
-                            userList.remove(0, userList.getLength());
-                            set.addAll(list);
-                            Iterator<String> iterator = set.iterator();
-                            while (iterator.hasNext()){
-                                String nextElement = iterator.next();
-                                insertString(nextElement, userList);
-                            }
-                            continue;
-                        }
-                        else{
-                            insertString(line, doc);
-                            //System.out.println(line+"\n");
-                        }
-                    } catch (BadLocationException e){
-                        //do nothing
-                    }
-                    if (line.startsWith("ERR")){
-                        System.exit(1);
-                    }
-                }   
-             }
-        } catch (SocketException ex){
-            System.out.println("socket closed");
-        } catch (IOException ex){
-            System.out.println("ioexception occured");
-        }
-    }*/
-
+                    parseFromServer(line);
+                }
+            }
+        
+     } catch (IOException ex) {
+                Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (BadLocationException ex) {
+                Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
+            }
+    }
 }
