@@ -25,14 +25,17 @@ public class Connection implements Runnable{
     String server, host, nick = "rieux", channel = "";
     int port;
     DefaultStyledDocument doc, userList;
-    public ArrayList<String> users, list;
+    public ArrayList<String> list;
+    SortedSet<String> set;
     
     public Connection(String server, int port, DefaultStyledDocument doc, DefaultStyledDocument userList){
        this.server = server;
        this.port = port;
        this.doc = doc;
        this.userList = userList;
+       
        list = new ArrayList<String>();
+       set = new TreeSet(String.CASE_INSENSITIVE_ORDER);
        
        thread = new Thread(this);
        thread.start();
@@ -60,8 +63,34 @@ public class Connection implements Runnable{
             return blank + nickname;
         }
     }    
-
+    public void addToUserList(String nick) throws BadLocationException{
+        System.out.println("adding nick "+nick);
+            userList.remove(0, userList.getLength());
+            set.add(nick);
+            Iterator<String> iterator = set.iterator();
+            while (iterator.hasNext()){
+                String nextElement = iterator.next();
+                insertString(nextElement, userList);
+            }
+            return;
+    }
+    public void removeFromUserList(String nick) throws BadLocationException{
+            System.out.println("removing "+nick);
+            userList.remove(0, userList.getLength());
+            boolean exists = set.remove(nick);
+            if (exists == false){
+                set.remove("+"+nick);
+            }
+            Iterator<String> iterator = set.iterator();
+            while (iterator.hasNext()){
+                String nextElement = iterator.next();
+                insertString(nextElement, userList);
+            }
+            return;
+        
+    }
     public void parseFromServer(String line) throws IOException, BadLocationException{
+        //TODO : rieux shows up as rieux and @rieux because doesnt distinguish between channels
         Parser parser = new Parser(line);
         String command = parser.getCommand();
         if (command.equals("AWAY")){
@@ -70,14 +99,21 @@ public class Connection implements Runnable{
         }
         if (command.equals("JOIN")){
             //user joins
-            //update user list
-            if (nick.equals(parser.getNick())){
+            if (!parser.getNick().equals(nick)){
                 String channelName = parser.getTrailing();
                 if (channelName.startsWith("#")){
                     channelName = channelName.substring(1);
+                    if (!parser.getUser().equals(nick)){
+                        addToUserList(parser.getNick());
+                    }
                     insertString(parser.getNick()+" (" + parser.getUser() + "@" + parser.getHost() + ") has joined channel " + parser.getTrailing(), doc);
                 }
             }
+            return;
+        }
+        if (command.equals("PART")){
+            removeFromUserList(parser.getNick());
+            insertString(parser.getNick()+" (" + parser.getUser() + "@" + parser.getHost() + ") has left the server " + parser.getTrailing(), doc);
             return;
         }
         if (command.equals("PING")){
@@ -90,8 +126,8 @@ public class Connection implements Runnable{
         }
         if (command.equals("QUIT")){
             //user quits
-            //todo: update user list
-            insertString(parser.getTrailing(), doc);
+            removeFromUserList(parser.getNick());
+            insertString(parser.getNick()+" (" + parser.getUser() + "@" + parser.getHost() + ") has left the server " + parser.getTrailing(), doc);
             return;
         }
         if (command.equals("001") || command.equals("002") || command.equals("003") || command.equals("004") || command.equals("005")){
@@ -118,12 +154,14 @@ public class Connection implements Runnable{
             return;            
         }
         if (command.equals("353")){
+            //names command
+            System.out.println("names list: "+parser.getTrailing());
             String[] nn = parser.getTrailing().split(" ");
             list.addAll(Arrays.asList(nn));
             return;
         }
         if (command.equals("366")){
-            SortedSet<String> set = new TreeSet(String.CASE_INSENSITIVE_ORDER);
+            //end of names command
             userList.remove(0, userList.getLength());
             set.addAll(list);
             list = new ArrayList<String>();
@@ -137,6 +175,10 @@ public class Connection implements Runnable{
         if (command.equals("371") || command.equals("372") || command.equals("374") || command.equals("375") || command.equals("376")){
             insertString(parser.getTrailing(), doc);
             return;
+        }
+        if (command.equals("471")){
+            //unknown command
+            insertString(parser.getTrailing(), doc);
         }
         if (command.equals("439")){
             //Message spamming
