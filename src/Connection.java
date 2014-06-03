@@ -1,3 +1,4 @@
+import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -14,7 +15,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
+import javax.swing.*;
 
 public class Connection implements Runnable{
     Thread thread;
@@ -27,12 +28,15 @@ public class Connection implements Runnable{
     DefaultStyledDocument doc, userList;
     public ArrayList<String> list;
     SortedSet<String> set;
-    
-    public Connection(String server, int port, DefaultStyledDocument doc, DefaultStyledDocument userList){
+    JTabbedPane tabbedPane;
+
+    public Connection(String server, int port, DefaultStyledDocument doc, DefaultStyledDocument userList, JTabbedPane tabbedPane){
        this.server = server;
        this.port = port;
        this.doc = doc;
        this.userList = userList;
+       
+       this.tabbedPane = tabbedPane;
        
        list = new ArrayList<String>();
        set = new TreeSet(String.CASE_INSENSITIVE_ORDER);
@@ -89,8 +93,15 @@ public class Connection implements Runnable{
             return;
         
     }
+    private int findTab(final javax.swing.JTabbedPane tabbedPane, String title){
+        int totalTabs = tabbedPane.getTabCount();
+        for (int i = 0; i < totalTabs; i++){
+            String tabTitle = tabbedPane.getTitleAt(i);
+            if (tabTitle.equalsIgnoreCase(title)) return i;
+        }
+        return -1;
+    }
     public void parseFromServer(String line) throws IOException, BadLocationException{
-        //TODO : rieux shows up as rieux and @rieux because doesnt distinguish between channels
         Parser parser = new Parser(line);
         String command = parser.getCommand();
         if (command.equals("AWAY")){
@@ -98,18 +109,50 @@ public class Connection implements Runnable{
             return;
         }
         if (command.equals("JOIN")){
-            //user joins
-            if (!parser.getNick().equals(nick)){
-                String channelName = parser.getTrailing();
-                if (channelName.startsWith("#")){
-                    channelName = channelName.substring(1);
-                    if (!parser.getUser().equals(nick)){
-                        addToUserList(parser.getNick());
-                    }
-                    insertString(parser.getNick()+" (" + parser.getUser() + "@" + parser.getHost() + ") has joined channel " + parser.getTrailing(), doc);
-                }
-            }
-            return;
+           if (nick.equals(parser.getNick()))
+           {
+               String channelName = parser.getTrailing();
+               if (channelName.startsWith("#"))
+               {
+                   channelName = channelName.substring(1);
+                   int indexOfChannel = findTab(tabbedPane, "#" + channelName);
+                   
+                   if (indexOfChannel == -1)
+                   {
+                       javax.swing.JSplitPane splitPane = new javax.swing.JSplitPane();
+                       javax.swing.JScrollPane chat = new javax.swing.JScrollPane();
+                       javax.swing.JScrollPane users = new javax.swing.JScrollPane();
+                       
+                       DefaultStyledDocument newUserList = new DefaultStyledDocument();
+                       DefaultStyledDocument newDoc = new DefaultStyledDocument();
+                       
+                       javax.swing.JTextPane chatText = new javax.swing.JTextPane(newDoc);
+                       javax.swing.JTextPane usersText = new javax.swing.JTextPane(newUserList);
+                       
+                       chat.setViewportView(chatText);
+                       users.setViewportView(usersText);
+                       
+                       chatText.setEditable(false);
+                       usersText.setEditable(false);
+                       chatText.setAutoscrolls(false);
+                       usersText.setAutoscrolls(false);
+                       chatText.setFocusable(false);
+                       usersText.setFocusable(false);
+                       
+                       splitPane.setLeftComponent(chat);
+                       splitPane.setRightComponent(users);
+                       splitPane.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
+                       splitPane.setDividerLocation(480);
+                       splitPane.setResizeWeight(1.0);
+                       splitPane.setVerifyInputWhenFocusTarget(false);
+                       tabbedPane.addTab(channelName, splitPane);
+                   }
+                   else
+                   {
+                       ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfChannel);
+                   }
+               }
+           }
         }
         if (command.equals("PART")){
             removeFromUserList(parser.getNick());
@@ -204,6 +247,7 @@ public class Connection implements Runnable{
                 writer.write("join #lmitb\r\n");
                 writer.flush();
                 while ((line = reader.readLine()) != null){
+                    //System.out.println(line);
                     parseFromServer(line);
                 }
             }
@@ -214,4 +258,64 @@ public class Connection implements Runnable{
                 Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
             }
     }
+    
+    public class ChannelPanel extends javax.swing.JPanel implements java.awt.event.ActionListener
+    {
+        final String name;
+        final JTextArea textArea = new JTextArea(), userArea = new JTextArea();
+        final JTextField textfield = new JTextField(), titlearea = new JTextField();
+        final JScrollPane sp1 = new JScrollPane(textArea), sp2 = new JScrollPane(userArea);
+        SortedSet<String> usernameBox = new TreeSet<String>();
+        
+        public ChannelPanel(String name)
+        {
+            this.name = name;
+            makePanel();
+        }
+        private void makePanel()
+        {
+            javax.swing.JSplitPane splitPane = new javax.swing.JSplitPane();
+            javax.swing.JScrollPane chat = new javax.swing.JScrollPane();
+            javax.swing.JScrollPane users = new javax.swing.JScrollPane();
+
+            DefaultStyledDocument newUserList = new DefaultStyledDocument();
+            DefaultStyledDocument newDoc = new DefaultStyledDocument();
+
+            javax.swing.JTextPane chatText = new javax.swing.JTextPane(newDoc);
+            javax.swing.JTextPane usersText = new javax.swing.JTextPane(newUserList);
+
+            chat.setViewportView(chatText);
+            users.setViewportView(usersText);
+
+            chatText.setEditable(false);
+            usersText.setEditable(false);
+            chatText.setAutoscrolls(false);
+            usersText.setAutoscrolls(false);
+            chatText.setFocusable(false);
+            usersText.setFocusable(false);
+
+            splitPane.setLeftComponent(chat);
+            splitPane.setRightComponent(users);
+            splitPane.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
+            splitPane.setDividerLocation(480);
+            splitPane.setResizeWeight(1.0);
+            splitPane.setVerifyInputWhenFocusTarget(false);
+        }
+        public void insertString(String message)
+        {
+            int oldCaretPosition = textArea.getCaretPosition();
+            textArea.append(message + "\n");
+            int newCaretPosition = textArea.getCaretPosition();
+            if (newCaretPosition == oldCaretPosition)
+            textArea.setCaretPosition(oldCaretPosition + (message + "\n").length());
+        }
+        public void actionPerformed(ActionEvent e)
+        {
+            //unimplemented
+            
+        }
+        
+    }
+            
 }
+

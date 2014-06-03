@@ -1,7 +1,6 @@
 import java.io.IOException;
 import javax.swing.text.EditorKit;
 import javax.swing.text.DefaultStyledDocument;
-import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultCaret;
 
 public class GUI extends javax.swing.JFrame {
@@ -12,8 +11,8 @@ public class GUI extends javax.swing.JFrame {
     public GUI() {
         doc = new DefaultStyledDocument();
         userList = new DefaultStyledDocument();
-        c = new Connection("irc.rizon.net",6667, doc, userList);
         initComponents();
+        c = new Connection("irc.rizon.net",6667, doc, userList, tabbedPane);
     }
 
     /**
@@ -26,7 +25,7 @@ public class GUI extends javax.swing.JFrame {
     private void initComponents() {
 
         chatInputPane = new javax.swing.JTextField();
-        jTabbedPane1 = new javax.swing.JTabbedPane();
+        tabbedPane = new javax.swing.JTabbedPane();
         jSplitPane1 = new javax.swing.JSplitPane();
         jScrollPane2 = new javax.swing.JScrollPane();
         chatPane = new javax.swing.JTextPane(doc);
@@ -44,13 +43,13 @@ public class GUI extends javax.swing.JFrame {
             }
         });
 
-        jTabbedPane1.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
-        jTabbedPane1.setTabLayoutPolicy(javax.swing.JTabbedPane.SCROLL_TAB_LAYOUT);
-        jTabbedPane1.setTabPlacement(javax.swing.JTabbedPane.BOTTOM);
-        jTabbedPane1.setToolTipText("");
-        jTabbedPane1.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
-        jTabbedPane1.setFocusable(false);
-        jTabbedPane1.setPreferredSize(new java.awt.Dimension(600, 450));
+        tabbedPane.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
+        tabbedPane.setTabLayoutPolicy(javax.swing.JTabbedPane.SCROLL_TAB_LAYOUT);
+        tabbedPane.setTabPlacement(javax.swing.JTabbedPane.BOTTOM);
+        tabbedPane.setToolTipText("");
+        tabbedPane.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        tabbedPane.setFocusable(false);
+        tabbedPane.setPreferredSize(new java.awt.Dimension(600, 450));
 
         jSplitPane1.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
         jSplitPane1.setDividerLocation(480);
@@ -72,7 +71,7 @@ public class GUI extends javax.swing.JFrame {
 
         jSplitPane1.setRightComponent(jScrollPane1);
 
-        jTabbedPane1.addTab("tab1", jSplitPane1);
+        tabbedPane.addTab("tab1", jSplitPane1);
 
         jMenuBar2.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
         jMenuBar2.setFocusable(false);
@@ -89,16 +88,18 @@ public class GUI extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-            .addComponent(jTabbedPane1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 707, Short.MAX_VALUE)
+            .addComponent(tabbedPane, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 711, Short.MAX_VALUE)
             .addComponent(chatInputPane, javax.swing.GroupLayout.Alignment.LEADING)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 418, Short.MAX_VALUE)
+                .addComponent(tabbedPane, javax.swing.GroupLayout.DEFAULT_SIZE, 426, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(chatInputPane, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
+
+        tabbedPane.getAccessibleContext().setAccessibleName("Main");
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -161,7 +162,7 @@ public class GUI extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JSplitPane jSplitPane1;
-    private javax.swing.JTabbedPane jTabbedPane1;
+    public javax.swing.JTabbedPane tabbedPane;
     private javax.swing.JTextPane userListPane;
     // End of variables declaration//GEN-END:variables
 }
