@@ -12,7 +12,9 @@ public class GUI extends javax.swing.JFrame {
         doc = new DefaultStyledDocument();
         userList = new DefaultStyledDocument();
         initComponents();
+        tabbedPane.remove(jSplitPane1);
         c = new Connection("irc.rizon.net",6667, doc, userList, tabbedPane);
+        //tabbedPane.addTab("Main", );
     }
 
     /**
