@@ -11,6 +11,7 @@ import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.BadLocationException;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -25,27 +26,28 @@ public class Connection implements Runnable{
     BufferedReader reader;
     BufferedWriter writer;
     FileWriter chatLog;
-    String server, host, nick = "rieux", channel = "";
+    String server, host, nick = "rieux";
     int port;
     DefaultStyledDocument doc, userList;
-    public ArrayList<String> list;
-    SortedSet<String> set;
     JTabbedPane tabbedPane;
+    JLabel motd;
 
-    public Connection(String server, int port, DefaultStyledDocument doc, DefaultStyledDocument userList, JTabbedPane tabbedPane)
+    public Connection(String server, int port, DefaultStyledDocument doc, DefaultStyledDocument userList, JTabbedPane tabbedPane, JLabel motd)
     {
        this.server = server;
        this.port = port;
        this.doc = doc;
        this.userList = userList;
        
+       
        this.tabbedPane = tabbedPane;
+       this.motd = motd;
        
-       ChannelPanel first = new ChannelPanel("main");
-       tabbedPane.add("main", first);
+       ChannelPanel first = new ChannelPanel("Rizon");
+       tabbedPane.add(first.name, first);
        
-       list = new ArrayList<String>();
-       set = new TreeSet(String.CASE_INSENSITIVE_ORDER);
+       //list = new ArrayList<String>();
+       //set = new TreeSet(String.CASE_INSENSITIVE_ORDER);
        
        thread = new Thread(this);
        thread.start();
@@ -87,7 +89,9 @@ public class Connection implements Runnable{
         System.out.println(line);
         Parser parser = new Parser(line);
         String command = parser.getCommand();
-        if (command.equals("AWAY")){
+        //System.out.println("Command: "+command+ " Trailing: "+parser.getTrailing());
+        if (command.equals("AWAY"))
+        {
             String channelName = parser.getTrailing();
             int indexOfChannel = findTab(tabbedPane, "#" + channelName);
             if (indexOfChannel == -1)
@@ -135,8 +139,9 @@ public class Connection implements Runnable{
                        Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
                        if (aComponent instanceof JSplitPane)
                        {
-                            ((ChannelPanel)aComponent).insertString(parser.getNick() + " (" + parser.getUser() + "@" + parser.getHost() +  ") has joined the channel" + parser.getTrailing(), "doc");
-                            return;
+                           ((ChannelPanel)aComponent).addToUserList(parser.getNick());
+                           ((ChannelPanel)aComponent).insertString(parser.getNick() + " (" + parser.getUser() + "@" + parser.getHost() +  ") has joined the channel.", "doc");
+                           return;
                        }
                       // else System.out.println("missed a join");
                        //return;
@@ -176,6 +181,7 @@ public class Connection implements Runnable{
             {
                 Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
                 ((ChannelPanel)aComponent).insertString(parser.getNick()+" (" + parser.getUser() + "@" + parser.getHost() + ") has left the server (" + parser.getTrailing()+ ")" , "doc");
+                ((ChannelPanel)aComponent).removeFromUserList(parser.getNick());
                 return;
             }
         }
@@ -186,11 +192,12 @@ public class Connection implements Runnable{
         }
         if (command.equals("PRIVMSG") || command.equals("MSG"))
         {
+            //TODO: Private messages from users
             String channelName = parser.getMiddle();
             int indexOfChannel = findTab(tabbedPane, channelName);
             if (indexOfChannel == -1)
             {
-                Component aComponent = tabbedPane.getComponentAt(0);
+                Component aComponent = tabbedPane.getComponentAt(0); 
                 ((ChannelPanel)aComponent).insertString("___PRIVMSG BROKEN___"+line, "doc");
                 return;
             }
@@ -200,7 +207,16 @@ public class Connection implements Runnable{
         }
         if (command.equals("QUIT"))
         {
-           //TODO: Close all open connections and all but the main tab
+            if (!nick.equals(parser.getNick())){ //if i'm leaving
+                for (int i = 0; i < tabbedPane.getTabCount(); i++){
+                    Component aComponent = tabbedPane.getComponentAt(i);
+                    ChannelPanel channel = ((ChannelPanel)aComponent);
+                    channel.removeFromUserList(parser.getNick());
+                }
+                return;
+            }
+            //else close all connections 
+            
         }
         if (command.equals("001") || command.equals("002") || command.equals("003") || command.equals("004") || command.equals("005"))
         {
@@ -246,11 +262,12 @@ public class Connection implements Runnable{
         {
             //  332: Topic, 331: No topic
             String channelName = parser.getTrailing();
-            int indexOfChannel = findTab(tabbedPane, "#" + channelName);
+            int indexOfChannel = findTab(tabbedPane, channelName);
             if (indexOfChannel == -1)
             {
                 Component aComponent = tabbedPane.getComponentAt(0);
                 ((ChannelPanel)aComponent).insertString("___"+line, "doc");
+                return;
             }
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             if (command.equals("332")) ((ChannelPanel)aComponent).insertString(parser.getTrailing(), "doc");
@@ -265,30 +282,50 @@ public class Connection implements Runnable{
             {
                 Component aComponent = tabbedPane.getComponentAt(0);
                 ((ChannelPanel)aComponent).insertString("___"+line, "doc");
+                return;
             }
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             if (command.equals("333")) ((ChannelPanel)aComponent).insertString(parser.getTrailing(), "doc");
             return;            
         }
-       /* if (command.equals("353")){
+        if (command.equals("353"))
+        {
             //names command
+            String channelName = parser.getParams();
+            int index = channelName.indexOf("#");
+            int index2 = channelName.indexOf(":");
+            if (index2 != -1) channelName = channelName.substring(index, index2 - 1);
+            else channelName = channelName.substring(index);
+            
+            int indexOfChannel = findTab(tabbedPane, channelName);
+            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             System.out.println("names list: "+parser.getTrailing());
             String[] nn = parser.getTrailing().split(" ");
-            list.addAll(Arrays.asList(nn));
+            ((ChannelPanel)aComponent).list.addAll(Arrays.asList(nn));
             return;
         }
-        if (command.equals("366")){
+        if (command.equals("366"))
+        {
             //end of names command
-            userList.remove(0, userList.getLength());
-            set.addAll(list);
-            list = new ArrayList<String>();
-            Iterator<String> iterator = set.iterator();
+            String channelName = parser.getParams();
+            int index = channelName.indexOf("#");
+            int index2 = channelName.indexOf(":");
+            if (index2 != -1) channelName = channelName.substring(index, index2 - 1);
+            else channelName = channelName.substring(index);
+            int indexOfChannel = findTab(tabbedPane, channelName);
+            Component aComponent = tabbedPane.getComponentAt(indexOfChannel); 
+            ChannelPanel channel = ((ChannelPanel)aComponent);
+            
+            channel.userList.remove(0, userList.getLength());
+            channel.userSet.addAll(channel.list);
+            channel.list = new ArrayList<String>();
+            Iterator<String> iterator = channel.userSet.iterator();
             while (iterator.hasNext()){
                 String nextElement = iterator.next();
-                insertString(nextElement, userList);
+                channel.insertString(nextElement, "userList");
             }
             return;
-            }*/
+            }
         if (command.equals("371") || command.equals("372") || command.equals("374") || command.equals("375") || command.equals("376"))
         {
             String channelName = parser.getTrailing();
@@ -333,6 +370,7 @@ public class Connection implements Runnable{
             return;
         }
         if (command.equals("451"))
+            //you have not registered
         {
             String channelName = parser.getTrailing();
             int indexOfChannel = findTab(tabbedPane, "#" + channelName);
@@ -379,15 +417,16 @@ public class Connection implements Runnable{
     
        public class ChannelPanel extends JSplitPane implements ActionListener{
            
-        final String name;        
+        final String name; 
+        int population, ops;
         DefaultStyledDocument userList = new DefaultStyledDocument(), doc = new DefaultStyledDocument();
-        //final JTextArea chatText = new JTextArea(), usersText = new JTextArea();
         final JTextField chatInputPane = new JTextField();
         final JTextPane chatPane = new JTextPane(doc), userListPane = new JTextPane(userList);
         final JScrollPane jScrollPane1 = new JScrollPane(), jScrollPane2 = new JScrollPane();
-        SortedSet<String> userSet = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
-
         
+        SortedSet<String> userSet = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+        ArrayList<String> list = new ArrayList<String>();
+    
         public ChannelPanel(String name)
         {
             this.name = name;
@@ -422,20 +461,22 @@ public class Connection implements Runnable{
         userListPane.setAutoscrolls(false);
         userListPane.setFocusable(false);
         userListPane.setMaximumSize(new java.awt.Dimension(25, 25));
-
-            
-        //tabbedPane.addTab("Main", );
-        
         
         }
         private void insertString(String line, String target) throws BadLocationException
         { 
-            if (target.equals("doc")) doc.insertString(doc.getLength(), line+"\n", null);
-            else userList.insertString(userList.getLength(), line+"\n", null);
+            if (target.equals("doc")){
+                doc.insertString(doc.getLength(), line+"\n", null);
+                return;
+            }
+            if (target.equals("userList")){
+                userList.insertString(userList.getLength(), line+"\n", null);
+                return;
+            }
+            else System.out.println("_____________________insertString broken_____________________");
         }
         private void addToUserList(String nick) throws BadLocationException
         {
-            System.out.println("adding nick "+nick+" to "+name);
             userList.remove(0, userList.getLength());
             userSet.add(nick);
             Iterator<String> iterator = userSet.iterator();
@@ -447,13 +488,12 @@ public class Connection implements Runnable{
         }
         private void removeFromUserList(String nick) throws BadLocationException
         {
-            System.out.println("removing "+nick);
             userList.remove(0, userList.getLength());
-            boolean exists = set.remove(nick);
+            boolean exists = userSet.remove(nick);
             if (exists == false){
-                set.remove("+"+nick);
+                userSet.remove("+"+nick);
             }
-            Iterator<String> iterator = set.iterator();
+            Iterator<String> iterator = userSet.iterator();
             while (iterator.hasNext()){
                 String nextElement = iterator.next();
                 insertString(nextElement, "userList");
