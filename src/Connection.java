@@ -1,6 +1,4 @@
-import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
@@ -13,7 +11,6 @@ import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.BadLocationException;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -80,6 +77,7 @@ public class Connection implements Runnable{
         int totalTabs = tabbedPane.getTabCount();
         for (int i = 0; i < totalTabs; i++){
             String tabTitle = tabbedPane.getTitleAt(i);
+            //System.out.println(tabTitle);
             if (tabTitle.equalsIgnoreCase(title)) return i;
         }
         return -1;
@@ -94,8 +92,8 @@ public class Connection implements Runnable{
             int indexOfChannel = findTab(tabbedPane, "#" + channelName);
             if (indexOfChannel == -1)
             {
-                ChannelPanel c = (ChannelPanel)tabbedPane.getComponentAt(0);
-                c.insertString("___"+line, "doc");
+                ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(0);
+                channel.insertString("___"+line, "doc");
             } 
             ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfChannel);
             channel.insertString(parser.getTrailing(), "doc");
@@ -108,7 +106,6 @@ public class Connection implements Runnable{
                String channelName = parser.getTrailing();
                if (channelName.startsWith("#"))
                {
-                   //channelName = channelName.substring(1);
                    int indexOfChannel = findTab(tabbedPane, channelName);
                    
                    if (indexOfChannel == -1)
@@ -124,9 +121,6 @@ public class Connection implements Runnable{
                         Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
                         ((ChannelPanel)aComponent).insertString(parser.getNick() + " (" + parser.getUser() + "@" + parser.getHost() + "has joined the channel", "doc");   
                         return;
-                       //ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfChannel);
-                       //channel.insertString(parser.getNick() + " (" + parser.getUser() + "@" + parser.getHost() + "has joined the channel", "doc");
-
                    }
                }
            }
@@ -135,18 +129,13 @@ public class Connection implements Runnable{
                String channelName = parser.getTrailing();
                if (channelName.startsWith("#"))
                {
-                   //channelName = channelName.substring(1);
                    int indexOfChannel = findTab(tabbedPane, channelName);
                    if (indexOfChannel != -1)
                    {
-                       System.out.println("promiseland");
-                       Component aComponent = tabbedPane.getComponent(indexOfChannel);
+                       Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
                        if (aComponent instanceof JSplitPane)
                        {
-                            System.out.println("debug: "+aComponent.toString());
-                            ChannelPanel cc = (ChannelPanel)aComponent;
-                            cc.insertString("testing", "doc");
-                            ((ChannelPanel)aComponent).insertString(parser.getNick() + " (" + parser.getUser() + "@" + parser.getHost() +  ") has joined the channel " + parser.getTrailing(), "doc");
+                            ((ChannelPanel)aComponent).insertString(parser.getNick() + " (" + parser.getUser() + "@" + parser.getHost() +  ") has joined the channel" + parser.getTrailing(), "doc");
                             return;
                        }
                       // else System.out.println("missed a join");
@@ -166,19 +155,29 @@ public class Connection implements Runnable{
         }
         if (command.equals("PART"))
         {
-            String channelName = parser.getTrailing();
+            String channelName = parser.getParams();
+            int index = channelName.indexOf("#");
+            int index2 = channelName.indexOf(":");
+            if (index2 != -1) channelName = channelName.substring(index, index2 - 1);
+            else channelName = channelName.substring(index);
+            
             int indexOfChannel = findTab(tabbedPane, channelName);
+            
             if (indexOfChannel == -1)
             {
-                Component aComponent = tabbedPane.getComponentAt(0);
-                tabbedPane.remove(aComponent);
-                ((ChannelPanel)aComponent).insertString("_____PART is broken___"+line, "doc");
+                System.out.println("___/PART is broken___");
                 return;
             }
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            //((ChannelPanel)aComponent).removeFromUserList(parser.getNick());
-            ((ChannelPanel)aComponent).insertString(parser.getNick()+" (" + parser.getUser() + "@" + parser.getHost() + ") has left the server " + parser.getTrailing(), "doc");
-            return;
+            if (nick.equals(parser.getNick())){ //if i'm leaving
+                tabbedPane.remove(indexOfChannel);
+                return;
+            }
+            else
+            {
+                Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+                ((ChannelPanel)aComponent).insertString(parser.getNick()+" (" + parser.getUser() + "@" + parser.getHost() + ") has left the server (" + parser.getTrailing()+ ")" , "doc");
+                return;
+            }
         }
         if (command.equals("PING"))
         {
@@ -189,7 +188,6 @@ public class Connection implements Runnable{
         {
             String channelName = parser.getMiddle();
             int indexOfChannel = findTab(tabbedPane, channelName);
-            //System.out.println("Tab #"+indexOfChannel + "___"+tabbedPane.getTitleAt(2)); 
             if (indexOfChannel == -1)
             {
                 Component aComponent = tabbedPane.getComponentAt(0);
@@ -202,19 +200,7 @@ public class Connection implements Runnable{
         }
         if (command.equals("QUIT"))
         {
-            //user quits
-            String channelName = parser.getTrailing();
-            int indexOfChannel = findTab(tabbedPane, channelName);
-            if (indexOfChannel == -1)
-            {
-                Component aComponent = tabbedPane.getComponentAt(0);
-                ((ChannelPanel)aComponent).insertString("___"+line, "doc");
-                return;
-            }
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            //((ChannelPanel)aComponent).removeFromUserList(parser.getNick());
-            ((ChannelPanel)aComponent).insertString(parser.getNick()+" (" + parser.getUser() + "@" + parser.getHost() + ") has left the server " + parser.getTrailing(), "doc");
-            return;
+           //TODO: Close all open connections and all but the main tab
         }
         if (command.equals("001") || command.equals("002") || command.equals("003") || command.equals("004") || command.equals("005"))
         {
