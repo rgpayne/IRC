@@ -50,7 +50,7 @@
       <Group type="103" groupAlignment="1" attributes="0">
           <Component id="chatInputPane" alignment="0" max="32767" attributes="0"/>
           <Component id="tabbedPane" alignment="0" pref="699" max="32767" attributes="0"/>
-          <Component id="motd" alignment="0" max="32767" attributes="0"/>
+          <Component id="tabInfo" alignment="0" max="32767" attributes="0"/>
       </Group>
     </DimensionLayout>
     <DimensionLayout dim="1">
@@ -60,7 +60,7 @@
               <EmptySpace max="-2" attributes="0"/>
               <Component id="chatInputPane" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="motd" min="-2" pref="18" max="-2" attributes="0"/>
+              <Component id="tabInfo" min="-2" pref="18" max="-2" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -173,12 +173,7 @@
         </Container>
       </SubComponents>
     </Container>
-    <Component class="javax.swing.JLabel" name="motd">
-      <Properties>
-        <Property name="cursor" type="java.awt.Cursor" editor="org.netbeans.modules.form.editors2.CursorEditor">
-          <Color id="Default Cursor"/>
-        </Property>
-      </Properties>
+    <Component class="javax.swing.JLabel" name="tabInfo">
     </Component>
   </SubComponents>
 </Form>
