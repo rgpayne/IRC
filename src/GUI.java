@@ -14,7 +14,7 @@ public class GUI extends javax.swing.JFrame {
         initComponents();
         tabbedPane.removeAll();
         c = new Connection("irc.rizon.net",6667, doc, userList, tabbedPane, tabInfo);
-        //tabbedPane.addTab("Main", );
+       
     }
 
     /**
@@ -76,6 +76,8 @@ public class GUI extends javax.swing.JFrame {
 
         tabbedPane.addTab("tab1", jSplitPane1);
 
+        tabInfo.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+
         jMenuBar2.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
         jMenuBar2.setFocusable(false);
 
@@ -134,6 +136,7 @@ public class GUI extends javax.swing.JFrame {
                 new GUI().setVisible(true);
             }
         });
+        
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

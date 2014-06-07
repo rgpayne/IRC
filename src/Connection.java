@@ -18,7 +18,10 @@ import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.text.DefaultCaret;
+
 
 public class Connection implements Runnable{
     Thread thread;
@@ -30,9 +33,10 @@ public class Connection implements Runnable{
     int port;
     DefaultStyledDocument doc, userList;
     JTabbedPane tabbedPane;
-    JLabel motd;
+    JLabel tabInfo;
+    
 
-    public Connection(String server, int port, DefaultStyledDocument doc, DefaultStyledDocument userList, JTabbedPane tabbedPane, JLabel motd)
+    public Connection(String server, int port, DefaultStyledDocument doc, DefaultStyledDocument userList, JTabbedPane tabbedPane, JLabel tabInfo)
     {
        this.server = server;
        this.port = port;
@@ -41,7 +45,7 @@ public class Connection implements Runnable{
        
        
        this.tabbedPane = tabbedPane;
-       this.motd = motd;
+       this.tabInfo = tabInfo;
        
        ChannelPanel first = new ChannelPanel("Rizon");
        tabbedPane.add(first.name, first);
@@ -325,7 +329,7 @@ public class Connection implements Runnable{
             return;
         }
         if (command.equals("332"))
-        {
+        {/*
             //  332: Topic
             String channelName = parser.getParams();
             int index = channelName.indexOf("#");
@@ -338,7 +342,7 @@ public class Connection implements Runnable{
             ChannelPanel channel = ((ChannelPanel)aComponent);
             channel.topic = parser.getTrailing();
             channel.insertString("Current Topic: "+channel.topic, "doc");
-            return;
+            return;*/
         }
         if (command.equals("333"))
         {
@@ -391,6 +395,7 @@ public class Connection implements Runnable{
                 String nextElement = iterator.next();
                 channel.insertString(nextElement, "userList");
             }
+            channel.population = channel.userSet.size();
             return;
             }
         if (command.equals("371") || command.equals("372") || command.equals("374") || command.equals("375") || command.equals("376"))
@@ -533,6 +538,16 @@ public class Connection implements Runnable{
         userListPane.setAutoscrolls(false);
         userListPane.setFocusable(false);
         userListPane.setMaximumSize(new java.awt.Dimension(25, 25));
+        
+        ChangeListener changeListener = new ChangeListener(){
+            public void stateChanged(ChangeEvent changeEvent){
+                javax.swing.JTabbedPane tabbedPane = (javax.swing.JTabbedPane)changeEvent.getSource();
+                int index = tabbedPane.getSelectedIndex();
+                ChannelPanel c = (ChannelPanel)tabbedPane.getComponentAt(index);
+                tabInfo.setText(c.topic+"  |  "+Integer.toString(c.population)+" nicks     ");
+            }          
+        };
+        tabbedPane.addChangeListener(changeListener);   
         
         }
         private void insertString(String line, String target) throws BadLocationException
