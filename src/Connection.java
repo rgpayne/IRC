@@ -10,10 +10,14 @@ import java.io.FileWriter;
 import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.BadLocationException;
 import java.net.Socket;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.SortedSet;
+import java.util.StringTokenizer;
+import java.util.TimeZone;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,38 +33,35 @@ public class Connection implements Runnable{
     BufferedReader reader;
     BufferedWriter writer;
     FileWriter chatLog;
-    String server, host, nick = "rieux";
+    String server, host, nick = "rieux", knownAs;
     int port;
     DefaultStyledDocument doc, userList;
     JTabbedPane tabbedPane;
     JLabel tabInfo;
     
 
-    public Connection(String server, int port, DefaultStyledDocument doc, DefaultStyledDocument userList, JTabbedPane tabbedPane, JLabel tabInfo)
+    public Connection(String server, String knownAs, int port, DefaultStyledDocument doc, DefaultStyledDocument userList, JTabbedPane tabbedPane, JLabel tabInfo)
     {
        this.server = server;
        this.port = port;
        this.doc = doc;
        this.userList = userList;
+       this.knownAs = knownAs;
        
        
        this.tabbedPane = tabbedPane;
        this.tabInfo = tabInfo;
        
-       ChannelPanel first = new ChannelPanel("Rizon");
-       tabbedPane.add(first.name, first);
+       ChannelPanel first = new ChannelPanel(server);
+       tabbedPane.add("Name", first);
        
        thread = new Thread(this);
        thread.start();
     }     
     public void send(String line) throws IOException
     {
-        try{ 
-            writer.write(line+"\r\n");
-            writer.flush();
-        } catch (IOException e){
-            //do nothing
-        }
+        writer.write(line+"\r\n");
+        writer.flush();        
     }
     public String formatNickname(String nickname)
     {
@@ -154,6 +155,7 @@ public class Connection implements Runnable{
            channel = new ChannelPanel(parser.getTrailing());
            tabbedPane.add(channel, parser.getTrailing());
            channel.insertString(parser.getTrailing(), parser.getNick() + " joined in " + parser.getTrailing());
+           return;
         }
         if (command.equals("NICK"))
         {
@@ -207,6 +209,21 @@ public class Connection implements Runnable{
                 return;
             }
         }
+        if (command.equals("MODE"))
+        {
+            //TODO
+            return;
+        }
+        if (command.equals("NOTICE"))
+        {
+            String host = parser.getPrefix();
+            int indexOfChannel = findTab(tabbedPane, host);
+            if (indexOfChannel == -1) return;
+            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+            ChannelPanel channel = ((ChannelPanel)aComponent);
+            channel.insertString(parser.getTrailing(), "doc");
+            return;
+        }
         if (command.equals("PART"))
         {
             String channelName = parser.getParams();
@@ -246,8 +263,8 @@ public class Connection implements Runnable{
             int indexOfChannel = findTab(tabbedPane, channelName);
             if (indexOfChannel == -1)
             {
-                Component aComponent = tabbedPane.getComponentAt(0); 
-                ((ChannelPanel)aComponent).insertString("___PRIVMSG BROKEN___"+line, "doc");
+                //Component aComponent = tabbedPane.getComponentAt(0); 
+                //((ChannelPanel)aComponent).insertString("___PRIVMSG BROKEN___"+line, "doc");
                 return;
             }
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
@@ -285,42 +302,35 @@ public class Connection implements Runnable{
         }
         if (command.equals("001") || command.equals("002") || command.equals("003") || command.equals("004") || command.equals("005"))
         {
-            String channelName = parser.getTrailing();
-            int indexOfChannel = findTab(tabbedPane, "#" + channelName);
-            if (indexOfChannel == -1)
-            {
-                Component aComponent = tabbedPane.getComponentAt(0);
-                ((ChannelPanel)aComponent).insertString("___"+line, "doc");
-            }
-            Component aComponent = tabbedPane.getComponentAt(0);
-            ((ChannelPanel)aComponent).insertString(parser.getTrailing(), "doc");
+            String host = parser.getPrefix();
+            int indexOfChannel = findTab(tabbedPane, host);
+            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+            ChannelPanel channel = ((ChannelPanel)aComponent);
+            channel.insertString("[Welcome] "+parser.getTrailing(), "doc");
+            return;
+        }
+        if (command.equals("042"))
+        {
+            //unique id
             return;
         }
 	if(command.equals("251") || command.equals("252") || command.equals("253") || command.equals("254") || command.equals("255") || 
                 command.equals("256") || command.equals("257") || command.equals("258") || command.equals("259"))
         {
-            String channelName = parser.getTrailing();
-            int indexOfChannel = findTab(tabbedPane, "#" + channelName);
-            if (indexOfChannel == -1)
-            {
-                Component aComponent = tabbedPane.getComponentAt(0);
-                ((ChannelPanel)aComponent).insertString("___"+line, "doc");
-            }
-            Component aComponent = tabbedPane.getComponentAt(0);
-            ((ChannelPanel)aComponent).insertString(parser.getTrailing(), "doc");
+            String host = parser.getPrefix();
+            int indexOfChannel = findTab(tabbedPane, host);
+            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+            ChannelPanel channel = ((ChannelPanel)aComponent);
+            channel.insertString("[Users] "+parser.getTrailing(), "doc");
             return;
         }
         if (command.equals("265") || command.equals("266"))
         {
-            String channelName = parser.getTrailing();
-            int indexOfChannel = findTab(tabbedPane, "#" + channelName);
-            if (indexOfChannel == -1)
-            {
-                Component aComponent = tabbedPane.getComponentAt(0);
-                ((ChannelPanel)aComponent).insertString("___"+line, "doc");
-            }
-            Component aComponent = tabbedPane.getComponentAt(0);
-            ((ChannelPanel)aComponent).insertString(parser.getTrailing(), "doc");
+            String host = parser.getPrefix();
+            int indexOfChannel = findTab(tabbedPane, host);
+            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+            ChannelPanel channel = ((ChannelPanel)aComponent);
+            channel.insertString("[Users] "+parser.getTrailing(), "doc");
             return;
         }
         if (command.equals("331"))
@@ -329,7 +339,7 @@ public class Connection implements Runnable{
             return;
         }
         if (command.equals("332"))
-        {/*
+        {
             //  332: Topic
             String channelName = parser.getParams();
             int index = channelName.indexOf("#");
@@ -342,23 +352,35 @@ public class Connection implements Runnable{
             ChannelPanel channel = ((ChannelPanel)aComponent);
             channel.topic = parser.getTrailing();
             channel.insertString("Current Topic: "+channel.topic, "doc");
-            return;*/
+            return;
         }
         if (command.equals("333"))
         {
-            /*
             // 333: Time of topic change and who changed it
-            String channelName = parser.getParams();
-            int index1 = channelName.indexOf("#");
-            String chan = channelName.substring(index1);
-            int index2 = chan.indexOf(" ");
-            channelName = chan.substring(0,index2);
+            String[] tokens = new String[5];
+            int i = 0;
+            StringTokenizer st = new StringTokenizer(parser.getParams()," #!");
+            while (st.hasMoreTokens())
+            {
+                String str = st.nextToken();
+                tokens[i] = str;
+                i++;
+            }
             
+            String channelName = "#"+tokens[1];           
             int indexOfChannel = findTab(tabbedPane, channelName);
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             ChannelPanel channel = ((ChannelPanel)aComponent);
-     
-            long unixTime = System.currentTimeMillis() / 1000L;   */      
+            channel.topicAuthor = tokens[tokens.length-3];
+            //channel.time = tokens[tokens.length-2];
+            
+            //System.out.println(channel.topicAuthor+"___"+channel.time);
+            
+            //Date date = new Date(Integer.valueOf(channel.time) * 1000L);
+            //SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy hh:mm aa z");
+            //sdf.setTimeZone(TimeZone.getTimeZone("CST"));
+            //channel.time = sdf.format(date);
+            return;
         }
         if (command.equals("353"))
         {
@@ -396,22 +418,32 @@ public class Connection implements Runnable{
                 channel.insertString(nextElement, "userList");
             }
             channel.population = channel.userSet.size();
+            if (channel.isShowing()) tabInfo.setText(Integer.toString(channel.population)+" nicks     ");
+
             return;
             }
         if (command.equals("371") || command.equals("372") || command.equals("374") || command.equals("375") || command.equals("376"))
         {
-            String channelName = parser.getTrailing();
-            int indexOfChannel = findTab(tabbedPane, "#" + channelName);
-            if (indexOfChannel == -1)
-            {
-                Component aComponent = tabbedPane.getComponentAt(0);
-                ((ChannelPanel)aComponent).insertString(line, "doc");
-            }
-            Component aComponent = tabbedPane.getComponentAt(0);
-            ((ChannelPanel)aComponent).insertString(parser.getTrailing(), "doc");
+            String host = parser.getPrefix();
+            int indexOfChannel = findTab(tabbedPane, host);
+            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+            ChannelPanel channel = ((ChannelPanel)aComponent);
+            channel.insertString("[MOTD] "+parser.getTrailing(), "doc");
             return;
         }
-        if (command.equals("451")){
+        if (command.equals("439"))
+        {
+            String host = parser.getPrefix();
+            int indexOfChannel = findTab(tabbedPane, "Name");
+            tabbedPane.setTitleAt(indexOfChannel, host);
+            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+            ChannelPanel channel = ((ChannelPanel)aComponent);
+            
+            channel.insertString(parser.getTrailing(), "doc");
+            return;            
+        }
+        if (command.equals("451"))
+        {
             //you have not registered
             
         }
@@ -426,36 +458,6 @@ public class Connection implements Runnable{
                 ((ChannelPanel)aComponent).insertString("___"+line, "doc");
             }
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ((ChannelPanel)aComponent).insertString(parser.getTrailing(), "doc");
-            return;
-        }
-        if (command.equals("439"))
-        {
-            //Message spamming
-            String channelName = parser.getTrailing();
-            int indexOfChannel = findTab(tabbedPane, "#" + channelName);
-            if (indexOfChannel == -1)
-            {
-                Component aComponent = tabbedPane.getComponentAt(0);
-                //System.out.println(aComponent.toString());
-                ((ChannelPanel)aComponent).insertString(line, "doc");
-                return;
-            }
-            Component aComponent = tabbedPane.getComponentAt(0);
-            ((ChannelPanel)aComponent).insertString(parser.getTrailing(), "doc");
-            return;
-        }
-        if (command.equals("451"))
-            //you have not registered
-        {
-            String channelName = parser.getTrailing();
-            int indexOfChannel = findTab(tabbedPane, "#" + channelName);
-            if (indexOfChannel == -1)
-            {
-                Component aComponent = tabbedPane.getComponentAt(0);
-                ((ChannelPanel)aComponent).insertString("___"+line, "doc");
-            }
-            Component aComponent = tabbedPane.getComponentAt(0);
             ((ChannelPanel)aComponent).insertString(parser.getTrailing(), "doc");
             return;
         }
@@ -479,7 +481,6 @@ public class Connection implements Runnable{
                 writer.write("join #lmitb\r\n");
                 writer.flush();
                 while ((line = reader.readLine()) != null){
-                    //System.out.println(line);
                     parseFromServer(line);
                 }
             }
@@ -494,7 +495,7 @@ public class Connection implements Runnable{
        public class ChannelPanel extends JSplitPane implements ActionListener{
            
         final String name; 
-        String topic;
+        String topic, time, topicAuthor;
         int population, ops;
         DefaultStyledDocument userList = new DefaultStyledDocument(), doc = new DefaultStyledDocument();
         final JTextField chatInputPane = new JTextField();
@@ -544,7 +545,7 @@ public class Connection implements Runnable{
                 javax.swing.JTabbedPane tabbedPane = (javax.swing.JTabbedPane)changeEvent.getSource();
                 int index = tabbedPane.getSelectedIndex();
                 ChannelPanel c = (ChannelPanel)tabbedPane.getComponentAt(index);
-                tabInfo.setText(c.topic+"  |  "+Integer.toString(c.population)+" nicks     ");
+                tabInfo.setText(Integer.toString(c.population)+" nicks     ");
             }          
         };
         tabbedPane.addChangeListener(changeListener);   
@@ -572,6 +573,7 @@ public class Connection implements Runnable{
                 String nextElement = iterator.next();
                 insertString(nextElement, "userList");
             }
+            if (this.isShowing()) tabInfo.setText(Integer.toString(this.population)+" nicks     ");
             return;
         }
         private void removeFromUserList(String nick) throws BadLocationException
@@ -584,6 +586,7 @@ public class Connection implements Runnable{
                 String nextElement = iterator.next();
                 insertString(nextElement, "userList");
             }
+            if (this.isShowing()) tabInfo.setText(Integer.toString(this.population)+" nicks     ");
             return;
          }       
         public void actionPerformed(ActionEvent e)
