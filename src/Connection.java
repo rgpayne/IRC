@@ -33,7 +33,8 @@ public class Connection implements Runnable{
     BufferedReader reader;
     BufferedWriter writer;
     FileWriter chatLog;
-    String server, host, nick = "rieux", password;
+    String server, host, password;
+    static String nick = "rieux";
     int port;
     DefaultStyledDocument doc, userList;
     static JTabbedPane tabbedPane;
@@ -52,8 +53,8 @@ public class Connection implements Runnable{
        this.tabbedPane = tabbedPane;
        this.tabInfo = tabInfo;
        
-       first = new ChannelPanel(server);
-       tabbedPane.add("Name", first);
+       //first = new ChannelPanel(server, nick);
+       //tabbedPane.add("Name", first);
        
        thread = new Thread(this);
        thread.start();
@@ -63,7 +64,7 @@ public class Connection implements Runnable{
         writer.write(line+"\r\n");
         writer.flush();        
     }
-    public String formatNickname(String nickname)
+    public static String formatNickname(String nickname)
     {
         int formatlen = 12;
         String blank = "";
@@ -91,6 +92,7 @@ public class Connection implements Runnable{
         System.out.println(line);
         Parser parser = new Parser(line);
         String command = parser.getCommand();
+        
         if (command.equals("AWAY"))
         {
             String channelName = parser.getTrailing();
@@ -114,8 +116,8 @@ public class Connection implements Runnable{
                    int indexOfChannel = findTab(tabbedPane, channelName);
                    if (indexOfChannel == -1)
                    {
-                       ChannelPanel c = new ChannelPanel(channelName);
-                       tabbedPane.add(c.name, c);
+                       ChannelPanel c = new ChannelPanel(channelName, nick, this);
+                       //tabbedPane.add(c.name, c);
                        int newTabIndex = findTab(tabbedPane, c.name);
                        tabbedPane.setSelectedIndex(newTabIndex);                     
                        return;
@@ -153,8 +155,8 @@ public class Connection implements Runnable{
                }
            }
            ChannelPanel channel;
-           channel = new ChannelPanel(parser.getTrailing());
-           tabbedPane.add(channel, parser.getTrailing());
+           channel = new ChannelPanel(parser.getTrailing(), nick, this);
+           //(parser.getTrailing(), channel);
            channel.insertString(parser.getTrailing(), parser.getNick() + " joined in " + parser.getTrailing());
            return;
         }
@@ -309,6 +311,11 @@ public class Connection implements Runnable{
         {
             String host = parser.getPrefix();
             int indexOfChannel = findTab(tabbedPane, host);
+            if (indexOfChannel == -1)
+            {
+                new ChannelPanel(host, nick, this);
+                indexOfChannel = findTab(tabbedPane, host);
+            }
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             ChannelPanel channel = ((ChannelPanel)aComponent);
             channel.insertString("[Welcome] "+parser.getTrailing(), "doc");
@@ -444,10 +451,10 @@ public class Connection implements Runnable{
         if (command.equals("439"))
         {
             String host = parser.getPrefix();
-            int indexOfChannel = findTab(tabbedPane, "Name");
-            tabbedPane.setTitleAt(indexOfChannel, host);
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ChannelPanel channel = ((ChannelPanel)aComponent);
+            //int indexOfChannel = findTab(tabbedPane, "Name");
+            //tabbedPane.setTitleAt(indexOfChannel, host);
+           // Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+            ChannelPanel channel = new ChannelPanel(host, nick, this);
             
             channel.insertString(parser.getTrailing(), "doc");
             return;            
@@ -474,7 +481,7 @@ public class Connection implements Runnable{
             while (socket.isConnected()){
                 writer.write("NICK "+ nick+"\r\n");
                 writer.write("USER "+nick+" 8 * : a bot\r\n");
-                writer.write("join #lmitb\r\n");
+                //writer.write("join #lmitb\r\n");
                 writer.flush();
                 while ((line = reader.readLine()) != null){
                     parseFromServer(line);

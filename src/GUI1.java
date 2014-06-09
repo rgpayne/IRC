@@ -1,5 +1,8 @@
 import java.awt.Component;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.text.BadLocationException;
 import javax.swing.text.EditorKit;
 import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.DefaultCaret;
@@ -13,11 +16,11 @@ public class GUI1 extends javax.swing.JFrame {
         doc = new DefaultStyledDocument();
         userList = new DefaultStyledDocument();
         initComponents();
-        tabbedPane.removeAll();
+        //tabbedPane.removeAll();
         ChannelPanel.tabbedPane = tabbedPane;
         ChannelPanel.tabInfo = tabInfo;
         
-        c = new Connection("irc.rizon.net", 6667, doc, userList, tabbedPane, tabInfo);
+        //c = new Connection("irc.rizon.net", 6667, doc, userList, tabbedPane, tabInfo);
     }
 
     @SuppressWarnings("unchecked")
@@ -156,8 +159,6 @@ public class GUI1 extends javax.swing.JFrame {
 
         jSplitPane1.setRightComponent(jScrollPane1);
 
-        tabbedPane.addTab("tab1", jSplitPane1);
-
         tabInfo.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
 
         jMenuBar2.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
@@ -203,16 +204,29 @@ public class GUI1 extends javax.swing.JFrame {
             String msg = chatInputPane.getText();
             Component aComponent = tabbedPane.getComponentAt(tabbedPane.getSelectedIndex());
             ChannelPanel channel = (ChannelPanel)aComponent;
+            String target = channel.name;            
+            String output = "PRIVMSG "+target+" :"+msg;
             
-            
-            
-            c.writer.write(chatInputPane.getText()+"\r\n");
+            if (msg.charAt(0) != '/'){            
+            channel.connection.writer.write(output+"\r\n");
+            channel.insertString((Connection.formatNickname("<" + channel.nick + ">:").trim() +" "+ msg.trim()), "doc");   
             c.writer.flush();
             chatInputPane.setText(null);
-            evt.consume();                
+            evt.consume();
+            return;
+            }
+            else
+            {
+                channel.connection.writer.write(msg.substring(1)+"\r\n");
+                channel.connection.writer.flush();
+                chatInputPane.setText(null);
+                evt.consume();
+            }
                        
             } catch(IOException e){
                 System.out.println("IOException chatInputPane");
+            } catch (BadLocationException ex) {
+                Logger.getLogger(GUI1.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }

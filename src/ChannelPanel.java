@@ -1,4 +1,12 @@
 
+
+
+
+/*TODO:  continue with chatInputPaneKeyPressed (account for error messages, commands, etc)
+close connections on /close 
+*/
+
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -6,7 +14,6 @@ import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import javax.swing.JLabel;
-import javax.swing.JMenuBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
@@ -21,9 +28,11 @@ import javax.swing.text.DefaultStyledDocument;
        public class ChannelPanel extends JSplitPane implements ActionListener{
            
         final String name; 
+        String nick;
         String topic, time, topicAuthor;
         int population, ops;
         DefaultStyledDocument userList = new DefaultStyledDocument(), doc = new DefaultStyledDocument();
+        Connection connection;
         final JTextField chatInputPane = new JTextField();
         final JTextPane chatPane = new JTextPane(doc), userListPane = new JTextPane(userList);
         final JScrollPane jScrollPane1 = new JScrollPane(), jScrollPane2 = new JScrollPane();
@@ -32,10 +41,13 @@ import javax.swing.text.DefaultStyledDocument;
         SortedSet<String> userSet = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
         ArrayList<String> list = new ArrayList<String>();
     
-        public ChannelPanel(String name)
+        public ChannelPanel(String name, String nick, Connection c)
         {
             this.name = name;
+            this.nick = nick;
+            this.connection = c;
             makePanel();
+            tabbedPane.add(this, this.name);
         }
         public void setThings(javax.swing.JTabbedPane tp, javax.swing.JLabel ti){
             this.tabbedPane = tp;
