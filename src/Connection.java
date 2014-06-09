@@ -33,21 +33,20 @@ public class Connection implements Runnable{
     BufferedReader reader;
     BufferedWriter writer;
     FileWriter chatLog;
-    String server, host, nick = "rieux", knownAs;
+    String server, host, nick = "rieux", password;
     int port;
     DefaultStyledDocument doc, userList;
     JTabbedPane tabbedPane;
     JLabel tabInfo;
     
 
-    public Connection(String server, String knownAs, int port, DefaultStyledDocument doc, DefaultStyledDocument userList, JTabbedPane tabbedPane, JLabel tabInfo)
+    public Connection(String server, int port, DefaultStyledDocument doc, DefaultStyledDocument userList, JTabbedPane tabbedPane, JLabel tabInfo)
     {
        this.server = server;
        this.port = port;
        this.doc = doc;
        this.userList = userList;
-       this.knownAs = knownAs;
-       
+       this.password = password;
        
        this.tabbedPane = tabbedPane;
        this.tabInfo = tabInfo;
@@ -156,6 +155,10 @@ public class Connection implements Runnable{
            tabbedPane.add(channel, parser.getTrailing());
            channel.insertString(parser.getTrailing(), parser.getNick() + " joined in " + parser.getTrailing());
            return;
+        }
+        if (command.equals("KICK"))
+        {
+            //currently causes userlist to desync
         }
         if (command.equals("NICK"))
         {
@@ -431,6 +434,11 @@ public class Connection implements Runnable{
             channel.insertString("[MOTD] "+parser.getTrailing(), "doc");
             return;
         }
+        if (command.equals("421"))
+        {
+            //unknown command
+            return;
+        }
         if (command.equals("439"))
         {
             String host = parser.getPrefix();
@@ -446,20 +454,6 @@ public class Connection implements Runnable{
         {
             //you have not registered
             
-        }
-        if (command.equals("471"))
-        {
-            //unknown command
-            String channelName = parser.getTrailing();
-            int indexOfChannel = findTab(tabbedPane, "#" + channelName);
-            if (indexOfChannel == -1)
-            {
-                Component aComponent = tabbedPane.getComponentAt(0);
-                ((ChannelPanel)aComponent).insertString("___"+line, "doc");
-            }
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ((ChannelPanel)aComponent).insertString(parser.getTrailing(), "doc");
-            return;
         }
         else
         {

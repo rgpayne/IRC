@@ -13,7 +13,7 @@ public class GUI1 extends javax.swing.JFrame {
         userList = new DefaultStyledDocument();
         initComponents();
         tabbedPane.removeAll();
-        c = new Connection("irc.rizon.net", "Rizon", 6667, doc, userList, tabbedPane, tabInfo);
+        //c = new Connection("irc.rizon.net", 6667, doc, userList, tabbedPane, tabInfo);
        
     }
 
@@ -34,21 +34,87 @@ public class GUI1 extends javax.swing.JFrame {
         
         copyAction = new javax.swing.JMenuItem(new javax.swing.text.DefaultEditorKit.CopyAction());
         copyAction.setText("Copy");
+        editMenu.add(copyAction);
         cutAction = new javax.swing.JMenuItem((new javax.swing.text.DefaultEditorKit.CutAction()));
         cutAction.setText("Cut");
-        pasteAction = new javax.swing.JMenuItem(new javax.swing.text.DefaultEditorKit.PasteAction());
-        pasteAction.setText("Paste");
-        
-        
-        editMenu.add(copyAction);
         editMenu.add(cutAction);
+        pasteAction = new javax.swing.JMenuItem(new javax.swing.text.DefaultEditorKit.PasteAction());
+        pasteAction.setText("Paste");       
         editMenu.add(pasteAction);
         
+        quickConnect = new javax.swing.JMenuItem("Quick Connect");
+        fileMenu.add(quickConnect);
+        quickConnect.addActionListener(new java.awt.event.ActionListener(){
+            public void actionPerformed(java.awt.event.ActionEvent e)
+            {
+                final javax.swing.JPanel panel = new javax.swing.JPanel();
+                javax.swing.BoxLayout bl = new javax.swing.BoxLayout(panel, javax.swing.BoxLayout.Y_AXIS);
+                panel.setLayout(bl);
+                final javax.swing.JDialog window = new javax.swing.JDialog();
+                window.setTitle("Quick Connect");
+                window.setSize(new java.awt.Dimension(170,200));
+                window.setResizable(false);
+                window.setVisible(true);
+                window.setLocation(200,200);
+                
+                javax.swing.JLabel channelNameLabel = new javax.swing.JLabel("Server");
+                final javax.swing.JTextField channelName = new javax.swing.JTextField(20);
+                channelName.setMaximumSize(channelName.getPreferredSize());
+                javax.swing.JLabel portLabel = new javax.swing.JLabel("Port");
+                final javax.swing.JTextField port = new javax.swing.JTextField(20);
+                port.setMaximumSize(port.getPreferredSize());
+                javax.swing.JLabel nickLabel = new javax.swing.JLabel("Nick");
+                final javax.swing.JTextField nick = new javax.swing.JTextField(20);
+                nick.setMaximumSize(nick.getPreferredSize());
+                javax.swing.JLabel passwordLabel = new javax.swing.JLabel("Password");
+                final javax.swing.JTextField password = new javax.swing.JTextField(20);
+                password.setMaximumSize(password.getPreferredSize());
+                java.awt.Button connectButton = new java.awt.Button("Connect");
+                connectButton.setSize(new java.awt.Dimension(80,30));
+                connectButton.setMaximumSize(connectButton.getPreferredSize());
+                
+                window.add(panel);
+                panel.add(channelNameLabel);
+                panel.add(channelName);
+                panel.add(portLabel);
+                panel.add(port);
+                panel.add(nickLabel);
+                panel.add(nick);
+                panel.add(passwordLabel);
+                panel.add(password);
+                panel.add(connectButton);                
+                
+                window.setVisible(true);
+                
+                connectButton.addActionListener(new java.awt.event.ActionListener(){
+                    public void actionPerformed(java.awt.event.ActionEvent e)
+                    {
+                        String chan = channelName.getText().trim();
+                        String p = port.getText().trim();
+                        String n = nick.getText().trim();
+                        String pass = password.getText().trim();
+                        
+                        if (chan.isEmpty() || p.isEmpty() || n.isEmpty())
+                        {
+                            javax.swing.JOptionPane.showMessageDialog(panel, "Error");
+                        }
+                        else{
+                        window.dispose();
+                        c = new Connection(chan, Integer.valueOf(p), doc, userList, tabbedPane, tabInfo);
+                        c.nick = n;
+                        c.password = pass;
+                        }
+                    }
+                    
+                });
+            }
+        });
+
         
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        chatInputPane.addKeyListener(new java.awt.event.KeyAdapter() {
+        chatInputPane.addKeyListener(new java.awt.event.KeyAdapter(){
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 chatInputPaneKeyPressed(evt);
             }
@@ -94,6 +160,7 @@ public class GUI1 extends javax.swing.JFrame {
 
         editMenu.setText("Edit");
         jMenuBar2.add(editMenu);
+        
 
         setJMenuBar(jMenuBar2);
 
@@ -160,4 +227,5 @@ public class GUI1 extends javax.swing.JFrame {
     private javax.swing.JMenuItem copyAction;
     private javax.swing.JMenuItem cutAction;
     private javax.swing.JMenuItem pasteAction;
+    private javax.swing.JMenuItem quickConnect;
 }
