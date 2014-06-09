@@ -36,8 +36,9 @@ public class Connection implements Runnable{
     String server, host, nick = "rieux", password;
     int port;
     DefaultStyledDocument doc, userList;
-    JTabbedPane tabbedPane;
+    static JTabbedPane tabbedPane;
     JLabel tabInfo;
+    ChannelPanel first;
     
 
     public Connection(String server, int port, DefaultStyledDocument doc, DefaultStyledDocument userList, JTabbedPane tabbedPane, JLabel tabInfo)
@@ -51,7 +52,7 @@ public class Connection implements Runnable{
        this.tabbedPane = tabbedPane;
        this.tabInfo = tabInfo;
        
-       ChannelPanel first = new ChannelPanel(server);
+       first = new ChannelPanel(server);
        tabbedPane.add("Name", first);
        
        thread = new Thread(this);
@@ -75,7 +76,7 @@ public class Connection implements Runnable{
             return blank + nickname;
         }
     }
-    private int findTab(JTabbedPane tabbedPane, String title)
+    public static int findTab(JTabbedPane tabbedPane, String title)
     {
         int totalTabs = tabbedPane.getTabCount();
         for (int i = 0; i < totalTabs; i++){
@@ -84,6 +85,7 @@ public class Connection implements Runnable{
         }
         return -1;
     }
+
     public void parseFromServer(String line) throws IOException, BadLocationException
     {
         System.out.println(line);
@@ -486,7 +488,7 @@ public class Connection implements Runnable{
             }
     }
     
-       public class ChannelPanel extends JSplitPane implements ActionListener{
+      /* public class ChannelPanel extends JSplitPane implements ActionListener{
            
         final String name; 
         String topic, time, topicAuthor;
@@ -589,7 +591,7 @@ public class Connection implements Runnable{
             
         }
         
-    }
+    }*/
             
 }
 

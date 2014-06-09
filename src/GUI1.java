@@ -1,3 +1,4 @@
+import java.awt.Component;
 import java.io.IOException;
 import javax.swing.text.EditorKit;
 import javax.swing.text.DefaultStyledDocument;
@@ -13,8 +14,10 @@ public class GUI1 extends javax.swing.JFrame {
         userList = new DefaultStyledDocument();
         initComponents();
         tabbedPane.removeAll();
-        //c = new Connection("irc.rizon.net", 6667, doc, userList, tabbedPane, tabInfo);
-       
+        ChannelPanel.tabbedPane = tabbedPane;
+        ChannelPanel.tabInfo = tabInfo;
+        
+        c = new Connection("irc.rizon.net", 6667, doc, userList, tabbedPane, tabInfo);
     }
 
     @SuppressWarnings("unchecked")
@@ -48,29 +51,33 @@ public class GUI1 extends javax.swing.JFrame {
             public void actionPerformed(java.awt.event.ActionEvent e)
             {
                 final javax.swing.JPanel panel = new javax.swing.JPanel();
-                javax.swing.BoxLayout bl = new javax.swing.BoxLayout(panel, javax.swing.BoxLayout.Y_AXIS);
-                panel.setLayout(bl);
                 final javax.swing.JDialog window = new javax.swing.JDialog();
+                //javax.swing.BoxLayout bl = new javax.swing.BoxLayout(window, javax.swing.BoxLayout.Y_AXIS);
+                //window.setLayout(new javax.swing.BoxLayout(window, javax.swing.BoxLayout.Y_AXIS));
+                //window.setLayout(new javax.swing.BoxLayout(window, javax.swing.BoxLayout.Y_AXIS));
                 window.setTitle("Quick Connect");
-                window.setSize(new java.awt.Dimension(170,200));
+                window.setSize(new java.awt.Dimension(200,235));
                 window.setResizable(false);
                 window.setVisible(true);
-                window.setLocation(200,200);
+                window.setLocationRelativeTo(tabbedPane);
+                //window.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
+                //window.setModal(true);
+
                 
                 javax.swing.JLabel channelNameLabel = new javax.swing.JLabel("Server");
-                final javax.swing.JTextField channelName = new javax.swing.JTextField(20);
+                final javax.swing.JTextField channelName = new javax.swing.JTextField(15);
                 channelName.setMaximumSize(channelName.getPreferredSize());
                 javax.swing.JLabel portLabel = new javax.swing.JLabel("Port");
-                final javax.swing.JTextField port = new javax.swing.JTextField(20);
+                final javax.swing.JTextField port = new javax.swing.JTextField(15);
                 port.setMaximumSize(port.getPreferredSize());
                 javax.swing.JLabel nickLabel = new javax.swing.JLabel("Nick");
-                final javax.swing.JTextField nick = new javax.swing.JTextField(20);
+                final javax.swing.JTextField nick = new javax.swing.JTextField(15);
                 nick.setMaximumSize(nick.getPreferredSize());
                 javax.swing.JLabel passwordLabel = new javax.swing.JLabel("Password");
-                final javax.swing.JTextField password = new javax.swing.JTextField(20);
+                final javax.swing.JTextField password = new javax.swing.JTextField(15);
                 password.setMaximumSize(password.getPreferredSize());
                 java.awt.Button connectButton = new java.awt.Button("Connect");
-                connectButton.setSize(new java.awt.Dimension(80,30));
+                connectButton.setSize(new java.awt.Dimension(85,30));
                 connectButton.setMaximumSize(connectButton.getPreferredSize());
                 
                 window.add(panel);
@@ -84,7 +91,8 @@ public class GUI1 extends javax.swing.JFrame {
                 panel.add(password);
                 panel.add(connectButton);                
                 
-                window.setVisible(true);
+                panel.setVisible(true);
+                //panel.setModal(true);
                 
                 connectButton.addActionListener(new java.awt.event.ActionListener(){
                     public void actionPerformed(java.awt.event.ActionEvent e)
@@ -96,7 +104,7 @@ public class GUI1 extends javax.swing.JFrame {
                         
                         if (chan.isEmpty() || p.isEmpty() || n.isEmpty())
                         {
-                            javax.swing.JOptionPane.showMessageDialog(panel, "Error");
+                            javax.swing.JOptionPane.showMessageDialog(window, "Error");
                         }
                         else{
                         window.dispose();
@@ -191,10 +199,18 @@ public class GUI1 extends javax.swing.JFrame {
     private void chatInputPaneKeyPressed(java.awt.event.KeyEvent evt) {
         if (evt.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER){
             try{
+            
+            String msg = chatInputPane.getText();
+            Component aComponent = tabbedPane.getComponentAt(tabbedPane.getSelectedIndex());
+            ChannelPanel channel = (ChannelPanel)aComponent;
+            
+            
+            
             c.writer.write(chatInputPane.getText()+"\r\n");
             c.writer.flush();
             chatInputPane.setText(null);
-            evt.consume();
+            evt.consume();                
+                       
             } catch(IOException e){
                 System.out.println("IOException chatInputPane");
             }
@@ -220,8 +236,8 @@ public class GUI1 extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JSplitPane jSplitPane1;
-    private javax.swing.JLabel tabInfo;
-    private javax.swing.JTabbedPane tabbedPane;
+    private static javax.swing.JLabel tabInfo;
+    private static javax.swing.JTabbedPane tabbedPane;
     private javax.swing.JTextPane userListPane;
     
     private javax.swing.JMenuItem copyAction;
