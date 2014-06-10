@@ -117,7 +117,6 @@ public class Connection implements Runnable{
                    if (indexOfChannel == -1)
                    {
                        ChannelPanel c = new ChannelPanel(channelName, nick, this);
-                       //tabbedPane.add(c.name, c);
                        int newTabIndex = findTab(tabbedPane, c.name);
                        tabbedPane.setSelectedIndex(newTabIndex);                     
                        return;
@@ -162,7 +161,36 @@ public class Connection implements Runnable{
         }
         if (command.equals("KICK"))
         {
-            //currently causes userlist to desync
+            //System.out.println(parser.getCommand() +" | "+parser.getHost()+" | "+parser.getMiddle()+" | " + parser.getNick()+" | "+parser.getParams()+" | "+parser.getPrefix()+ " | "+ parser.getServer()+" | "+parser.getTrailing()+" | "+parser.getUser());
+            String middle = parser.getMiddle();
+            String channelName = middle.substring(0,middle.indexOf(" "));
+            String kicked = middle.substring(middle.indexOf(" ")).trim();
+            String kickedBy = parser.getNick();
+            String kickMessage = parser.getTrailing();
+            
+            int indexOfChannel = findTab(tabbedPane, channelName);
+            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+            ChannelPanel channel = (ChannelPanel)aComponent;
+                        
+            if (kicked.equals(nick)) //i am kicked
+            {
+               channel.insertString("*** You have been kicked from the channel by "+kickedBy+ " ("+kickMessage+")", "doc");
+               channel.removeFromUserList(nick);
+               channel.removeAllFromuserList();
+               return;
+            }
+            if (kickedBy.equals(nick)) //i kick somebody
+            {
+                channel.insertString("*** You have kicked "+kicked+" from the channel ("+kickMessage+")", "doc");
+                channel.removeFromUserList(kicked);
+                return;
+            }
+            else //somebody else kicked
+            {
+                channel.insertString("*** "+kicked+" was kicked from the channel ("+kickMessage, server);
+                channel.removeFromUserList(kicked);
+                return;
+            }
         }
         if (command.equals("NICK"))
         {
@@ -296,8 +324,6 @@ public class Connection implements Runnable{
             {
                 ChannelPanel channel = new ChannelPanel(channelName, nick, this);
                 channel.insertString("<"+channelName+">: "+parser.getTrailing(), "doc");
-                //Component aComponent = tabbedPane.getComponentAt(0); 
-                //((ChannelPanel)aComponent).insertString("___PRIVMSG BROKEN___"+line, "doc");
                 return;
             }
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
@@ -331,6 +357,10 @@ public class Connection implements Runnable{
             }
             else channel.insertString(parser.getNick()+" has changed the topic to: "+channel.topic, "doc");
             return;
+            
+        }
+        if (command.equals("WHOIS"))
+        {
             
         }
         if (command.equals("001") || command.equals("002") || command.equals("003") || command.equals("004") || command.equals("005"))
@@ -447,7 +477,7 @@ public class Connection implements Runnable{
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel); 
             ChannelPanel channel = ((ChannelPanel)aComponent);
             
-            channel.userList.remove(0, userList.getLength());
+            channel.removeAllFromuserList();
             channel.userSet.addAll(channel.list);
             channel.list = new ArrayList<String>();
             Iterator<String> iterator = channel.userSet.iterator();
@@ -490,10 +520,18 @@ public class Connection implements Runnable{
             channel.insertString(parser.getTrailing(), "doc");
             return;            
         }
+        if (command.equals("443"))
+        {
+            //username taken?
+        }
         if (command.equals("451"))
         {
             //you have not registered
             
+        }
+        if (command.equals("461"))
+        {
+           //not enough parameters
         }
         else
         {
@@ -510,9 +548,9 @@ public class Connection implements Runnable{
             writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             String line;
             while (socket.isConnected()){
-                writer.write("NICK "+ nick+"\r\n");
-                writer.write("USER "+nick+" 8 * : a bot\r\n");
-                //writer.write("join #lmitb\r\n");
+                send("NICK "+nick);
+                send("USER "+nick+" 8 * : some guy");
+                send("join #lmitb\r\n");
                 writer.flush();
                 while ((line = reader.readLine()) != null){
                     parseFromServer(line);
@@ -525,111 +563,5 @@ public class Connection implements Runnable{
                 Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
             }
     }
-    
-      /* public class ChannelPanel extends JSplitPane implements ActionListener{
-           
-        final String name; 
-        String topic, time, topicAuthor;
-        int population, ops;
-        DefaultStyledDocument userList = new DefaultStyledDocument(), doc = new DefaultStyledDocument();
-        final JTextField chatInputPane = new JTextField();
-        final JTextPane chatPane = new JTextPane(doc), userListPane = new JTextPane(userList);
-        final JScrollPane jScrollPane1 = new JScrollPane(), jScrollPane2 = new JScrollPane();
-        
-        SortedSet<String> userSet = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
-        ArrayList<String> list = new ArrayList<String>();
-    
-        public ChannelPanel(String name)
-        {
-            this.name = name;
-            makePanel();
-        }
-        private void makePanel()
-        {
-        tabbedPane.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
-        tabbedPane.setTabLayoutPolicy(javax.swing.JTabbedPane.SCROLL_TAB_LAYOUT);
-        tabbedPane.setTabPlacement(javax.swing.JTabbedPane.BOTTOM);
-        tabbedPane.setToolTipText("");
-        tabbedPane.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
-        tabbedPane.setFocusable(false);
-        tabbedPane.setPreferredSize(new java.awt.Dimension(600, 450));
-
-        setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
-        setDividerLocation(480);
-        setResizeWeight(1.0);
-        setVerifyInputWhenFocusTarget(false);
-
-        
-        chatPane.setEditable(false);
-        jScrollPane1.setViewportView(userListPane);
-        jScrollPane2.setViewportView(chatPane);
-        DefaultCaret caret = (DefaultCaret)chatPane.getCaret();
-        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
-
-        setLeftComponent(jScrollPane2);
-        setRightComponent(jScrollPane1);
-        
-        userListPane.setEditable(false);
-        userListPane.setAutoscrolls(false);
-        userListPane.setFocusable(false);
-        userListPane.setMaximumSize(new java.awt.Dimension(25, 25));
-        
-        ChangeListener changeListener = new ChangeListener(){
-            public void stateChanged(ChangeEvent changeEvent){
-                javax.swing.JTabbedPane tabbedPane = (javax.swing.JTabbedPane)changeEvent.getSource();
-                int index = tabbedPane.getSelectedIndex();
-                ChannelPanel c = (ChannelPanel)tabbedPane.getComponentAt(index);
-                tabInfo.setText(Integer.toString(c.population)+" nicks     ");
-            }          
-        };
-        tabbedPane.addChangeListener(changeListener);   
-        
-        }
-        private void insertString(String line, String target) throws BadLocationException
-        { 
-            if (target.equals("doc")){
-                doc.insertString(doc.getLength(), line+"\n", null);
-                return;
-            }
-            if (target.equals("userList")){
-                userList.insertString(userList.getLength(), line+"\n", null);
-                return;
-            }
-            else System.out.println("_____________________insertString broken_____________________");
-        }
-        private void addToUserList(String nick) throws BadLocationException
-        {
-            userList.remove(0, userList.getLength());
-            userSet.add(nick);
-            population = userSet.size();
-            Iterator<String> iterator = userSet.iterator();
-            while (iterator.hasNext()){
-                String nextElement = iterator.next();
-                insertString(nextElement, "userList");
-            }
-            if (this.isShowing()) tabInfo.setText(Integer.toString(this.population)+" nicks     ");
-            return;
-        }
-        private void removeFromUserList(String nick) throws BadLocationException
-        {
-            userList.remove(0, userList.getLength());
-            userSet.remove(nick);
-            population = userSet.size();
-            Iterator<String> iterator = userSet.iterator();
-            while (iterator.hasNext()){
-                String nextElement = iterator.next();
-                insertString(nextElement, "userList");
-            }
-            if (this.isShowing()) tabInfo.setText(Integer.toString(this.population)+" nicks     ");
-            return;
-         }       
-        public void actionPerformed(ActionEvent e)
-        {
-            //unimplemented
-            
-        }
-        
-    }*/
-            
 }
 

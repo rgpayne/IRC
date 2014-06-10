@@ -16,7 +16,6 @@ public class GUI1 extends javax.swing.JFrame {
         doc = new DefaultStyledDocument();
         userList = new DefaultStyledDocument();
         initComponents();
-        //tabbedPane.removeAll();
         ChannelPanel.tabbedPane = tabbedPane;
         ChannelPanel.tabInfo = tabInfo;
         
@@ -82,6 +81,29 @@ public class GUI1 extends javax.swing.JFrame {
                 java.awt.Button connectButton = new java.awt.Button("Connect");
                 connectButton.setSize(new java.awt.Dimension(85,30));
                 connectButton.setMaximumSize(connectButton.getPreferredSize());
+                connectButton.addKeyListener(new java.awt.event.KeyAdapter(){
+                public void keyPressed(java.awt.event.KeyEvent evt)
+                {
+                    if (evt.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER){
+                        String chan = channelName.getText().trim();
+                        String p = port.getText().trim();
+                        String n = nick.getText().trim();
+                        String pass = password.getText().trim();
+                        
+                        if (chan.isEmpty() || p.isEmpty() || n.isEmpty())
+                        {
+                            javax.swing.JOptionPane.showMessageDialog(window, "Server, port and nick are required");
+                        }
+                        else
+                        {
+                        window.dispose();
+                        c = new Connection(chan, Integer.valueOf(p), doc, userList, tabbedPane, tabInfo);
+                        c.nick = n;
+                        c.password = pass;
+                        }
+                    }
+                }
+                 });
                 
                 window.add(panel);
                 panel.add(channelNameLabel);
@@ -107,7 +129,7 @@ public class GUI1 extends javax.swing.JFrame {
                         
                         if (chan.isEmpty() || p.isEmpty() || n.isEmpty())
                         {
-                            javax.swing.JOptionPane.showMessageDialog(window, "Error");
+                            javax.swing.JOptionPane.showMessageDialog(window, "Server, port and nick are required");
                         }
                         else{
                         window.dispose();
@@ -125,7 +147,8 @@ public class GUI1 extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        chatInputPane.addKeyListener(new java.awt.event.KeyAdapter(){
+        chatInputPane.addKeyListener(new java.awt.event.KeyAdapter()
+        {
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 chatInputPaneKeyPressed(evt);
             }

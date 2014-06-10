@@ -131,7 +131,10 @@ import javax.swing.text.DefaultStyledDocument;
             }
             if (this.isShowing()) tabInfo.setText(Integer.toString(this.population)+" nicks     ");
             return;
-         }       
+         }     
+        public void removeAllFromuserList() throws BadLocationException{
+            userList.remove(0, userList.getLength());
+        }
         public void actionPerformed(ActionEvent e)
         {
             //unimplemented
