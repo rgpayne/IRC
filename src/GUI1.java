@@ -20,7 +20,7 @@ public class GUI1 extends javax.swing.JFrame {
         ChannelPanel.tabbedPane = tabbedPane;
         ChannelPanel.tabInfo = tabInfo;
         
-        //c = new Connection("irc.rizon.net", 6667, doc, userList, tabbedPane, tabInfo);
+        c = new Connection("irc.rizon.net", 6667, doc, userList, tabbedPane, tabInfo);
     }
 
     @SuppressWarnings("unchecked")

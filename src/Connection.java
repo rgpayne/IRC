@@ -267,9 +267,35 @@ public class Connection implements Runnable{
         {
             //TODO: Private messages from users
             String channelName = parser.getMiddle();
+           
+            if (channelName.equals(nick))
+            {
+                //System.out.println(parser.getNick()+ "| "+parser.getParams()+" "+parser.getPrefix()+" "+parser.getServer()+" "+parser.getUser());
+                channelName = parser.getNick();
+                int indexOfChannel = findTab(tabbedPane, channelName);
+                if (indexOfChannel == -1)
+                {
+                    if (parser.getTrailing().trim().equals("VERSION"))
+                    {
+                        this.send("NOTICE "+channelName+" "+"\001AlphaClient:v0.1:LM17\001");
+                        return;
+                        
+                    }
+                    ChannelPanel channel = new ChannelPanel(channelName, nick, this);
+                    channel.insertString("<"+channelName+">: "+parser.getTrailing(), "doc");
+                    return;
+                }
+                Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+                ((ChannelPanel)aComponent).insertString((formatNickname("<" + parser.getNick() + ">: ") + parser.getTrailing()).trim(), "doc");
+                return;
+            }
+            
+            
             int indexOfChannel = findTab(tabbedPane, channelName);
             if (indexOfChannel == -1)
             {
+                ChannelPanel channel = new ChannelPanel(channelName, nick, this);
+                channel.insertString("<"+channelName+">: "+parser.getTrailing(), "doc");
                 //Component aComponent = tabbedPane.getComponentAt(0); 
                 //((ChannelPanel)aComponent).insertString("___PRIVMSG BROKEN___"+line, "doc");
                 return;
@@ -441,6 +467,11 @@ public class Connection implements Runnable{
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             ChannelPanel channel = ((ChannelPanel)aComponent);
             channel.insertString("[MOTD] "+parser.getTrailing(), "doc");
+            return;
+        }
+        if (command.equals("403"))
+        {
+            //no such channel
             return;
         }
         if (command.equals("421"))
