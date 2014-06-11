@@ -214,9 +214,6 @@ public class GUI1 extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(tabInfo, javax.swing.GroupLayout.PREFERRED_SIZE, 18, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
-
-        tabbedPane.getAccessibleContext().setAccessibleName("Main");
-
         pack();
     }
 
@@ -230,18 +227,17 @@ public class GUI1 extends javax.swing.JFrame {
             String target = channel.name;            
             String output = "PRIVMSG "+target+" :"+msg;
             
-            if (msg.charAt(0) != '/'){            
-            channel.connection.writer.write(output+"\r\n");
-            channel.insertString((Connection.formatNickname("<" + channel.nick + ">:").trim() +" "+ msg.trim()), "doc");   
-            c.writer.flush();
-            chatInputPane.setText(null);
-            evt.consume();
-            return;
+            if (msg.charAt(0) != '/')
+            {          
+                channel.connection.send(output);
+                channel.insertString((Connection.formatNickname("<" + channel.nick + ">:").trim() +" "+ msg.trim()), "doc");   
+                chatInputPane.setText(null);
+                evt.consume();
+                return;
             }
             else
             {
-                channel.connection.writer.write(msg.substring(1)+"\r\n");
-                channel.connection.writer.flush();
+                channel.connection.send(msg.substring(1));
                 chatInputPane.setText(null);
                 evt.consume();
             }

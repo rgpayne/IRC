@@ -59,10 +59,16 @@ public class Connection implements Runnable{
        thread = new Thread(this);
        thread.start();
     }     
-    public void send(String line) throws IOException
+    public void send(String line) throws IOException, BadLocationException
     {
-        writer.write(line+"\r\n");
-        writer.flush();        
+        line = line.toUpperCase();
+        if (line.equals("QUIT")){
+            System.exit(0);
+            return;
+        }
+        this.writer.write(line+"\r\n");
+        this.writer.flush();   
+       
     }
     public static String formatNickname(String nickname)
     {
@@ -125,7 +131,7 @@ public class Connection implements Runnable{
                    {
                         System.out.println("do we ever even get here tho?");
                         Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-                        ((ChannelPanel)aComponent).insertString(parser.getNick() + " (" + parser.getUser() + "@" + parser.getHost() + "has joined the channel", "doc");   
+                        ((ChannelPanel)aComponent).insertString("*** "+parser.getNick() + " (" + parser.getUser() + "@" + parser.getHost() + "has joined the channel", "doc");   
                         return;
                    }
                }
@@ -142,7 +148,7 @@ public class Connection implements Runnable{
                        if (aComponent instanceof JSplitPane)
                        {
                            ((ChannelPanel)aComponent).addToUserList(parser.getNick());
-                           ((ChannelPanel)aComponent).insertString(parser.getNick() + " (" + parser.getUser() + "@" + parser.getHost() +  ") has joined the channel.", "doc");
+                           ((ChannelPanel)aComponent).insertString("*** "+parser.getNick() + " (" + parser.getUser() + "@" + parser.getHost() +  ") has joined the channel.", "doc");
                            return;
                        }
                    }
@@ -155,8 +161,7 @@ public class Connection implements Runnable{
            }
            ChannelPanel channel;
            channel = new ChannelPanel(parser.getTrailing(), nick, this);
-           //(parser.getTrailing(), channel);
-           channel.insertString(parser.getTrailing(), parser.getNick() + " joined in " + parser.getTrailing());
+           channel.insertString("___debug*** "+parser.getTrailing(), parser.getNick() + " joined in " + parser.getTrailing());
            return;
         }
         if (command.equals("KICK"))
@@ -205,7 +210,6 @@ public class Connection implements Runnable{
                     
                     if (channel.userSet.contains(oldNick))
                     {
-                        System.out.println("attempting to remove "+oldNick);
                         channel.removeFromUserList(oldNick);
                         channel.addToUserList(newNick);
                         channel.insertString("*** "+ oldNick+" is now known as "+newNick+".", "doc");
@@ -213,10 +217,16 @@ public class Connection implements Runnable{
                     }
                     if (channel.userSet.contains("@"+oldNick))
                     {
-                        System.out.println("attempting to remove "+"@"+oldNick);
                         channel.removeFromUserList("@"+oldNick);
                         channel.addToUserList("@"+newNick);
                         channel.insertString("*** "+ oldNick+" is now known as "+newNick+".", "doc");
+                        return;
+                    }
+                    if (channel.userSet.contains("~"+oldNick))
+                    {
+                        channel.removeFromUserList(oldNick);
+                        channel.addToUserList(newNick);
+                        channel.insertString("*** "+oldNick+" is now known as "+newNick+".", "doc");
                         return;
                     }
                     if (channel.userSet.contains("+"+oldNick))
@@ -281,7 +291,7 @@ public class Connection implements Runnable{
             else
             {
                 Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-                ((ChannelPanel)aComponent).insertString(parser.getNick()+" (" + parser.getUser() + "@" + parser.getHost() + ") has left the server (" + parser.getTrailing()+ ")" , "doc");
+                ((ChannelPanel)aComponent).insertString("*** "+parser.getNick()+" (" + parser.getUser() + "@" + parser.getHost() + ") has left the channel (" + parser.getTrailing()+ ")" , "doc");
                 ((ChannelPanel)aComponent).removeFromUserList(parser.getNick());
                 return;
             }
@@ -331,17 +341,17 @@ public class Connection implements Runnable{
             return;
         }
         if (command.equals("QUIT"))
-        {
-            if (!nick.equals(parser.getNick())){ //if i'm leaving
-                for (int i = 0; i < tabbedPane.getTabCount(); i++){
-                    Component aComponent = tabbedPane.getComponentAt(i);
-                    ChannelPanel channel = ((ChannelPanel)aComponent);
-                    channel.removeFromUserList(parser.getNick());
-                }
-                return;
+        {   String quitter = parser.getNick().trim();
+            String quitMessage = parser.getParams().substring(2);
+            System.out.println("quitter:"+quitter);
+            System.out.println(parser.getCommand() +" | "+parser.getHost()+" | "+parser.getMiddle()+" | " + parser.getNick()+" | "+parser.getParams()+" | "+parser.getPrefix()+ " | "+ parser.getServer()+" | "+parser.getTrailing()+" | "+parser.getUser());            
+            for (int i = 0; i < tabbedPane.getTabCount(); i++){
+                Component aComponent = tabbedPane.getComponentAt(i);
+                ChannelPanel channel = ((ChannelPanel)aComponent);
+                boolean success = channel.removeFromUserList(quitter);
+                if (success) channel.insertString("*** "+quitter+" has left the server ("+quitMessage+")", "doc");
             }
-            //else close all connections 
-            
+            return;            
         }
         if (command.equals("TOPIC"))
         {
@@ -511,13 +521,7 @@ public class Connection implements Runnable{
         }
         if (command.equals("439"))
         {
-            String host = parser.getPrefix();
-            //int indexOfChannel = findTab(tabbedPane, "Name");
-            //tabbedPane.setTitleAt(indexOfChannel, host);
-           // Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ChannelPanel channel = new ChannelPanel(host, nick, this);
-            
-            channel.insertString(parser.getTrailing(), "doc");
+            //target change too fast
             return;            
         }
         if (command.equals("443"))
@@ -527,11 +531,12 @@ public class Connection implements Runnable{
         if (command.equals("451"))
         {
             //you have not registered
-            
+            return;
         }
         if (command.equals("461"))
         {
-           //not enough parameters
+            //not enough parameters
+            return;
         }
         else
         {

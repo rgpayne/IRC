@@ -119,8 +119,9 @@ import javax.swing.text.DefaultStyledDocument;
             if (this.isShowing()) tabInfo.setText(Integer.toString(this.population)+" nicks     ");
             return;
         }
-        public void removeFromUserList(String nick) throws BadLocationException
+        public boolean removeFromUserList(String nick) throws BadLocationException
         {
+            int oldPop = userSet.size();
             userList.remove(0, userList.getLength());
             userSet.remove(nick);
             population = userSet.size();
@@ -130,7 +131,7 @@ import javax.swing.text.DefaultStyledDocument;
                 insertString(nextElement, "userList");
             }
             if (this.isShowing()) tabInfo.setText(Integer.toString(this.population)+" nicks     ");
-            return;
+            return !(oldPop == population);
          }     
         public void removeAllFromuserList() throws BadLocationException{
             userList.remove(0, userList.getLength());
