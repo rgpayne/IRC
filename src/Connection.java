@@ -61,8 +61,7 @@ public class Connection implements Runnable{
     }     
     public void send(String line) throws IOException, BadLocationException
     {
-        line = line.toUpperCase();
-        if (line.equals("QUIT")){
+        if (line.toUpperCase().equals("QUIT")){
             System.exit(0);
             return;
         }
@@ -208,10 +207,10 @@ public class Connection implements Runnable{
                     Component aComponent = tabbedPane.getComponentAt(i);
                     ChannelPanel channel = ((ChannelPanel)aComponent);
                     
-                    if (channel.userSet.contains(oldNick))
+                    if (channel.userSet.contains(" "+oldNick))
                     {
-                        channel.removeFromUserList(oldNick);
-                        channel.addToUserList(newNick);
+                        channel.removeFromUserList(" "+oldNick);
+                        channel.addToUserList(" "+newNick);
                         channel.insertString("*** "+ oldNick+" is now known as "+newNick+".", "doc");
                         return;
                     }
@@ -224,8 +223,8 @@ public class Connection implements Runnable{
                     }
                     if (channel.userSet.contains("~"+oldNick))
                     {
-                        channel.removeFromUserList(oldNick);
-                        channel.addToUserList(newNick);
+                        channel.removeFromUserList("~"+oldNick);
+                        channel.addToUserList("~"+newNick);
                         channel.insertString("*** "+oldNick+" is now known as "+newNick+".", "doc");
                         return;
                     }
@@ -411,6 +410,22 @@ public class Connection implements Runnable{
             channel.insertString("[Users] "+parser.getTrailing(), "doc");
             return;
         }
+        if (command.equals("311"))
+        {
+            //:irc.rizon.io 311 rieux tors ~tor B38D9CCF.975E129B.6CD49EBA.IP * :torsoe
+        }
+        if (command.equals("312"))
+        {
+            //:irc.rizon.io 312 rieux tors *.rizon.net :Where are you?
+        }
+        if (command.equals("318"))
+        {
+            //:irc.rizon.io 318 rieux tors :End of /WHOIS list.
+        }
+        if (command.equals("319"))
+        {
+            //:irc.rizon.io 319 rieux tors :#asdaaaa #asdasdasd @#jaodijoidj #LMITB #news #RizonIRPG
+        }
         if (command.equals("331"))
         {
             // 331: No topic
@@ -468,10 +483,16 @@ public class Connection implements Runnable{
             int index2 = channelName.indexOf(":");
             if (index2 != -1) channelName = channelName.substring(index, index2 - 1);
             else channelName = channelName.substring(index);
-            
             int indexOfChannel = findTab(tabbedPane, channelName);
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             String[] nn = parser.getTrailing().split(" ");
+            for (int i = 0; i < nn.length; i++)
+            {
+                String name = nn[i];
+                char first = name.charAt(0);
+                if (first == '@' || first == '+' || first == '%' || first == '~' || first == '&') continue;
+                else nn[i] = " "+name;
+            }
             ((ChannelPanel)aComponent).list.addAll(Arrays.asList(nn));
             return;
         }
@@ -489,9 +510,10 @@ public class Connection implements Runnable{
             
             channel.removeAllFromuserList();
             channel.userSet.addAll(channel.list);
-            channel.list = new ArrayList<String>();
+            channel.list.clear();
             Iterator<String> iterator = channel.userSet.iterator();
-            while (iterator.hasNext()){
+            while (iterator.hasNext())
+            {
                 String nextElement = iterator.next();
                 channel.insertString(nextElement, "userList");
             }
@@ -556,7 +578,6 @@ public class Connection implements Runnable{
                 send("NICK "+nick);
                 send("USER "+nick+" 8 * : some guy");
                 send("join #lmitb\r\n");
-                writer.flush();
                 while ((line = reader.readLine()) != null){
                     parseFromServer(line);
                 }

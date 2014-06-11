@@ -25,7 +25,7 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultCaret;
 import javax.swing.text.DefaultStyledDocument;
 
-       public class ChannelPanel extends JSplitPane implements ActionListener{
+    public class ChannelPanel extends JSplitPane implements ActionListener{
            
         final String name; 
         String nick;
@@ -38,7 +38,7 @@ import javax.swing.text.DefaultStyledDocument;
         final JScrollPane jScrollPane1 = new JScrollPane(), jScrollPane2 = new JScrollPane();
         static JTabbedPane tabbedPane;
         static JLabel tabInfo;
-        SortedSet<String> userSet = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+        SortedSet<String> userSet = new TreeSet<String>(new NickComparator());
         ArrayList<String> list = new ArrayList<String>();
     
         public ChannelPanel(String name, String nick, Connection c)
@@ -106,10 +106,11 @@ import javax.swing.text.DefaultStyledDocument;
             }
             else System.out.println("_____________________insertString broken_____________________");
         }
-        public void addToUserList(String nick) throws BadLocationException
+        public void addToUserList(String nick) throws BadLocationException //doesn't 
         {
+            nick = nick.trim();
             userList.remove(0, userList.getLength());
-            userSet.add(nick);
+            userSet.add(" "+nick);
             population = userSet.size();
             Iterator<String> iterator = userSet.iterator();
             while (iterator.hasNext()){
@@ -121,12 +122,21 @@ import javax.swing.text.DefaultStyledDocument;
         }
         public boolean removeFromUserList(String nick) throws BadLocationException
         {
-            int oldPop = userSet.size();
+            String[] prefix = new String[] {" ","+","@","~","&"};
+            int oldPop = this.userSet.size();
             userList.remove(0, userList.getLength());
-            userSet.remove(nick);
-            population = userSet.size();
-            Iterator<String> iterator = userSet.iterator();
-            while (iterator.hasNext()){
+            boolean success = false;
+            
+            for (int i = 0; i < prefix.length; i++)
+            {
+                success = this.userSet.remove(prefix[i]+nick);
+                if (success == true) break;
+            }
+            
+            population = this.userSet.size();
+            Iterator<String> iterator = this.userSet.iterator();
+            while (iterator.hasNext())
+            {
                 String nextElement = iterator.next();
                 insertString(nextElement, "userList");
             }
@@ -141,5 +151,13 @@ import javax.swing.text.DefaultStyledDocument;
             //unimplemented
             
         }
-        
+    public class NickComparator implements java.util.Comparator{
+        public int compare(Object o1, Object o2)
+        {
+            String s1 = o1.toString().substring(1).toLowerCase();
+            String s2 = o2.toString().substring(1).toLowerCase();
+            return s1.compareTo(s2);
+        }
+    }
+    
     }
