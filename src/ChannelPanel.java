@@ -28,7 +28,6 @@ import javax.swing.text.DefaultStyledDocument;
     public class ChannelPanel extends JSplitPane implements ActionListener{
            
         final String name; 
-        String nick;
         String topic, signOnTime, topicAuthor;
         int population, ops;
         DefaultStyledDocument userList = new DefaultStyledDocument(), doc = new DefaultStyledDocument();
@@ -44,7 +43,6 @@ import javax.swing.text.DefaultStyledDocument;
         public ChannelPanel(String name, String nick, Connection c)
         {
             this.name = name;
-            this.nick = nick;
             this.connection = c;
             makePanel();
             tabbedPane.add(this, this.name);

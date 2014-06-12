@@ -200,6 +200,8 @@ public class Connection implements Runnable{
         {
             String oldNick = parser.getNick();
             String newNick = parser.getTrailing();
+            System.out.println(parser.getCommand() +" | "+parser.getHost()+" | "+parser.getMiddle()+" | " + parser.getNick()+" | "+parser.getParams()+" | "+parser.getPrefix()+ " | "+ parser.getServer()+" | "+parser.getTrailing()+" | "+parser.getUser());
+            System.out.println(nick+" "+oldNick+" "+newNick);
             if (!nick.equals(oldNick)) //if someone else changes name
             {
                 for (int i = 0; i < tabbedPane.getTabCount(); i++)
@@ -209,48 +211,60 @@ public class Connection implements Runnable{
                     
                     if (channel.userSet.contains(" "+oldNick))
                     {
-                        channel.removeFromUserList(" "+oldNick);
+                        channel.removeFromUserList(oldNick);
                         channel.addToUserList(" "+newNick);
                         channel.insertString("*** "+ oldNick+" is now known as "+newNick+".", "doc");
                         return;
                     }
                     if (channel.userSet.contains("@"+oldNick))
                     {
-                        channel.removeFromUserList("@"+oldNick);
+                        channel.removeFromUserList(oldNick);
                         channel.addToUserList("@"+newNick);
                         channel.insertString("*** "+ oldNick+" is now known as "+newNick+".", "doc");
                         return;
                     }
                     if (channel.userSet.contains("~"+oldNick))
                     {
-                        channel.removeFromUserList("~"+oldNick);
+                        channel.removeFromUserList(oldNick);
                         channel.addToUserList("~"+newNick);
                         channel.insertString("*** "+oldNick+" is now known as "+newNick+".", "doc");
                         return;
                     }
                     if (channel.userSet.contains("+"+oldNick))
                     {
-                        channel.removeFromUserList("+"+oldNick);
+                        channel.removeFromUserList(oldNick);
                         channel.addToUserList("+"+newNick);
                         channel.insertString("*** "+ oldNick+" is now known as "+newNick+".", "doc");        
                         return;
                     }
                     if (channel.userSet.contains("%"+oldNick))
                     {
-                        channel.removeFromUserList("%"+oldNick);
+                        channel.removeFromUserList(oldNick);
                         channel.addToUserList("%"+newNick);
                         channel.insertString("*** "+ oldNick+" is now known as "+newNick+".", "doc");  
                         return;
                     }
                     if (channel.userSet.contains("&"+oldNick))
                     {
-                        channel.removeFromUserList("&"+oldNick);
+                        channel.removeFromUserList(oldNick);
                         channel.addToUserList("&"+newNick);
                         channel.insertString("*** "+ oldNick+" is now known as "+newNick+".", "doc");   
                         return;
                     }
                 }
                 return;
+            }
+            else //you change your name
+            {
+                for (int i = 0; i < tabbedPane.getTabCount(); i++)
+                {
+                    Component aComponent = tabbedPane.getComponentAt(i);
+                    ChannelPanel channel = ((ChannelPanel)aComponent);
+                    channel.removeFromUserList(oldNick);
+                    channel.addToUserList(newNick);
+                    channel.insertString("*** You are now known as "+newNick, "doc");
+                    this.nick = newNick;
+                }
             }
         }
         if (command.equals("MODE"))
@@ -408,12 +422,31 @@ public class Connection implements Runnable{
             channel.insertString("[Users] "+parser.getTrailing(), "doc");
             return;
         }
+        if (command.equals("301"))
+        {
+            String[] s = parser.getMiddle().split(" ");
+            String target = s[1];
+            String info = parser.getTrailing();
+            int indexOfChannel = tabbedPane.getSelectedIndex();
+            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+            ChannelPanel channel = ((ChannelPanel)aComponent);
+            channel.insertString("[Whois] "+target+" "+info, "doc");             
+        }
+        if (command.equals("307"))
+        {
+            String[] s = parser.getMiddle().split(" ");
+            String target = s[1];
+            String info = parser.getTrailing();
+            int indexOfChannel = tabbedPane.getSelectedIndex();
+            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+            ChannelPanel channel = ((ChannelPanel)aComponent);
+            channel.insertString("[Whois] "+target+" "+info,"doc"); 
+        }
         if (command.equals("310"))
         {
             String[] s = parser.getMiddle().split(" ");
             String target = s[1];
             String modes = parser.getTrailing();
-            System.out.println(parser.getCommand() +" | "+parser.getHost()+" | "+parser.getMiddle()+" | " + parser.getNick()+" | "+parser.getParams()+" | "+parser.getPrefix()+ " | "+ parser.getServer()+" | "+parser.getTrailing()+" | "+parser.getUser());
             int indexOfChannel = tabbedPane.getSelectedIndex();
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             ChannelPanel channel = ((ChannelPanel)aComponent);
@@ -452,6 +485,13 @@ public class Connection implements Runnable{
         if (command.equals("313"))
         {
             //whois operator
+            String[] s = parser.getMiddle().split(" ");
+            String target = s[1];
+            int indexOfChannel = tabbedPane.getSelectedIndex();
+            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+            ChannelPanel channel = ((ChannelPanel)aComponent);
+            channel.insertString("[Whois] "+target+" is an IRC Operator", "doc");        
+            return;
         }
         if (command.equals("317"))
         {
@@ -624,6 +664,10 @@ public class Connection implements Runnable{
             //unknown command
             return;
         }
+        if (command.equals("437"))
+        {
+            //:irc.sxci.net 437 rieux #news :Cannot change nickname while banned or moderated on channel
+        }
         if (command.equals("439"))
         {
             //target change too fast
@@ -642,6 +686,15 @@ public class Connection implements Runnable{
         {
             //not enough parameters
             return;
+        }
+        if (command.equals("671")){
+            String[] s = parser.getMiddle().split(" ");
+            String target = s[1];
+            String info = parser.getTrailing();
+            int indexOfChannel = tabbedPane.getSelectedIndex();
+            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+            ChannelPanel channel = ((ChannelPanel)aComponent);
+            channel.insertString("[Whois] "+target+" "+info,"doc");                   
         }
         else
         {
