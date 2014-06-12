@@ -342,8 +342,6 @@ public class Connection implements Runnable{
         if (command.equals("QUIT"))
         {   String quitter = parser.getNick().trim();
             String quitMessage = parser.getParams().substring(2);
-            System.out.println("quitter:"+quitter);
-            System.out.println(parser.getCommand() +" | "+parser.getHost()+" | "+parser.getMiddle()+" | " + parser.getNick()+" | "+parser.getParams()+" | "+parser.getPrefix()+ " | "+ parser.getServer()+" | "+parser.getTrailing()+" | "+parser.getUser());            
             for (int i = 0; i < tabbedPane.getTabCount(); i++){
                 Component aComponent = tabbedPane.getComponentAt(i);
                 ChannelPanel channel = ((ChannelPanel)aComponent);
@@ -410,21 +408,94 @@ public class Connection implements Runnable{
             channel.insertString("[Users] "+parser.getTrailing(), "doc");
             return;
         }
+        if (command.equals("310"))
+        {
+            String[] s = parser.getMiddle().split(" ");
+            String target = s[1];
+            String modes = parser.getTrailing();
+            System.out.println(parser.getCommand() +" | "+parser.getHost()+" | "+parser.getMiddle()+" | " + parser.getNick()+" | "+parser.getParams()+" | "+parser.getPrefix()+ " | "+ parser.getServer()+" | "+parser.getTrailing()+" | "+parser.getUser());
+            int indexOfChannel = tabbedPane.getSelectedIndex();
+            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+            ChannelPanel channel = ((ChannelPanel)aComponent);
+            channel.insertString("[Whois] "+target+" "+modes, "doc");
+            return;
+        }
         if (command.equals("311"))
         {
-            //:irc.rizon.io 311 rieux tors ~tor B38D9CCF.975E129B.6CD49EBA.IP * :torsoe
+            //Whois user
+            String[] s = parser.getMiddle().split(" ");
+            String target = s[1];
+            String fulladd = s[2]+"@"+s[3]+" ("+parser.getTrailing().trim()+")";
+            
+            int indexOfChannel = tabbedPane.getSelectedIndex();
+            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+            ChannelPanel channel = ((ChannelPanel)aComponent);
+            channel.insertString("[Whois] "+target+" is "+fulladd, "doc");
+            return;
+        
         }
         if (command.equals("312"))
         {
-            //:irc.rizon.io 312 rieux tors *.rizon.net :Where are you?
+            //whois server
+            String[] s = parser.getMiddle().split(" ");
+            String target = s[1];
+            String info = parser.getTrailing();
+            String srv = parser.getPrefix();
+            
+            int indexOfChannel = tabbedPane.getSelectedIndex();
+            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+            ChannelPanel channel = ((ChannelPanel)aComponent);
+            channel.insertString("[Whois] "+target+" is online via "+srv+" ("+info+")", "doc");        
+            return;
+            
+        }
+        if (command.equals("313"))
+        {
+            //whois operator
+        }
+        if (command.equals("317"))
+        {
+            System.out.println(parser.getCommand() +" | "+parser.getHost()+" | "+parser.getMiddle()+" | " + parser.getNick()+" | "+parser.getParams()+" | "+parser.getPrefix()+ " | "+ parser.getServer()+" | "+parser.getTrailing()+" | "+parser.getUser());                       
+            //whois idletime
+            String[] s = parser.getMiddle().split(" ");
+            String target = s[1];
+            String idleTime = s[2];
+            String time = s[3];
+
+            int indexOfChannel = tabbedPane.getSelectedIndex();
+            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+            ChannelPanel channel = ((ChannelPanel)aComponent);
+            
+            Date date = new Date(Integer.valueOf(time) * 1000L);
+            SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy hh:mm aa z");
+            sdf.setTimeZone(TimeZone.getTimeZone("CST"));
+            channel.signOnTime = sdf.format(date);
+            
+            channel.insertString("[Whois] "+target+" has been idle for "+idleTime+" seconds", "doc");
+            channel.insertString("[Whois] "+target+" has been online since "+channel.signOnTime, "doc");
+            
         }
         if (command.equals("318"))
         {
-            //:irc.rizon.io 318 rieux tors :End of /WHOIS list.
+            //End of /WHOIS list.
+            int indexOfChannel = tabbedPane.getSelectedIndex();
+            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+            ChannelPanel channel = ((ChannelPanel)aComponent);
+            channel.insertString("[Whois] "+parser.getTrailing(), "doc");
+            return;
         }
         if (command.equals("319"))
         {
-            //:irc.rizon.io 319 rieux tors :#asdaaaa #asdasdasd @#jaodijoidj #LMITB #news #RizonIRPG
+            //whois channels
+            String[] s = parser.getParams().split(" ");  
+            String target = s[2];
+            String chans = parser.getTrailing();
+            int indexOfChannel = tabbedPane.getSelectedIndex();
+            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+            ChannelPanel channel = ((ChannelPanel)aComponent);
+            channel.insertString("[Whois] "+target+" is a user on channels: "+chans, "doc"); 
+            return;
+            
         }
         if (command.equals("331"))
         {
@@ -465,15 +536,27 @@ public class Connection implements Runnable{
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             ChannelPanel channel = ((ChannelPanel)aComponent);
             channel.topicAuthor = tokens[tokens.length-3];
-            //channel.time = tokens[tokens.length-2];
+            //channel.signOnTime = tokens[tokens.length-2];
             
             //System.out.println(channel.topicAuthor+"___"+channel.time);
             
             //Date date = new Date(Integer.valueOf(channel.time) * 1000L);
             //SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy hh:mm aa z");
             //sdf.setTimeZone(TimeZone.getTimeZone("CST"));
-            //channel.time = sdf.format(date);
+            //channel.signOnTime = sdf.format(date);
             return;
+        }
+        if (command.equals("338"))
+        {
+            //whois actually
+            String[] s = parser.getMiddle().split(" ");
+            String target = s[1];
+            String info = parser.getTrailing();
+            int indexOfChannel = tabbedPane.getSelectedIndex();
+            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+            ChannelPanel channel = ((ChannelPanel)aComponent);
+            channel.insertString("[Whois] "+target+" "+info, "doc");            
+                    
         }
         if (command.equals("353"))
         {
@@ -576,7 +659,7 @@ public class Connection implements Runnable{
             String line;
             while (socket.isConnected()){
                 send("NICK "+nick);
-                send("USER "+nick+" 8 * : some guy");
+                send("USER "+nick+"123"+" 8 * : some guy");
                 send("join #lmitb\r\n");
                 while ((line = reader.readLine()) != null){
                     parseFromServer(line);

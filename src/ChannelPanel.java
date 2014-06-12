@@ -29,7 +29,7 @@ import javax.swing.text.DefaultStyledDocument;
            
         final String name; 
         String nick;
-        String topic, time, topicAuthor;
+        String topic, signOnTime, topicAuthor;
         int population, ops;
         DefaultStyledDocument userList = new DefaultStyledDocument(), doc = new DefaultStyledDocument();
         Connection connection;
@@ -159,5 +159,4 @@ import javax.swing.text.DefaultStyledDocument;
             return s1.compareTo(s2);
         }
     }
-    
-    }
+        }
