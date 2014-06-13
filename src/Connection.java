@@ -343,12 +343,12 @@ public class Connection implements Runnable{
         }
         if (command.equals("PRIVMSG") || command.equals("MSG"))
         {
+            System.out.println(parser.toString());
             //TODO: Private messages from users
             String channelName = parser.getMiddle();
            
             if (channelName.equals(nick))
             {
-                //System.out.println(parser.getNick()+ "| "+parser.getParams()+" "+parser.getPrefix()+" "+parser.getServer()+" "+parser.getUser());
                 channelName = parser.getNick();
                 int indexOfChannel = findTab(tabbedPane, channelName);
                 if (indexOfChannel == -1)
@@ -430,9 +430,35 @@ public class Connection implements Runnable{
             //unique id
             return;
         }
-	if(command.equals("251") || command.equals("252") || command.equals("253") || command.equals("254") || command.equals("255") || 
-                command.equals("256") || command.equals("257") || command.equals("258") || command.equals("259"))
+        if (command.equals("251") || command.equals("255"))
         {
+            String p = parser.getParams();
+            String message = p.substring(p.indexOf(":")+1);
+            
+            String host = parser.getPrefix();
+            int indexOfChannel = findTab(tabbedPane, host);
+            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+            ChannelPanel channel = ((ChannelPanel)aComponent);
+            channel.insertString("[Users] "+message+".", "doc");
+            return;
+        }
+        if (command.equals("252") || command.equals("253") || command.equals("254"))
+        {
+            String[] s = parser.getParams().trim().split(" ");
+            String digit = s[1];
+            String msg = parser.getParams().substring(parser.getParams().indexOf(":")+1);
+            
+            String host = parser.getPrefix();
+            int indexOfChannel = findTab(tabbedPane, host);
+            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+            ChannelPanel channel = ((ChannelPanel)aComponent);
+            channel.insertString("[Users] "+digit+" "+msg+".", "doc");
+            return;
+        }
+        //split up and redo some of these
+	if (command.equals("256") || command.equals("257") || command.equals("258") || command.equals("259")) //placeholders
+        {
+            System.out.println(parser.toString());
             String host = parser.getPrefix();
             int indexOfChannel = findTab(tabbedPane, host);
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
@@ -526,7 +552,6 @@ public class Connection implements Runnable{
         }
         if (command.equals("317"))
         {
-            System.out.println(parser.getCommand() +" | "+parser.getHost()+" | "+parser.getMiddle()+" | " + parser.getNick()+" | "+parser.getParams()+" | "+parser.getPrefix()+ " | "+ parser.getServer()+" | "+parser.getTrailing()+" | "+parser.getUser());                       
             //whois idletime
             String[] s = parser.getMiddle().split(" ");
             String target = s[1];

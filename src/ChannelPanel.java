@@ -105,11 +105,11 @@ import javax.swing.text.DefaultStyledDocument;
         {
             nick = nick.trim();
             userList.remove(0, userList.getLength());
-            if (nick.startsWith("+") || nick.startsWith("@") || nick.startsWith("&") || nick.startsWith("%") || nick.startsWith("~"))
-                {
-                    userSet.add(nick);
-                }
+            char first = nick.charAt(0);
+            
+            if (first == '+' || first == '@' || first == '&' || first == '%' || first == '~') userSet.add(nick);
             else userSet.add(" "+nick);
+            
             population = userSet.size();
             Iterator<String> iterator = userSet.iterator();
             while (iterator.hasNext()){

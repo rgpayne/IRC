@@ -147,4 +147,14 @@ public class Parser{
 		}
 		return middle;
 	}
+        
+        /**
+         * toString
+         * @return; returns String representation
+         */
+        public String toString()
+        {
+          return ("command:"+command+"| host:"+host+"| middle:"+middle+"| nick:" + nick+"| params:"+params+"| prefix:"+prefix+ "| server:"+servername+"| trailing:"+trailing+"| user:"+user);                       
+
+        }
 }
