@@ -144,24 +144,15 @@ public class Connection implements Runnable{
                    if (indexOfChannel != -1)
                    {
                        Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-                       if (aComponent instanceof JSplitPane)
-                       {
-                           ((ChannelPanel)aComponent).addToUserList(parser.getNick());
-                           ((ChannelPanel)aComponent).insertString("*** "+parser.getNick() + " (" + parser.getUser() + "@" + parser.getHost() +  ") has joined the channel.", "doc");
-                           return;
-                       }
-                   }
-                   else
-                   {
-                       System.out.println("___error in JOIN___");
+                       ChannelPanel channel = ((ChannelPanel)aComponent);
+                       channel.addToUserList(parser.getNick());
+                       channel.insertString("*** "+parser.getNick() + " (" + parser.getUser() + "@" + parser.getHost() +  ") has joined the channel.", "doc");
+                      // channel.connection.send("WHO "+parser.getNick());
                        return;
+                       
                    }
                }
            }
-           ChannelPanel channel;
-           channel = new ChannelPanel(parser.getTrailing(), nick, this);
-           channel.insertString("___debug*** "+parser.getTrailing(), parser.getNick() + " joined in " + parser.getTrailing());
-           return;
         }
         if (command.equals("KICK"))
         {
@@ -196,12 +187,48 @@ public class Connection implements Runnable{
                 return;
             }
         }
+        if (command.equals("MODE"))
+        {
+            //System.out.println(parser.getCommand() +" | "+parser.getHost()+" | "+parser.getMiddle()+" | " + parser.getNick()+" | "+parser.getParams()+" | "+parser.getPrefix()+ " | "+ parser.getServer()+" | "+parser.getTrailing()+" | "+parser.getUser());
+            
+            if (parser.getServer().equals(nick)) //setting personal mode
+            {
+                Component aComponent = tabbedPane.getSelectedComponent();
+                ChannelPanel channel = ((ChannelPanel)aComponent);
+                channel.insertString("[Mode] You have set personal modes: "+parser.getTrailing(), "doc");
+            }
+            else //setting channel mode
+            { 
+            String[] s = parser.getParams().trim().split(" ");
+            String giver = parser.getNick();
+            String chan = s[0];
+            String power = s[1];
+            String receiver = s[2];
+            
+            int indexOfChannel = findTab(tabbedPane, chan);
+            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+            ChannelPanel channel = ((ChannelPanel)aComponent);
+            channel.insertString("*** "+giver+" "+power+" "+receiver, "doc");
+            channel.removeFromUserList(receiver);
+            
+            String newNick = receiver;
+            if (power.equals("+o")) newNick = "@"+receiver; //operator
+            if (power.equals("+v")) newNick = "+"+receiver; //voice
+            if (power.equals("+a")) newNick = "&"+receiver; //admin
+            if (power.equals("+h")) newNick = "%"+receiver; //half-op
+            if (power.equals("+q")) newNick = "~"+receiver; //owner
+            if (newNick.equals(receiver)) System.out.println("______PROBLEM IN MODE_______");
+            channel.addToUserList(newNick);
+            }
+            return;
+        }
         if (command.equals("NICK"))
         {
             String oldNick = parser.getNick();
             String newNick = parser.getTrailing();
             System.out.println(parser.getCommand() +" | "+parser.getHost()+" | "+parser.getMiddle()+" | " + parser.getNick()+" | "+parser.getParams()+" | "+parser.getPrefix()+ " | "+ parser.getServer()+" | "+parser.getTrailing()+" | "+parser.getUser());
             System.out.println(nick+" "+oldNick+" "+newNick);
+            
             if (!nick.equals(oldNick)) //if someone else changes name
             {
                 for (int i = 0; i < tabbedPane.getTabCount(); i++)
@@ -493,6 +520,10 @@ public class Connection implements Runnable{
             channel.insertString("[Whois] "+target+" is an IRC Operator", "doc");        
             return;
         }
+        if (command.equals("315"))
+        {
+            //END OF /WHO
+        }
         if (command.equals("317"))
         {
             System.out.println(parser.getCommand() +" | "+parser.getHost()+" | "+parser.getMiddle()+" | " + parser.getNick()+" | "+parser.getParams()+" | "+parser.getPrefix()+ " | "+ parser.getServer()+" | "+parser.getTrailing()+" | "+parser.getUser());                       
@@ -597,6 +628,10 @@ public class Connection implements Runnable{
             ChannelPanel channel = ((ChannelPanel)aComponent);
             channel.insertString("[Whois] "+target+" "+info, "doc");            
                     
+        }
+        if (command.equals("352"))
+        {
+            //WHO command
         }
         if (command.equals("353"))
         {

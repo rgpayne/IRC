@@ -47,10 +47,7 @@ import javax.swing.text.DefaultStyledDocument;
             makePanel();
             tabbedPane.add(this, this.name);
         }
-        public void setThings(javax.swing.JTabbedPane tp, javax.swing.JLabel ti){
-            this.tabbedPane = tp;
-            this.tabInfo = ti;
-        }
+
         private void makePanel()
         {
         tabbedPane.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
@@ -104,11 +101,15 @@ import javax.swing.text.DefaultStyledDocument;
             }
             else System.out.println("_____________________insertString broken_____________________");
         }
-        public void addToUserList(String nick) throws BadLocationException //doesn't 
+        public void addToUserList(String nick) throws BadLocationException
         {
             nick = nick.trim();
             userList.remove(0, userList.getLength());
-            userSet.add(" "+nick);
+            if (nick.startsWith("+") || nick.startsWith("@") || nick.startsWith("&") || nick.startsWith("%") || nick.startsWith("~"))
+                {
+                    userSet.add(nick);
+                }
+            else userSet.add(" "+nick);
             population = userSet.size();
             Iterator<String> iterator = userSet.iterator();
             while (iterator.hasNext()){
