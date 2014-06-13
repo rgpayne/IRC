@@ -32,29 +32,22 @@ public class Connection implements Runnable{
     Socket socket;
     BufferedReader reader;
     BufferedWriter writer;
-    FileWriter chatLog;
     String server, host, password;
     static String nick = "rieux";
     int port;
-    DefaultStyledDocument doc, userList;
     static JTabbedPane tabbedPane;
     JLabel tabInfo;
     ChannelPanel first;
     
 
-    public Connection(String server, int port, DefaultStyledDocument doc, DefaultStyledDocument userList, JTabbedPane tabbedPane, JLabel tabInfo)
+    public Connection(String server, int port, JTabbedPane tabbedPane, JLabel tabInfo)
     {
        this.server = server;
        this.port = port;
-       this.doc = doc;
-       this.userList = userList;
        this.password = password;
        
        this.tabbedPane = tabbedPane;
        this.tabInfo = tabInfo;
-       
-       //first = new ChannelPanel(server, nick);
-       //tabbedPane.add("Name", first);
        
        thread = new Thread(this);
        thread.start();
@@ -126,13 +119,7 @@ public class Connection implements Runnable{
                        tabbedPane.setSelectedIndex(newTabIndex);                     
                        return;
                    }
-                   else
-                   {
-                        System.out.println("do we ever even get here tho?");
-                        Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-                        ((ChannelPanel)aComponent).insertString("*** "+parser.getNick() + " (" + parser.getUser() + "@" + parser.getHost() + "has joined the channel", "doc");   
-                        return;
-                   }
+                   else System.out.println("_____JOIN BROKEN_____");
                }
            }
            else //if joined isn't me
@@ -147,7 +134,6 @@ public class Connection implements Runnable{
                        ChannelPanel channel = ((ChannelPanel)aComponent);
                        channel.addToUserList(parser.getNick());
                        channel.insertString("*** "+parser.getNick() + " (" + parser.getUser() + "@" + parser.getHost() +  ") has joined the channel.", "doc");
-                      // channel.connection.send("WHO "+parser.getNick());
                        return;
                        
                    }
@@ -156,7 +142,6 @@ public class Connection implements Runnable{
         }
         if (command.equals("KICK"))
         {
-            //System.out.println(parser.getCommand() +" | "+parser.getHost()+" | "+parser.getMiddle()+" | " + parser.getNick()+" | "+parser.getParams()+" | "+parser.getPrefix()+ " | "+ parser.getServer()+" | "+parser.getTrailing()+" | "+parser.getUser());
             String middle = parser.getMiddle();
             String channelName = middle.substring(0,middle.indexOf(" "));
             String kicked = middle.substring(middle.indexOf(" ")).trim();
@@ -188,46 +173,58 @@ public class Connection implements Runnable{
             }
         }
         if (command.equals("MODE"))
-        {
-            //System.out.println(parser.getCommand() +" | "+parser.getHost()+" | "+parser.getMiddle()+" | " + parser.getNick()+" | "+parser.getParams()+" | "+parser.getPrefix()+ " | "+ parser.getServer()+" | "+parser.getTrailing()+" | "+parser.getUser());
-            
+        {           
+            System.out.println(parser.toString());
             if (parser.getServer().equals(nick)) //setting personal mode
             {
                 Component aComponent = tabbedPane.getSelectedComponent();
                 ChannelPanel channel = ((ChannelPanel)aComponent);
                 channel.insertString("[Mode] You have set personal modes: "+parser.getTrailing(), "doc");
             }
-            else //setting channel mode
+            
+            //need to account for channel modes  
+            
+            
+            else //setting a user's mode
             { 
-            String[] s = parser.getParams().trim().split(" ");
-            String giver = parser.getNick();
-            String chan = s[0];
-            String power = s[1];
-            String receiver = s[2];
-            
-            int indexOfChannel = findTab(tabbedPane, chan);
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ChannelPanel channel = ((ChannelPanel)aComponent);
-            channel.insertString("*** "+giver+" "+power+" "+receiver, "doc");
-            channel.removeFromUserList(receiver);
-            
-            String newNick = receiver;
-            if (power.equals("+o")) newNick = "@"+receiver; //operator
-            if (power.equals("+v")) newNick = "+"+receiver; //voice
-            if (power.equals("+a")) newNick = "&"+receiver; //admin
-            if (power.equals("+h")) newNick = "%"+receiver; //half-op
-            if (power.equals("+q")) newNick = "~"+receiver; //owner
-            if (newNick.equals(receiver)) System.out.println("______PROBLEM IN MODE_______");
-            channel.addToUserList(newNick);
+                String[] s = parser.getParams().trim().split(" ");
+                String receiver = "";
+                String giver = parser.getNick();
+                String chan = s[0];
+                String power = s[1];
+                if (s.length >= 3) receiver = s[2];
+
+                int indexOfChannel = findTab(tabbedPane, chan);
+                Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+                ChannelPanel channel = ((ChannelPanel)aComponent);
+
+                if (!receiver.equals(""))
+                {
+                channel.insertString("*** "+giver+" "+power+" "+receiver, "doc");
+                channel.removeFromUserList(receiver);
+
+                String newNick = receiver;
+                if (power.equals("+o")) newNick = "@"+receiver; //operator
+                if (power.equals("+v")) newNick = "+"+receiver; //voice
+                if (power.equals("+a")) newNick = "&"+receiver; //admin
+                if (power.equals("+h")) newNick = "%"+receiver; //half-op
+                if (power.equals("+q")) newNick = "~"+receiver; //owner
+                if (newNick.equals(receiver)) newNick = " "+receiver;
+                channel.addToUserList(newNick);
+                return;
+                }
+                else
+                {
+                    channel.insertString("*** "+giver+" set the channel to: "+power, "doc");
+                }
             }
             return;
         }
         if (command.equals("NICK"))
         {
+            String prefix = parser.getNick().substring(0,1);
             String oldNick = parser.getNick();
             String newNick = parser.getTrailing();
-            System.out.println(parser.getCommand() +" | "+parser.getHost()+" | "+parser.getMiddle()+" | " + parser.getNick()+" | "+parser.getParams()+" | "+parser.getPrefix()+ " | "+ parser.getServer()+" | "+parser.getTrailing()+" | "+parser.getUser());
-            System.out.println(nick+" "+oldNick+" "+newNick);
             
             if (!nick.equals(oldNick)) //if someone else changes name
             {
@@ -281,23 +278,20 @@ public class Connection implements Runnable{
                 }
                 return;
             }
-            else //you change your name
+            else //if you change your name
             {
                 for (int i = 0; i < tabbedPane.getTabCount(); i++)
                 {
                     Component aComponent = tabbedPane.getComponentAt(i);
                     ChannelPanel channel = ((ChannelPanel)aComponent);
                     channel.removeFromUserList(oldNick);
-                    channel.addToUserList(newNick);
+                    this.nick = prefix+newNick.substring(1);
+                    channel.addToUserList(this.nick);
                     channel.insertString("*** You are now known as "+newNick, "doc");
-                    this.nick = newNick;
+                    //this.nick = newNick;
                 }
+                return;
             }
-        }
-        if (command.equals("MODE"))
-        {
-            //TODO
-            return;
         }
         if (command.equals("NOTICE"))
         {
@@ -344,7 +338,6 @@ public class Connection implements Runnable{
         if (command.equals("PRIVMSG") || command.equals("MSG"))
         {
             System.out.println(parser.toString());
-            //TODO: Private messages from users
             String channelName = parser.getMiddle();
            
             if (channelName.equals(nick))
@@ -355,7 +348,7 @@ public class Connection implements Runnable{
                 {
                     if (parser.getTrailing().trim().equals("VERSION"))
                     {
-                        this.send("NOTICE "+channelName+" "+"\001AlphaClient:v0.1:LM17\001");
+                        this.send("NOTICE "+channelName+" "+"\001AlphaClient:v0.1:LM17\001");  //placeholder
                         return;
                         
                     }
@@ -409,7 +402,7 @@ public class Connection implements Runnable{
         }
         if (command.equals("WHOIS"))
         {
-            
+         //does this even exist?   
         }
         if (command.equals("001") || command.equals("002") || command.equals("003") || command.equals("004") || command.equals("005"))
         {
@@ -425,9 +418,8 @@ public class Connection implements Runnable{
             channel.insertString("[Welcome] "+parser.getTrailing(), "doc");
             return;
         }
-        if (command.equals("042"))
+        if (command.equals("042")) //unique id
         {
-            //unique id
             return;
         }
         if (command.equals("251") || command.equals("255"))
@@ -455,7 +447,6 @@ public class Connection implements Runnable{
             channel.insertString("[Users] "+digit+" "+msg+".", "doc");
             return;
         }
-        //split up and redo some of these
 	if (command.equals("256") || command.equals("257") || command.equals("258") || command.equals("259")) //placeholders
         {
             System.out.println(parser.toString());
@@ -506,9 +497,8 @@ public class Connection implements Runnable{
             channel.insertString("[Whois] "+target+" "+modes, "doc");
             return;
         }
-        if (command.equals("311"))
+        if (command.equals("311")) //Whois user
         {
-            //Whois user
             String[] s = parser.getMiddle().split(" ");
             String target = s[1];
             String fulladd = s[2]+"@"+s[3]+" ("+parser.getTrailing().trim()+")";
@@ -520,9 +510,8 @@ public class Connection implements Runnable{
             return;
         
         }
-        if (command.equals("312"))
+        if (command.equals("312")) //whois server
         {
-            //whois server
             String[] s = parser.getMiddle().split(" ");
             String target = s[1];
             String info = parser.getTrailing();
@@ -535,9 +524,8 @@ public class Connection implements Runnable{
             return;
             
         }
-        if (command.equals("313"))
+        if (command.equals("313")) //whois operator
         {
-            //whois operator
             String[] s = parser.getMiddle().split(" ");
             String target = s[1];
             int indexOfChannel = tabbedPane.getSelectedIndex();
@@ -546,13 +534,11 @@ public class Connection implements Runnable{
             channel.insertString("[Whois] "+target+" is an IRC Operator", "doc");        
             return;
         }
-        if (command.equals("315"))
+        if (command.equals("315")) //end of /who
         {
-            //END OF /WHO
         }
-        if (command.equals("317"))
+        if (command.equals("317")) //whois idletime
         {
-            //whois idletime
             String[] s = parser.getMiddle().split(" ");
             String target = s[1];
             String idleTime = s[2];
@@ -571,18 +557,16 @@ public class Connection implements Runnable{
             channel.insertString("[Whois] "+target+" has been online since "+channel.signOnTime, "doc");
             
         }
-        if (command.equals("318"))
+        if (command.equals("318")) //end of whois
         {
-            //End of /WHOIS list.
             int indexOfChannel = tabbedPane.getSelectedIndex();
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             ChannelPanel channel = ((ChannelPanel)aComponent);
             channel.insertString("[Whois] "+parser.getTrailing(), "doc");
             return;
         }
-        if (command.equals("319"))
+        if (command.equals("319")) //whois channels
         {
-            //whois channels
             String[] s = parser.getParams().split(" ");  
             String target = s[2];
             String chans = parser.getTrailing();
@@ -593,14 +577,12 @@ public class Connection implements Runnable{
             return;
             
         }
-        if (command.equals("331"))
+        if (command.equals("331")) //no topic
         {
-            // 331: No topic
             return;
         }
-        if (command.equals("332"))
+        if (command.equals("332")) //topic
         {
-            //  332: Topic
             String channelName = parser.getParams();
             int index = channelName.indexOf("#");
             int index2 = channelName.indexOf(":");
@@ -614,9 +596,8 @@ public class Connection implements Runnable{
             channel.insertString("Current Topic: "+channel.topic, "doc");
             return;
         }
-        if (command.equals("333"))
+        if (command.equals("333")) //time of topic change and who set it
         {
-            // 333: Time of topic change and who changed it
             String[] tokens = new String[5];
             int i = 0;
             StringTokenizer st = new StringTokenizer(parser.getParams()," #!");
@@ -642,9 +623,8 @@ public class Connection implements Runnable{
             //channel.signOnTime = sdf.format(date);
             return;
         }
-        if (command.equals("338"))
+        if (command.equals("338")) //whois actually
         {
-            //whois actually
             String[] s = parser.getMiddle().split(" ");
             String target = s[1];
             String info = parser.getTrailing();
@@ -654,11 +634,11 @@ public class Connection implements Runnable{
             channel.insertString("[Whois] "+target+" "+info, "doc");            
                     
         }
-        if (command.equals("352"))
+        if (command.equals("352")) //who reply
         {
-            //WHO command
+            
         }
-        if (command.equals("353"))
+        if (command.equals("353")) //names cmomand
         {
             //names command
             String channelName = parser.getParams();
@@ -714,40 +694,34 @@ public class Connection implements Runnable{
             channel.insertString("[MOTD] "+parser.getTrailing(), "doc");
             return;
         }
-        if (command.equals("403"))
+        if (command.equals("403")) //no such channel exists
         {
-            //no such channel
             return;
         }
-        if (command.equals("421"))
+        if (command.equals("421")) //unknown command
         {
-            //unknown command
             return;
         }
-        if (command.equals("437"))
+        if (command.equals("437")) //cannot change nickname while banned o moderated on channel
         {
-            //:irc.sxci.net 437 rieux #news :Cannot change nickname while banned or moderated on channel
         }
-        if (command.equals("439"))
+        if (command.equals("439")) //target change too fast
         {
-            //target change too fast
             return;            
         }
-        if (command.equals("443"))
+        if (command.equals("443")) //user already in channel invited to
         {
-            //username taken?
-        }
-        if (command.equals("451"))
-        {
-            //you have not registered
             return;
         }
-        if (command.equals("461"))
+        if (command.equals("451")) //you have not registered
         {
-            //not enough parameters
             return;
         }
-        if (command.equals("671")){
+        if (command.equals("461")) //not enough parameters
+        {
+            return;
+        }
+        if (command.equals("671")){ //whois: using secure connection
             String[] s = parser.getMiddle().split(" ");
             String target = s[1];
             String info = parser.getTrailing();

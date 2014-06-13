@@ -16,10 +16,12 @@ public class Parser{
 	/**
 	 * Initialize tags
 	 */
-	private void initTags(){
+	private void initTags()
+        {
 		StringTokenizer st = new StringTokenizer(line, " \r\n");
 		int totalTokens = st.countTokens();
-		if(line.startsWith(":") && totalTokens >= 3){
+		if(line.startsWith(":") && totalTokens >= 3)
+                {
 			String temp = st.nextToken();
 			int index = temp.indexOf(":");
 			if(index != -1)
@@ -29,7 +31,8 @@ public class Parser{
 				temp = st.nextToken("\n");
 				params = temp;
 		}
-		else if(!line.startsWith(":") && totalTokens >= 2){
+		else if(!line.startsWith(":") && totalTokens >= 2)
+                {
 			String temp = st.nextToken();
 			command = temp;
 			params = st.nextToken("\n");
@@ -64,10 +67,13 @@ public class Parser{
 	 * Gets the server
 	 * @return: Returns the server
 	 */
-	public String getServer(){
-		if(!prefix.equals("")){
+	public String getServer()
+        {
+		if(!prefix.equals(""))
+                {
 			int index = prefix.indexOf("!");
-			if(index != -1){
+			if(index != -1)
+                        {
 				String temp = prefix.substring(0, index);
 				servername = temp;
 			}
@@ -79,8 +85,10 @@ public class Parser{
 	 * Gets the nickname
 	 * @return: Returns the nickname
 	 */
-	public String getNick(){
-		if(!prefix.equals("")){
+	public String getNick()
+        {
+		if(!prefix.equals(""))
+                {
 			int index = prefix.indexOf("!");
 			if(index != -1){
 				String temp = prefix.substring(0, index);
@@ -94,8 +102,10 @@ public class Parser{
 	 * Gets the user
 	 * @return: Returns the user
 	 */
-	public String getUser(){
-		if(!prefix.equals("")){
+	public String getUser()
+        {
+		if(!prefix.equals(""))
+                {
 			int exMark = prefix.indexOf("!");
 			int adMark = prefix.indexOf("@");
 			if(exMark != -1 && adMark != -1 && (adMark > exMark))
@@ -108,7 +118,8 @@ public class Parser{
 	 * Gets the host
 	 * @return: Returns the host
 	 */
-	public String getHost(){
+	public String getHost()
+        {
 		if(!prefix.equals(""))
 		{
 			int adMark = prefix.indexOf("@");
@@ -122,8 +133,10 @@ public class Parser{
 	 * Gets the trailing
 	 * @return: Returns the trailing
 	 */
-	public String getTrailing(){
-		if (!params.equals("")){
+	public String getTrailing()
+        {
+		if (!params.equals(""))
+                {
 			int index = params.indexOf(":");
 			if(index != -1 && index >= 0)
 				trailing = params.substring(index + 1);
@@ -135,10 +148,13 @@ public class Parser{
 	 * Gets the middle
 	 * @return: Returns the middle
 	 */
-	public String getMiddle(){
-		if(!params.equals("")){
+	public String getMiddle()
+        {
+		if(!params.equals(""))
+                {
 			int index = params.indexOf(":");
-			if(index != -1 && index >= 0){
+			if(index != -1 && index >= 0)
+                        {
 				if(params.startsWith(" ") && index - 1 >= 1)
 					middle = params.substring(1, index - 1);
 				else

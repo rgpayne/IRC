@@ -19,7 +19,7 @@ public class GUI1 extends javax.swing.JFrame {
         ChannelPanel.tabbedPane = tabbedPane;
         ChannelPanel.tabInfo = tabInfo;
         
-        c = new Connection("irc.rizon.net", 6667, doc, userList, tabbedPane, tabInfo);
+        c = new Connection("irc.rizon.net", 6667, tabbedPane, tabInfo);
     }
 
     @SuppressWarnings("unchecked")
@@ -97,7 +97,7 @@ public class GUI1 extends javax.swing.JFrame {
                         else
                         {
                         window.dispose();
-                        c = new Connection(chan, Integer.valueOf(p), doc, userList, tabbedPane, tabInfo);
+                        c = new Connection(chan, Integer.valueOf(p), tabbedPane, tabInfo);
                         c.nick = n;
                         c.password = pass;
                         }
@@ -133,7 +133,7 @@ public class GUI1 extends javax.swing.JFrame {
                         }
                         else{
                         window.dispose();
-                        c = new Connection(chan, Integer.valueOf(p), doc, userList, tabbedPane, tabInfo);
+                        c = new Connection(chan, Integer.valueOf(p), tabbedPane, tabInfo);
                         c.nick = n;
                         c.password = pass;
                         }

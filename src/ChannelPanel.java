@@ -25,7 +25,7 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultCaret;
 import javax.swing.text.DefaultStyledDocument;
 
-    public class ChannelPanel extends JSplitPane implements ActionListener{
+    public class ChannelPanel extends JSplitPane{
            
         final String name; 
         String topic, signOnTime, topicAuthor;
@@ -145,11 +145,7 @@ import javax.swing.text.DefaultStyledDocument;
         public void removeAllFromuserList() throws BadLocationException{
             userList.remove(0, userList.getLength());
         }
-        public void actionPerformed(ActionEvent e)
-        {
-            //unimplemented
-            
-        }
+
     public class NickComparator implements java.util.Comparator{
         public int compare(Object o1, Object o2)
         {
