@@ -1,31 +1,20 @@
 import java.awt.Component;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.FileWriter;
-import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.BadLocationException;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.SortedSet;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
-import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import javax.swing.text.DefaultCaret;
-
 
 public class Connection implements Runnable{
     Thread thread;
@@ -694,12 +683,33 @@ public class Connection implements Runnable{
             channel.insertString("[MOTD] "+parser.getTrailing(), "doc");
             return;
         }
-        if (command.equals("403")) //no such channel exists
+        if (command.equals("401")) //no such nick/channel
         {
+            String[] s = parser.getParams().trim().split(" ");
+            ChannelPanel channel = ((ChannelPanel)tabbedPane.getSelectedComponent());
+            channel.insertString("[Error] "+s[1]+": No such nick/channel.", "doc");
+            return;            
+        }
+        if (command.equals("402")) //no such server
+        {            
+        }
+        if (command.equals("403")) //no such channel 
+        {
+            //does this exist?
+            return;
+        }
+        if (command.equals("412")) //no text to send
+        {
+            String[] s = parser.getParams().trim().split(" ");
+            ChannelPanel channel = ((ChannelPanel)tabbedPane.getSelectedComponent());
+            channel.insertString("[Error] "+s[0]+" no text to send", "doc");
             return;
         }
         if (command.equals("421")) //unknown command
         {
+            String[] s = parser.getParams().trim().split(" ");
+            ChannelPanel channel = ((ChannelPanel)tabbedPane.getSelectedComponent());
+            channel.insertString("[Error] "+s[1]+": Unknown command.", "doc");
             return;
         }
         if (command.equals("437")) //cannot change nickname while banned o moderated on channel
@@ -721,7 +731,8 @@ public class Connection implements Runnable{
         {
             return;
         }
-        if (command.equals("671")){ //whois: using secure connection
+        if (command.equals("671")) //whois: using secure connection
+        {
             String[] s = parser.getMiddle().split(" ");
             String target = s[1];
             String info = parser.getTrailing();
@@ -739,25 +750,28 @@ public class Connection implements Runnable{
     
     public void run()
     {
-        try {
+        try 
+        {
             socket = new Socket(server, port);
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             String line;
-            while (socket.isConnected()){
+            while (socket.isConnected())
+            {
                 send("NICK "+nick);
                 send("USER "+nick+"123"+" 8 * : some guy");
                 send("join #lmitb\r\n");
-                while ((line = reader.readLine()) != null){
+                while ((line = reader.readLine()) != null)
+                {
                     parseFromServer(line);
                 }
             }
         
-     } catch (IOException ex) {
-                Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (BadLocationException ex) {
-                Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
-            }
+        } catch (IOException ex) {
+            Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (BadLocationException ex) {
+            Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }
 

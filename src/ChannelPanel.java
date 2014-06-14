@@ -1,14 +1,3 @@
-
-
-
-
-/*TODO:  continue with chatInputPaneKeyPressed (account for error messages, commands, etc)
-close connections on /close 
-*/
-
-
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.SortedSet;
