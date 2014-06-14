@@ -1,3 +1,5 @@
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.SortedSet;
@@ -11,34 +13,61 @@ import javax.swing.JTextPane;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.DefaultCaret;
-import javax.swing.text.DefaultStyledDocument;
+import javax.swing.text.Element;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.Style;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyleContext;
+import javax.swing.text.html.HTML;
+import javax.swing.text.html.HTMLEditorKit;
+
+
 
     public class ChannelPanel extends JSplitPane{
            
         final String name; 
         String topic, signOnTime, topicAuthor;
         int population, ops;
-        DefaultStyledDocument userList = new DefaultStyledDocument(), doc = new DefaultStyledDocument();
+        HTMLDocument doc, userList;
         Connection connection;
         final JTextField chatInputPane = new JTextField();
-        final JTextPane chatPane = new JTextPane(doc), userListPane = new JTextPane(userList);
+        final JTextPane chatPane = new JTextPane(), userListPane = new JTextPane();
         final JScrollPane jScrollPane1 = new JScrollPane(), jScrollPane2 = new JScrollPane();
         static JTabbedPane tabbedPane;
         static JLabel tabInfo;
         SortedSet<String> userSet = new TreeSet<String>(new NickComparator());
         ArrayList<String> list = new ArrayList<String>();
+        HTMLEditorKit htmlKit = new HTMLEditorKit();
+        
+        static String errorColor = "Red", chatColor="Black", serverColor="Purple";
+        
     
-        public ChannelPanel(String name, String nick, Connection c)
+        public ChannelPanel(String name, String nick, Connection c) throws BadLocationException, IOException
         {
             this.name = name;
             this.connection = c;
+                    
+            doc = (HTMLDocument) htmlKit.createDefaultDocument();
+            userList = (HTMLDocument)htmlKit.createDefaultDocument();
+            chatPane.setContentType("text/html");
+            chatPane.setDocument(doc);
+            userListPane.setContentType("text/html");
+            userListPane.setDocument(userList);
             makePanel();
             tabbedPane.add(this, this.name);
         }
 
-        private void makePanel()
+        private void makePanel() throws BadLocationException, IOException
         {
+            
+           // String str = "<p align='left'>";
+            //u wot m8</p><br/>"+
+                //"the first line<br/>"+"the second line<br/>";
+            //this.insertString(str, "doc");            
+   
+            //why is all this tabbed pane stuff in here
         tabbedPane.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
         tabbedPane.setTabLayoutPolicy(javax.swing.JTabbedPane.SCROLL_TAB_LAYOUT);
         tabbedPane.setTabPlacement(javax.swing.JTabbedPane.BOTTOM);
@@ -51,7 +80,6 @@ import javax.swing.text.DefaultStyledDocument;
         setDividerLocation(480);
         setResizeWeight(1.0);
         setVerifyInputWhenFocusTarget(false);
-
         
         chatPane.setEditable(false);
         jScrollPane1.setViewportView(userListPane);
@@ -76,21 +104,50 @@ import javax.swing.text.DefaultStyledDocument;
             }          
         };
         tabbedPane.addChangeListener(changeListener);   
-        
         }
-        public void insertString(String line, String target) throws BadLocationException
+
+        
+        
+        
+        public void insertString(String line, String target, String color) throws BadLocationException, IOException
         { 
-            if (target.equals("doc")){
-                doc.insertString(doc.getLength(), line+"\n", null);
+            if (target.equals("doc"))
+            {
+                Element[] roots = doc.getRootElements(); // #0 is the HTML element, #1 the bidi-root
+                Element body = null;
+                for(int i = 0; i < roots[0].getElementCount(); i++) 
+                {
+                    Element element = roots[0].getElement(i);
+                    if(element.getAttributes().getAttribute(StyleConstants.NameAttribute) == HTML.Tag.BODY)
+                    {
+                    body = element;
+                    break;
+                    }
+                }
+                doc.insertAfterEnd(body,"<div align='left'><font color="+color+">"+line+"</font></div>");
                 return;
             }
-            if (target.equals("userList")){
-                userList.insertString(userList.getLength(), line+"\n", null);
+            
+            if (target.equals("userList"))
+            {
+                Element[] roots = userList.getRootElements(); // #0 is the HTML element, #1 the bidi-root
+                Element body = null;
+                for( int i = 0; i < roots[0].getElementCount(); i++ )
+                {
+                    Element element = roots[0].getElement( i );
+                    if( element.getAttributes().getAttribute( StyleConstants.NameAttribute ) == HTML.Tag.BODY )
+                    {
+                        body = element;
+                        break;
+                    }
+                }
+                userList.insertAfterEnd(body,"<div align='left'><font color="+color+">"+line+"</font></div>");
                 return;
             }
             else System.out.println("_____________________insertString broken_____________________");
         }
-        public void addToUserList(String nick) throws BadLocationException
+                
+        public void addToUserList(String nick) throws BadLocationException, IOException
         {
             nick = nick.trim();
             userList.remove(0, userList.getLength());
@@ -103,12 +160,12 @@ import javax.swing.text.DefaultStyledDocument;
             Iterator<String> iterator = userSet.iterator();
             while (iterator.hasNext()){
                 String nextElement = iterator.next();
-                insertString(nextElement, "userList");
+                insertString(nextElement, "userList", "black");
             }
             if (this.isShowing()) tabInfo.setText(Integer.toString(this.population)+" nicks     ");
             return;
         }
-        public boolean removeFromUserList(String nick) throws BadLocationException
+        public boolean removeFromUserList(String nick) throws BadLocationException, IOException
         {
             String[] prefix = new String[] {" ","+","@","~","&"};
             int oldPop = this.userSet.size();
@@ -126,7 +183,7 @@ import javax.swing.text.DefaultStyledDocument;
             while (iterator.hasNext())
             {
                 String nextElement = iterator.next();
-                insertString(nextElement, "userList");
+                insertString(nextElement, "userList", "black");
             }
             if (this.isShowing()) tabInfo.setText(Integer.toString(this.population)+" nicks     ");
             return !(oldPop == population);
