@@ -15,6 +15,8 @@ import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.*;
+import static org.apache.commons.lang3.StringEscapeUtils.*;
+
 
 public class Connection implements Runnable{
     Thread thread;
@@ -122,7 +124,7 @@ public class Connection implements Runnable{
                        Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
                        ChannelPanel channel = ((ChannelPanel)aComponent);
                        channel.addToUserList(parser.getNick());
-                       channel.insertString("*** "+parser.getNick() + " (" + parser.getUser() + "@" + parser.getHost() +  ") has joined the channel.", "doc", ChannelPanel.serverColor);
+                       channel.insertString("--> "+parser.getNick() + " (" + parser.getUser() + "@" + parser.getHost() +  ") has joined the channel.", "doc", ChannelPanel.serverColor);
                        return;                       
                    }
                }
@@ -313,7 +315,7 @@ public class Connection implements Runnable{
             else
             {
                 Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-                ((ChannelPanel)aComponent).insertString("*** "+parser.getNick()+" (" + parser.getUser() + "@" + parser.getHost() + ") has left the channel (" + parser.getTrailing()+ ")" , "doc", ChannelPanel.serverColor);
+                ((ChannelPanel)aComponent).insertString("<-- "+parser.getNick()+" (" + parser.getUser() + "@" + parser.getHost() + ") has left the channel (" + parser.getTrailing()+ ")" , "doc", ChannelPanel.serverColor);
                 ((ChannelPanel)aComponent).removeFromUserList(parser.getNick());
                 return;
             }
@@ -341,11 +343,11 @@ public class Connection implements Runnable{
                         
                     }
                     ChannelPanel channel = new ChannelPanel(channelName, nick, this);
-                    channel.insertString("("+channelName+"): "+parser.getTrailing(), "doc", ChannelPanel.chatColor);
+                    channel.insertString("<"+channelName+">: "+parser.getTrailing(), "doc", ChannelPanel.chatColor);
                     return;
                 }
                 Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-                ((ChannelPanel)aComponent).insertString(("(" + parser.getNick() + "): " + parser.getTrailing()).trim(), "doc", ChannelPanel.chatColor);
+                ((ChannelPanel)aComponent).insertString(("<" + parser.getNick() + ">: " + parser.getTrailing()).trim(), "doc", ChannelPanel.chatColor);
                 return;
             }
             
@@ -354,11 +356,11 @@ public class Connection implements Runnable{
             if (indexOfChannel == -1)
             {
                 ChannelPanel channel = new ChannelPanel(channelName, nick, this);
-                channel.insertString("("+channelName+"): "+parser.getTrailing(), "doc", ChannelPanel.chatColor);
+                channel.insertString("<"+channelName+">: "+parser.getTrailing(), "doc", ChannelPanel.chatColor);
                 return;
             }
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ((ChannelPanel)aComponent).insertString((formatNickname("(" + parser.getNick() + "): ") + parser.getTrailing()).trim(), "doc", ChannelPanel.chatColor);   
+            ((ChannelPanel)aComponent).insertString((formatNickname("<" + parser.getNick() + ">: ") + parser.getTrailing()).trim(), "doc", ChannelPanel.chatColor);   
             return;
         }
         if (command.equals("QUIT"))
@@ -368,7 +370,7 @@ public class Connection implements Runnable{
                 Component aComponent = tabbedPane.getComponentAt(i);
                 ChannelPanel channel = ((ChannelPanel)aComponent);
                 boolean success = channel.removeFromUserList(quitter);
-                if (success) channel.insertString("*** "+quitter+" has left the server ("+quitMessage+")", "doc", ChannelPanel.serverColor);
+                if (success) channel.insertString(escapeHtml4("<-- "+quitter+" has left the server ("+quitMessage+")"), "doc", ChannelPanel.serverColor);
             }
             return;            
         }
@@ -666,7 +668,7 @@ public class Connection implements Runnable{
             while (iterator.hasNext())
             {
                 String nextElement = iterator.next();
-                channel.insertString(nextElement, "userList", ChannelPanel.serverColor);
+                channel.insertString(nextElement, "userList", ChannelPanel.chatColor);
             }
             channel.population = channel.userSet.size();
             if (channel.isShowing()) tabInfo.setText(Integer.toString(channel.population)+" nicks     ");
@@ -714,8 +716,16 @@ public class Connection implements Runnable{
         if (command.equals("437")) //cannot change nickname while banned o moderated on channel
         {
         }
-        if (command.equals("439")) //target change too fast
+        if (command.equals("439")) //please wait until we process your connection
         {
+            int indexOfChannel = tabbedPane.getSelectedIndex();
+            if (indexOfChannel == -1)
+            {
+                new ChannelPanel(parser.getPrefix(), this.nick, this);
+                indexOfChannel = findTab(tabbedPane,parser.getPrefix());
+            }
+            ChannelPanel channel = ((ChannelPanel)tabbedPane.getComponentAt(indexOfChannel));
+            channel.insertString("Please wait while we process your connection...", "doc", ChannelPanel.serverColor);
             return;            
         }
         if (command.equals("443")) //user already in channel invited to

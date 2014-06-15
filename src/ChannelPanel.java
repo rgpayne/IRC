@@ -22,8 +22,7 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
 import javax.swing.text.html.HTML;
 import javax.swing.text.html.HTMLEditorKit;
-
-
+import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
 
     public class ChannelPanel extends JSplitPane{
            
@@ -41,7 +40,7 @@ import javax.swing.text.html.HTMLEditorKit;
         ArrayList<String> list = new ArrayList<String>();
         HTMLEditorKit htmlKit = new HTMLEditorKit();
         
-        static String errorColor = "Red", chatColor="Black", serverColor="Purple";
+        static String errorColor = "#FF0000", chatColor="Black", serverColor="#6600CC";
         
     
         public ChannelPanel(String name, String nick, Connection c) throws BadLocationException, IOException
@@ -60,14 +59,9 @@ import javax.swing.text.html.HTMLEditorKit;
         }
 
         private void makePanel() throws BadLocationException, IOException
-        {
-            
-           // String str = "<p align='left'>";
-            //u wot m8</p><br/>"+
-                //"the first line<br/>"+"the second line<br/>";
-            //this.insertString(str, "doc");            
+        {      
    
-            //why is all this tabbed pane stuff in here
+        //why is all this tabbed pane stuff in here
         tabbedPane.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
         tabbedPane.setTabLayoutPolicy(javax.swing.JTabbedPane.SCROLL_TAB_LAYOUT);
         tabbedPane.setTabPlacement(javax.swing.JTabbedPane.BOTTOM);
@@ -105,14 +99,13 @@ import javax.swing.text.html.HTMLEditorKit;
         };
         tabbedPane.addChangeListener(changeListener);   
         }
-
-        
-        
+     
         
         public void insertString(String line, String target, String color) throws BadLocationException, IOException
         { 
             if (target.equals("doc"))
             {
+                line = escapeHtml4(line);
                 Element[] roots = doc.getRootElements(); // #0 is the HTML element, #1 the bidi-root
                 Element body = null;
                 for(int i = 0; i < roots[0].getElementCount(); i++) 
