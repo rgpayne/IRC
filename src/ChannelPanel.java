@@ -44,7 +44,11 @@ import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
         ArrayList<String> list = new ArrayList<String>();
         HTMLEditorKit htmlKit = new HTMLEditorKit();
         
-        static String errorColor = "#FF0000", chatColor="Black", serverColor="#6600CC";
+        static String errorColor = "#FF0000", chatColor="Black", serverColor="#990099", connectColor="993300";
+        static String font = "Sans Serif";
+        
+        ArrayList<String> history = new ArrayList<String>();
+        int historyCounter = 0;
         
         
         
@@ -127,7 +131,7 @@ import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
                         break;
                     }
                 }
-                doc.insertAfterEnd(body,"<div align='left'><font color="+color+">"+line+"</font></div>");
+                doc.insertAfterEnd(body,"<div align='left'><font face="+ChannelPanel.font+" color="+color+">"+line+"</font></div>");
                 return;
         }
                 
@@ -214,12 +218,12 @@ import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
             }
             public void fireIntervalAdded()
             {
-                fireIntervalAdded(this, 0, set.size()-1);
+                fireIntervalAdded(this, 0,0);
             }
             public boolean removeElement(String x)
             {
                 boolean success = set.remove(x);
-                fireIntervalRemoved(this, 0, set.size()-1);
+                fireIntervalRemoved(this, 0, 0);
                 return success;
             }
             public void removeAll()

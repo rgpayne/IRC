@@ -217,15 +217,21 @@ public class GUI1 extends javax.swing.JFrame {
         pack();
     }
 
-    private void chatInputPaneKeyPressed(java.awt.event.KeyEvent evt) {
-        if (evt.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER){
-            try{
+    private void chatInputPaneKeyPressed(java.awt.event.KeyEvent evt)
+    {
+        Component aComponent = tabbedPane.getComponentAt(tabbedPane.getSelectedIndex());
+        ChannelPanel channel = (ChannelPanel)aComponent;
+        
+        if (evt.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER)
+        {
+            try
+            {
             
             String msg = chatInputPane.getText();
-            Component aComponent = tabbedPane.getComponentAt(tabbedPane.getSelectedIndex());
-            ChannelPanel channel = (ChannelPanel)aComponent;
-            String target = channel.name;            
+            String target = channel.name;
+            channel.history.add(msg);
             String output = "PRIVMSG "+target+" :"+msg;
+            channel.historyCounter = channel.history.size()-1;
             
             if (msg.charAt(0) != '/')
             {          
@@ -248,8 +254,27 @@ public class GUI1 extends javax.swing.JFrame {
                 Logger.getLogger(GUI1.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+        if (evt.getKeyCode() == java.awt.event.KeyEvent.VK_UP)
+        {
+            String msg = "";
+            if (channel.historyCounter >= 0){
+                msg = channel.history.get(channel.historyCounter);
+                if (channel.historyCounter > 0) channel.historyCounter--;
+            }            
+            chatInputPane.setText(msg);
+            return;
+        }
+        if (evt.getKeyCode() == java.awt.event.KeyEvent.VK_DOWN)
+        {
+            String msg = "";
+            if (channel.historyCounter < channel.history.size()-1){
+                msg = channel.history.get(channel.historyCounter);
+                channel.historyCounter++;
+            }
+            chatInputPane.setText(msg);
+            return;
+        }
     }
-
     
     public static void main(String args[]) {
 

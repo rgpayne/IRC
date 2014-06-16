@@ -288,7 +288,7 @@ public class Connection implements Runnable{
             if (indexOfChannel == -1) return;
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             ChannelPanel channel = ((ChannelPanel)aComponent);
-            channel.insertString(parser.getTrailing(), ChannelPanel.serverColor);
+            channel.insertString(parser.getTrailing(), ChannelPanel.connectColor);
             return;
         }
         if (command.equals("PART"))
@@ -403,7 +403,7 @@ public class Connection implements Runnable{
             }
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             ChannelPanel channel = ((ChannelPanel)aComponent);
-            channel.insertString("[Welcome] "+parser.getTrailing(), ChannelPanel.serverColor);
+            channel.insertString("[Welcome] "+parser.getTrailing(), ChannelPanel.connectColor);
             return;
         }
         if (command.equals("042")) //unique id
@@ -419,7 +419,7 @@ public class Connection implements Runnable{
             int indexOfChannel = findTab(host);
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             ChannelPanel channel = ((ChannelPanel)aComponent);
-            channel.insertString("[Users] "+message+".", ChannelPanel.serverColor);
+            channel.insertString("[Users] "+message+".", ChannelPanel.connectColor);
             return;
         }
         if (command.equals("252") || command.equals("253") || command.equals("254"))
@@ -432,7 +432,7 @@ public class Connection implements Runnable{
             int indexOfChannel = findTab(host);
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             ChannelPanel channel = ((ChannelPanel)aComponent);
-            channel.insertString("[Users] "+digit+" "+msg+".", ChannelPanel.serverColor);
+            channel.insertString("[Users] "+digit+" "+msg+".", ChannelPanel.connectColor);
             return;
         }
 	if (command.equals("256") || command.equals("257") || command.equals("258") || command.equals("259")) //placeholders
@@ -442,8 +442,12 @@ public class Connection implements Runnable{
             int indexOfChannel = findTab(host);
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             ChannelPanel channel = ((ChannelPanel)aComponent);
-            channel.insertString("[Users] "+parser.getTrailing(), ChannelPanel.serverColor);
+            channel.insertString("[Users] "+parser.getTrailing(), ChannelPanel.connectColor);
             return;
+        }
+        if (command.equals("263")) //server load too heavy. please try again (happens with /list)
+        {
+            
         }
         if (command.equals("265") || command.equals("266"))
         {
@@ -451,7 +455,7 @@ public class Connection implements Runnable{
             int indexOfChannel = findTab(host);
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             ChannelPanel channel = ((ChannelPanel)aComponent);
-            channel.insertString("[Users] "+parser.getTrailing(), ChannelPanel.serverColor);
+            channel.insertString("[Users] "+parser.getTrailing(), ChannelPanel.connectColor);
             return;
         }
         if (command.equals("301"))
@@ -680,7 +684,7 @@ public class Connection implements Runnable{
             int indexOfChannel = findTab(host);
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             ChannelPanel channel = ((ChannelPanel)aComponent);
-            channel.insertString("[MOTD] "+parser.getTrailing(), ChannelPanel.serverColor);
+            channel.insertString("[MOTD] "+parser.getTrailing(), ChannelPanel.connectColor);
             return;
         }
         if (command.equals("401")) //no such nick/channel
@@ -712,6 +716,13 @@ public class Connection implements Runnable{
             channel.insertString("[Error] "+s[1]+": Unknown command.", ChannelPanel.errorColor);
             return;
         }
+        if (command.equals("322")) // /list
+        {
+        }
+        if (command.equals("333")) //end of /list
+        {
+            
+        }
         if (command.equals("437")) //cannot change nickname while banned o moderated on channel
         {
         }
@@ -724,7 +735,7 @@ public class Connection implements Runnable{
                 indexOfChannel = findTab(parser.getPrefix());
             }
             ChannelPanel channel = ((ChannelPanel)tabbedPane.getComponentAt(indexOfChannel));
-            channel.insertString("Please wait while we process your connection...", ChannelPanel.serverColor);
+            channel.insertString("Please wait while we process your connection...", ChannelPanel.connectColor);
             return;            
         }
         if (command.equals("443")) //user already in channel invited to
@@ -738,6 +749,10 @@ public class Connection implements Runnable{
         if (command.equals("461")) //not enough parameters
         {
             return;
+        }
+        if (command.equals("481")) //permission denied
+        {
+            
         }
         if (command.equals("671")) //whois: using secure connection
         {
