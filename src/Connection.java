@@ -109,7 +109,12 @@ public class Connection implements Runnable{
                        tabbedPane.setSelectedIndex(newTabIndex);                     
                        return;
                    }
-                   else System.out.println("_____JOIN BROKEN_____");
+                   else{ //joining a room for which you already have a tab (i.e. you were kicked or something)
+                       
+                       Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+                       ChannelPanel channel = ((ChannelPanel)aComponent);
+                       channel.insertString("Joined "+channelName,ChannelPanel.serverColor); //blank line
+                   }
                }
            }
            else //if joined isn't me
