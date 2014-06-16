@@ -230,7 +230,7 @@ public class GUI1 extends javax.swing.JFrame {
             if (msg.charAt(0) != '/')
             {          
                 channel.connection.send(output);
-                channel.insertString((Connection.formatNickname("<" + channel.connection.nick + ">:").trim() +" "+ msg.trim()), "doc",ChannelPanel.chatColor);   
+                channel.insertString((Connection.formatNickname("<" + channel.connection.nick + ">:").trim() +" "+ msg.trim()),ChannelPanel.chatColor);   
                 chatInputPane.setText(null);
                 evt.consume();
                 return;
