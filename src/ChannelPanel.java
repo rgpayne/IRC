@@ -1,5 +1,7 @@
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import javax.swing.AbstractListModel;
@@ -49,6 +51,7 @@ import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
         
         ArrayList<String> history = new ArrayList<String>();
         int historyCounter = 0;
+        boolean showTimestamp = true;
         
         
         
@@ -116,10 +119,18 @@ import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
         tabbedPane.addChangeListener(changeListener);   
         }
      
-        
+        public String makeTimestamp()
+        {
+            Date date = new Date();
+            SimpleDateFormat sdf = new SimpleDateFormat("hh:mm");
+            String formattedDate = sdf.format(date);
+            return formattedDate;
+        }
         public void insertString(String line, String color) throws BadLocationException, IOException
         { 
                 line = escapeHtml4(line);
+                String timestamp="";
+                if (showTimestamp == true) timestamp = "["+makeTimestamp()+"]";
                 Element[] roots = doc.getRootElements(); // #0 is the HTML element, #1 the bidi-root
                 Element body = null;
                 for(int i = 0; i < roots[0].getElementCount(); i++) 
@@ -131,7 +142,7 @@ import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
                         break;
                     }
                 }
-                doc.insertAfterEnd(body,"<div align='left'><font face="+ChannelPanel.font+" color="+color+">"+line+"</font></div>");
+                doc.insertAfterEnd(body,"<div align='left'><font face="+ChannelPanel.font+" color="+color+">"+timestamp+" "+line+"</font></div>");
                 return;
         }
                 
