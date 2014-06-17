@@ -29,8 +29,8 @@ import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
 
     public class ChannelPanel extends JSplitPane{
            
-        final String name; 
-        String topic="", signOnTime, topicAuthor;
+        final String name;
+        String topic="", signOnTime, topicAuthor, server;
         int population, ops = 0;
         
         Connection connection;
@@ -101,12 +101,12 @@ import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
         setRightComponent(jScrollPane1);
         
         
-        ChangeListener changeListener = new ChangeListener(){
+        ChangeListener changeListener = new ChangeListener(){ //use this.population ??
             public void stateChanged(ChangeEvent changeEvent){
-                javax.swing.JTabbedPane tabbedPane = (javax.swing.JTabbedPane)changeEvent.getSource();
-                int index = tabbedPane.getSelectedIndex();
-                ChannelPanel c = (ChannelPanel)tabbedPane.getComponentAt(index);
-                tabInfo.setText(Integer.toString(c.population)+" nicks     ");
+                //javax.swing.JTabbedPane tabbedPane = (javax.swing.JTabbedPane)changeEvent.getSource();
+                //int index = tabbedPane.getSelectedIndex();
+                //ChannelPanel c = (ChannelPanel)tabbedPane.getComponentAt(index);
+                updateTabInfo();
             }          
         };
         tabbedPane.addChangeListener(changeListener);   
@@ -121,7 +121,22 @@ import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
             String formattedDate = sdf.format(date);
             return formattedDate;
         }
-        
+        public void updateTabInfo()
+        {
+            
+            if (this.isShowing())
+            {
+                String text ="";
+                if (ops != 1) text = " ops) ";
+                if (ops == 1) text = " op) ";
+                        
+                if (server == null)
+                {
+                    tabInfo.setText(name+"  ");
+                }
+                else tabInfo.setText(name+" - "+population+" nicks ("+ops+text+server+"  ");
+            }
+        }
         public void insertString(String line, String color) throws BadLocationException, IOException
         { 
                 line = escapeHtml4(line);
@@ -150,19 +165,23 @@ import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
 
             if (first == '+' || first == '@' || first == '&' || first == '%' || first == '~')
             {
+                if (first != '+') ops++;
                 model.addElement(new User(first+nick.substring(1)));
             }
             else model.addElement(new User(" "+nick));
             
             population = model.getSize();
-            if (this.isShowing()) tabInfo.setText(Integer.toString(this.population)+" nicks     ");
+            updateTabInfo();
             return;
         }
         
         public void addManyToUserList(String nick)
         {
+            if (nick.charAt(0) != ' ' && nick.charAt(0) != '+') ops++;
             SortedListModel<User> model = (SortedListModel<User>) this.userListPane.getModel();
             model.addManyElements(new User(nick));
+            updateTabInfo();
+            return;
         }
         public boolean contains(Object o)
         {
@@ -176,6 +195,8 @@ import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
         {
             SortedListModel<String> model = (SortedListModel<String>) this.userListPane.getModel();            
             model.fireIntervalAdded();
+            population = model.getSize();
+            updateTabInfo();
             return;
         }
         
@@ -189,17 +210,22 @@ import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
             for (int i = 0; i < prefix.length; i++)
             {
                 success = model.removeElement(new User(prefix[i]+nick));
-                if (success == true) break;
+                if (success == true){
+                    if (!prefix[i].equals(" ") && prefix[i].equals("+")) ops--;
+                    break;
+                }
             }
             
-            population = this.model.getSize();
-            if (this.isShowing()) tabInfo.setText(Integer.toString(this.population)+" nicks     ");
+            population = model.getSize();
+            updateTabInfo();
             return !(oldPop == population);
         }     
         
         public void clear()
         {
-            SortedListModel<User>  model = (SortedListModel<User>) userListPane.getModel();
+            SortedListModel<User> model = (SortedListModel<User>) userListPane.getModel();
+            ops = 0;
+            population = 0;
             model.removeAll();
             return;
         }

@@ -52,19 +52,6 @@ public class Connection implements Runnable{
         this.writer.flush();   
        
     }
-    /*public static String formatNickname(String nickname)
-    {
-        int formatlen = 12;
-        String blank = "";
-        int len = nickname.length();
-        if (len >= formatlen) return nickname;
-        else{
-            for (int i = 0; i < (formatlen - len); i++){
-                blank = blank+" ";
-            }
-            return blank + nickname;
-        }
-    }*/
     public static int findTab(String title)
     {
         int totalTabs = tabbedPane.getTabCount();
@@ -652,9 +639,9 @@ public class Connection implements Runnable{
             ((ChannelPanel)aComponent).list.addAll(Arrays.asList(nn));
             return;
         }
-        if (command.equals("366"))
+        if (command.equals("366")) //end of names command
         {
-            //end of names command
+            System.out.println(parser.toString());
             String channelName = parser.getParams();
             int index = channelName.indexOf("#");
             int index2 = channelName.indexOf(":");
@@ -664,9 +651,6 @@ public class Connection implements Runnable{
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel); 
             ChannelPanel channel = ((ChannelPanel)aComponent);
             
-            //channel.clear();
-            //channel.userSet.addAll(channel.list);
-            //channel.list.clear();
             Iterator<String> iterator = channel.list.iterator();
             while (iterator.hasNext())
             {
@@ -674,10 +658,8 @@ public class Connection implements Runnable{
                 channel.addManyToUserList(nextElement);
             }
             channel.list.clear();
+            channel.server = parser.getPrefix();
             channel.fireIntervalAdded();
-            //channel.population = channel.userSet.size();
-            //if (channel.isShowing()) tabInfo.setText(Integer.toString(channel.population)+" nicks     ");
-
             return;
             }
         if (command.equals("371") || command.equals("372") || command.equals("374") || command.equals("375") || command.equals("376"))
@@ -790,8 +772,7 @@ public class Connection implements Runnable{
                 {
                     parseFromServer(line);
                 }
-            }
-        
+            }       
         } catch (IOException ex) {
             Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
         } catch (BadLocationException ex) {
@@ -799,4 +780,3 @@ public class Connection implements Runnable{
         }
     }
 }
-
