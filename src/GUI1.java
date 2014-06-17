@@ -54,17 +54,11 @@ public class GUI1 extends javax.swing.JFrame {
             {
                 final javax.swing.JPanel panel = new javax.swing.JPanel();
                 final javax.swing.JDialog window = new javax.swing.JDialog();
-                //javax.swing.BoxLayout bl = new javax.swing.BoxLayout(window, javax.swing.BoxLayout.Y_AXIS);
-                //window.setLayout(new javax.swing.BoxLayout(window, javax.swing.BoxLayout.Y_AXIS));
-                //window.setLayout(new javax.swing.BoxLayout(window, javax.swing.BoxLayout.Y_AXIS));
                 window.setTitle("Quick Connect");
                 window.setSize(new java.awt.Dimension(200,235));
                 window.setResizable(false);
                 window.setVisible(true);
                 window.setLocationRelativeTo(tabbedPane);
-                //window.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
-                //window.setModal(true);
-
                 
                 javax.swing.JLabel channelNameLabel = new javax.swing.JLabel("Server");
                 final javax.swing.JTextField channelName = new javax.swing.JTextField(15);
@@ -236,7 +230,7 @@ public class GUI1 extends javax.swing.JFrame {
             if (msg.charAt(0) != '/')
             {          
                 channel.connection.send(output);
-                channel.insertString((Connection.formatNickname("<" + channel.connection.nick + ">:").trim() +" "+ msg.trim()),ChannelPanel.chatColor);   
+                channel.insertString(("<" + channel.connection.nick + ">:".trim() +" "+ msg.trim()),ChannelPanel.chatColor);   
                 chatInputPane.setText(null);
                 evt.consume();
                 return;

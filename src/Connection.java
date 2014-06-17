@@ -52,7 +52,7 @@ public class Connection implements Runnable{
         this.writer.flush();   
        
     }
-    public static String formatNickname(String nickname)
+    /*public static String formatNickname(String nickname)
     {
         int formatlen = 12;
         String blank = "";
@@ -64,7 +64,7 @@ public class Connection implements Runnable{
             }
             return blank + nickname;
         }
-    }
+    }*/
     public static int findTab(String title)
     {
         int totalTabs = tabbedPane.getTabCount();
@@ -113,7 +113,7 @@ public class Connection implements Runnable{
                        
                        Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
                        ChannelPanel channel = ((ChannelPanel)aComponent);
-                       channel.insertString("Joined "+channelName,ChannelPanel.serverColor); //blank line
+                       channel.insertString("Joined "+channelName,ChannelPanel.serverColor);
                    }
                }
            }
@@ -173,10 +173,7 @@ public class Connection implements Runnable{
                 Component aComponent = tabbedPane.getSelectedComponent();
                 ChannelPanel channel = ((ChannelPanel)aComponent);
                 channel.insertString("[Mode] You have set personal modes: "+parser.getTrailing(), ChannelPanel.serverColor);
-            }
-            
-            //need to account for channel modes  
-            
+            }    
             
             else //setting a user's mode
             { 
@@ -208,7 +205,7 @@ public class Connection implements Runnable{
                 }
                 else
                 {
-                    channel.insertString("*** "+giver+" set the channel to: "+power, ChannelPanel.serverColor);
+                    channel.insertString("*** "+giver+" set the channel to: "+power, ChannelPanel.serverColor); //channel mode
                 }
             }
             return;
@@ -226,42 +223,42 @@ public class Connection implements Runnable{
                     Component aComponent = tabbedPane.getComponentAt(i);
                     ChannelPanel channel = ((ChannelPanel)aComponent);
                     
-                    if (channel.userSet.contains(" "+oldNick))
+                    if (channel.contains(" "+oldNick))
                     {
                         channel.removeFromUserList(oldNick);
                         channel.addToUserList(" "+newNick);
                         channel.insertString("*** "+ oldNick+" is now known as "+newNick+".", ChannelPanel.serverColor);
                         return;
                     }
-                    if (channel.userSet.contains("@"+oldNick))
+                    if (channel.contains("@"+oldNick))
                     {
                         channel.removeFromUserList(oldNick);
                         channel.addToUserList("@"+newNick);
                         channel.insertString("*** "+ oldNick+" is now known as "+newNick+".", ChannelPanel.serverColor);
                         return;
                     }
-                    if (channel.userSet.contains("~"+oldNick))
+                    if (channel.contains("~"+oldNick))
                     {
                         channel.removeFromUserList(oldNick);
                         channel.addToUserList("~"+newNick);
                         channel.insertString("*** "+oldNick+" is now known as "+newNick+".", ChannelPanel.serverColor);
                         return;
                     }
-                    if (channel.userSet.contains("+"+oldNick))
+                    if (channel.contains("+"+oldNick))
                     {
                         channel.removeFromUserList(oldNick);
                         channel.addToUserList("+"+newNick);
                         channel.insertString("*** "+ oldNick+" is now known as "+newNick+".", ChannelPanel.serverColor);        
                         return;
                     }
-                    if (channel.userSet.contains("%"+oldNick))
+                    if (channel.contains("%"+oldNick))
                     {
                         channel.removeFromUserList(oldNick);
                         channel.addToUserList("%"+newNick);
                         channel.insertString("*** "+ oldNick+" is now known as "+newNick+".", ChannelPanel.serverColor);  
                         return;
                     }
-                    if (channel.userSet.contains("&"+oldNick))
+                    if (channel.contains("&"+oldNick))
                     {
                         channel.removeFromUserList(oldNick);
                         channel.addToUserList("&"+newNick);
@@ -363,7 +360,7 @@ public class Connection implements Runnable{
                 return;
             }
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ((ChannelPanel)aComponent).insertString((formatNickname("<" + parser.getNick() + ">: ") + parser.getTrailing()).trim(), ChannelPanel.chatColor);   
+            ((ChannelPanel)aComponent).insertString(("<" + parser.getNick() + ">: " + parser.getTrailing()).trim(), ChannelPanel.chatColor);   
             return;
         }
         if (command.equals("QUIT"))
@@ -635,9 +632,8 @@ public class Connection implements Runnable{
         {
             
         }
-        if (command.equals("353")) //names cmomand
+        if (command.equals("353")) //names command
         {
-            //names command
             String channelName = parser.getParams();
             int index = channelName.indexOf("#");
             int index2 = channelName.indexOf(":");
@@ -668,18 +664,19 @@ public class Connection implements Runnable{
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel); 
             ChannelPanel channel = ((ChannelPanel)aComponent);
             
-            channel.clear();
-            channel.userSet.addAll(channel.list);
-            channel.list.clear();
-            Iterator<String> iterator = channel.userSet.iterator();
+            //channel.clear();
+            //channel.userSet.addAll(channel.list);
+            //channel.list.clear();
+            Iterator<String> iterator = channel.list.iterator();
             while (iterator.hasNext())
             {
                 String nextElement = iterator.next();
                 channel.addManyToUserList(nextElement);
             }
+            channel.list.clear();
             channel.fireIntervalAdded();
-            channel.population = channel.userSet.size();
-            if (channel.isShowing()) tabInfo.setText(Integer.toString(channel.population)+" nicks     ");
+            //channel.population = channel.userSet.size();
+            //if (channel.isShowing()) tabInfo.setText(Integer.toString(channel.population)+" nicks     ");
 
             return;
             }
