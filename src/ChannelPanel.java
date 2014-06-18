@@ -245,7 +245,7 @@ import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
                 return set.size();
             }
             @Override
-            public User getElementAt(int index)
+            public synchronized User getElementAt(int index)
             {
                 return (User) set.toArray()[index];
             }
@@ -292,12 +292,12 @@ import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
     }
     class CustomRenderer extends JLabel implements ListCellRenderer
     {
-        final static ImageIcon iconWhite = new ImageIcon("src/icons/chatPaneWhite.png");
-        final static ImageIcon iconGreen = new ImageIcon("src/icons/chatPaneGreen.png");
-        final static ImageIcon iconOrange = new ImageIcon("src/icons/chatPaneOrange.png");
-        final static ImageIcon iconPurple = new ImageIcon("src/icons/chatPanePurple.png");
-        final static ImageIcon iconRed = new ImageIcon("src/icons/chatPaneRed.png");
-        final static ImageIcon iconBlue = new ImageIcon("src/icons/chatPaneBlue.png");
+        final static ImageIcon iconWhite = new ImageIcon("src/icons/user-white.png");
+        final static ImageIcon iconGreen = new ImageIcon("src/icons/user.png");
+        final static ImageIcon iconOrange = new ImageIcon("src/icons/user-female.png");
+        final static ImageIcon iconPurple = new ImageIcon("src/icons/user-red.png");
+        final static ImageIcon iconRed = new ImageIcon("user-green.png");
+        final static ImageIcon iconBlue = new ImageIcon("src/icons/user-gray.png");
 
         @Override
         public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus)

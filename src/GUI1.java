@@ -1,27 +1,32 @@
 import java.awt.Component;
-import java.awt.Dialog;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.ImageIcon;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.EditorKit;
-import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.DefaultCaret;
 
 public class GUI1 extends javax.swing.JFrame {
+    final static ImageIcon mainIcon = new ImageIcon("src/icons/weather-sun.png");
+    final static ImageIcon quickConnectIcon = new ImageIcon("src/icons/configure-5.png");
+    final static ImageIcon identitiesIcon = new ImageIcon("src/icons/edit-group.png");
+
+    
     EditorKit editorKit;
-    DefaultStyledDocument doc, userList;
     Connection c;
 
     public GUI1(){
+        super("Alpha IRC 0.1");
+        setIconImage(mainIcon.getImage());
         
-        doc = new DefaultStyledDocument();
-        userList = new DefaultStyledDocument();
         initComponents();
         ChannelPanel.tabbedPane = tabbedPane;
+        Connection.tabbedPane = tabbedPane;
         ChannelPanel.tabInfo = tabInfo;
+        Connection.tabInfo = tabInfo;
         
-        c = new Connection("irc.rizon.net", 6667, tabbedPane, tabInfo);
+        new Connection("irc.rizon.net", 6667);
     }
 
     @SuppressWarnings("unchecked")
@@ -32,9 +37,9 @@ public class GUI1 extends javax.swing.JFrame {
         tabbedPane = new javax.swing.JTabbedPane();
         jSplitPane1 = new javax.swing.JSplitPane();
         jScrollPane2 = new javax.swing.JScrollPane();
-        chatPane = new javax.swing.JTextPane(doc);
+        chatPane = new javax.swing.JTextPane();
         jScrollPane1 = new javax.swing.JScrollPane();
-        userListPane = new javax.swing.JTextPane(userList);
+        userListPane = new javax.swing.JTextPane();
         tabInfo = new javax.swing.JLabel();
         jMenuBar2 = new javax.swing.JMenuBar();
         fileMenu = new javax.swing.JMenu();
@@ -50,7 +55,8 @@ public class GUI1 extends javax.swing.JFrame {
         pasteAction.setText("Paste");       
         editMenu.add(pasteAction);
         
-        quickConnect = new javax.swing.JMenuItem("Quick Connect");
+        quickConnect = new javax.swing.JMenuItem("Quick Connect", quickConnectIcon);
+        
         fileMenu.add(quickConnect);
         quickConnect.addActionListener(new java.awt.event.ActionListener(){
             public void actionPerformed(java.awt.event.ActionEvent e)
@@ -93,7 +99,7 @@ public class GUI1 extends javax.swing.JFrame {
                         else
                         {
                         dialog.dispose();
-                        c = new Connection(chan, Integer.valueOf(p), tabbedPane, tabInfo);
+                        c = new Connection(chan, Integer.valueOf(p));
                         c.nick = n;
                         c.password = pass;
                         }
@@ -127,7 +133,7 @@ public class GUI1 extends javax.swing.JFrame {
                         }
                         else{
                         dialog.dispose();
-                        c = new Connection(chan, Integer.valueOf(p), tabbedPane, tabInfo);
+                        c = new Connection(chan, Integer.valueOf(p));
                         c.nick = n;
                         c.password = pass;
                         }
@@ -138,7 +144,7 @@ public class GUI1 extends javax.swing.JFrame {
         });
         
         //IDENTITIES
-        identities = new javax.swing.JMenuItem("Identities");
+        identities = new javax.swing.JMenuItem("Identities", identitiesIcon);
         fileMenu.add(identities);
         identities.addActionListener(new java.awt.event.ActionListener(){
             public void actionPerformed(java.awt.event.ActionEvent e)
@@ -194,7 +200,7 @@ public class GUI1 extends javax.swing.JFrame {
                 connectButton.addActionListener(new java.awt.event.ActionListener(){
                     public void actionPerformed(java.awt.event.ActionEvent e)
                     {
-                        //pushing okay or whatever the key is
+                        //stuff to do when submit butten pressed
                     }
                     
                 });

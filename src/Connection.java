@@ -26,18 +26,15 @@ public class Connection implements Runnable{
     static String nick = "rieux";
     int port;
     static JTabbedPane tabbedPane;
-    JLabel tabInfo;
+    static JLabel tabInfo;
     ChannelPanel first;
     
 
-    public Connection(String server, int port, JTabbedPane tabbedPane, JLabel tabInfo)
+    public Connection(String server, int port) //need nick and password eventually
     {
        this.server = server;
        this.port = port;
        this.password = password;
-       
-       this.tabbedPane = tabbedPane;
-       this.tabInfo = tabInfo;
        
        thread = new Thread(this);
        thread.start();
@@ -64,7 +61,6 @@ public class Connection implements Runnable{
 
     public void parseFromServer(String line) throws IOException, BadLocationException
     {
-        System.out.println(line);
         Parser parser = new Parser(line);
         String command = parser.getCommand();
         
@@ -154,7 +150,6 @@ public class Connection implements Runnable{
         }
         if (command.equals("MODE"))
         {           
-            System.out.println(parser.toString());
             if (parser.getServer().equals(nick)) //setting personal mode
             {
                 Component aComponent = tabbedPane.getSelectedComponent();
@@ -314,7 +309,6 @@ public class Connection implements Runnable{
         }
         if (command.equals("PRIVMSG") || command.equals("MSG"))
         {
-            System.out.println(parser.toString());
             String channelName = parser.getMiddle();
            
             if (channelName.equals(nick))
@@ -426,7 +420,6 @@ public class Connection implements Runnable{
         }
 	if (command.equals("256") || command.equals("257") || command.equals("258") || command.equals("259")) //placeholders
         {
-            System.out.println(parser.toString());
             String host = parser.getPrefix();
             int indexOfChannel = findTab(host);
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
@@ -641,7 +634,6 @@ public class Connection implements Runnable{
         }
         if (command.equals("366")) //end of names command
         {
-            System.out.println(parser.toString());
             String channelName = parser.getParams();
             int index = channelName.indexOf("#");
             int index2 = channelName.indexOf(":");
@@ -750,8 +742,9 @@ public class Connection implements Runnable{
         }
         else
         {
-            Component aComponent = tabbedPane.getComponentAt(0);
-            ((ChannelPanel)aComponent).insertString(parser.getCommand(), ChannelPanel.serverColor);
+            System.out.println(line);
+            //Component aComponent = tabbedPane.getComponentAt(0);
+            //((ChannelPanel)aComponent).insertString(parser.getCommand(), ChannelPanel.serverColor);
         }        
     }
     
