@@ -1,3 +1,4 @@
+import java.awt.Color;
 import java.awt.Component;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -19,13 +20,11 @@ import javax.swing.ListSelectionModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.text.BadLocationException;
-import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.DefaultCaret;
-import javax.swing.text.Element;
+import javax.swing.text.Document;
+import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
-import javax.swing.text.html.HTML;
-import javax.swing.text.html.HTMLEditorKit;
-import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
+import javax.swing.text.StyleContext;
 
     public class ChannelPanel extends JSplitPane{
            
@@ -47,11 +46,13 @@ import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
         SortedListModel<User> model = new SortedListModel<User>();
         ArrayList<String> list = new ArrayList<String>();
         
-        HTMLEditorKit htmlKit = new HTMLEditorKit();
-        HTMLDocument doc;    
         
-        static String errorColor = "#FF0000", chatColor="Black", serverColor="#990099", connectColor="#993300", timestampColor="#909090";
-        static String font = "Sans Serif";
+        Document doc;  
+        StyleContext sc = StyleContext.getDefaultStyleContext();
+        Style style = sc.addStyle("DefaultStyle", null);
+        
+        static String errorColor = "#FF0000", chatColor="#000000", serverColor="#990099", connectColor="#993300", timestampColor="#909090";
+        static String font = "monospace";
         boolean showTimestamp = true;
         
         ArrayList<String> history;
@@ -63,15 +64,20 @@ import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
             this.name = name;
             this.connection = c;
                     
-            doc = (HTMLDocument)htmlKit.createDefaultDocument();
-            chatPane.setContentType("text/html");
+            doc = chatPane.getStyledDocument();
+            
+            setStyles();
+            
             chatPane.setDocument(doc);
-            chatPane.setText(topic);
             userListPane = new JList(model);
             if (showTimestamp == true) history = new ArrayList<String>();
+            
+            
             makePanel();
                        
             tabbedPane.add(this, this.name);
+            
+                
         }
 
         private void makePanel() throws BadLocationException, IOException
@@ -113,7 +119,11 @@ import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
         }
      
         
-        
+        public void setStyles()
+        {
+        StyleConstants.setFontFamily(style, "monospace");
+        StyleConstants.setBold(style, true);
+        }
         public String makeTimestamp()
         {
             Date date = new Date();
@@ -139,22 +149,9 @@ import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
         }
         public void insertString(String line, String color) throws BadLocationException, IOException
         { 
-                line = escapeHtml4(line);
-                String timestamp="";
-                if (showTimestamp == true) timestamp = "<font color="+timestampColor+">["+makeTimestamp()+"]</font>";
-                Element[] roots = doc.getRootElements(); // #0 is the HTML element, #1 the bidi-root
-                Element body = null;
-                for(int i = 0; i < roots[0].getElementCount(); i++) 
-                {
-                    Element element = roots[0].getElement(i);
-                    if(element.getAttributes().getAttribute(StyleConstants.NameAttribute) == HTML.Tag.BODY)
-                    {
-                        body = element;
-                        break;
-                    }
-                }
-                doc.insertAfterEnd(body,"<div align='left'><font face="+ChannelPanel.font+" color="+color+">"+timestamp+" "+line+"</font></div>");
-                return;
+            StyleConstants.setForeground(style, Color.decode(color));
+            doc.insertString(doc.getLength(), line+"\n", style);
+            return;
         }
                 
         public void addToUserList(String nick) throws BadLocationException, IOException
