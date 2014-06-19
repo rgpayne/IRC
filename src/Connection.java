@@ -1,20 +1,11 @@
-import java.awt.Component;
-import java.io.IOException;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.awt.*;
 import javax.swing.text.BadLocationException;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.StringTokenizer;
-import java.util.TimeZone;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.*;
+import java.util.*;
+import java.io.*;
+import java.util.logging.*;
 
 
 public class Connection implements Runnable{
@@ -153,7 +144,6 @@ public class Connection implements Runnable{
         }
         if (command.equals("MODE"))
         {
-            System.out.println("__"+parser.getServer()+"__"+currentNick);
             if (parser.getServer().equals(currentNick)) //setting personal mode
             {
                 Component aComponent = tabbedPane.getSelectedComponent();
@@ -289,11 +279,6 @@ public class Connection implements Runnable{
             
             int indexOfChannel = findTab(channelName);
             
-            if (indexOfChannel == -1)
-            {
-                System.out.println("___/PART is broken___");
-                return;
-            }
             if (currentNick.equals(parser.getNick())){ //if i'm leaving
                 tabbedPane.remove(indexOfChannel);
                 return;
@@ -739,6 +724,9 @@ public class Connection implements Runnable{
                 indexOfChannel = findTab(parser.getPrefix());
             }
             ChannelPanel channel = ((ChannelPanel)tabbedPane.getComponentAt(indexOfChannel));
+            channel.setDividerLocation(Integer.MAX_VALUE);
+            channel.setDividerSize(0);
+            channel.setEnabled(false);
             channel.insertString("Please wait while we process your connection...", ChannelPanel.connectColor);
             return;            
         }

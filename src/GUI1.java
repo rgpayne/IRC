@@ -1,29 +1,13 @@
-import java.awt.Button;
-import java.awt.Component;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.JTextPane;
-import javax.swing.SpringLayout;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.EditorKit;
-import javax.swing.text.DefaultCaret;
-import java.util.Properties;
+import java.awt.*;
+import javax.swing.*;
+import javax.swing.text.*;
+import java.util.*;
+import java.util.logging.*;
+import java.io.*;
 
 public class GUI1 extends javax.swing.JFrame {
     final static ImageIcon mainIcon = new ImageIcon("src/icons/weather-sun.png");
-    final static ImageIcon quickConnectIcon = new ImageIcon("src/icons/configure-5.png");
+    final static ImageIcon quickConnectIcon = new ImageIcon("src/icons/connect.png");
     final static ImageIcon identitiesIcon = new ImageIcon("src/icons/edit-group.png");
 
     
