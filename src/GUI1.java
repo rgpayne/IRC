@@ -1,11 +1,25 @@
+import java.awt.Button;
 import java.awt.Component;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.JTextPane;
+import javax.swing.SpringLayout;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.EditorKit;
 import javax.swing.text.DefaultCaret;
+import java.util.Properties;
 
 public class GUI1 extends javax.swing.JFrame {
     final static ImageIcon mainIcon = new ImageIcon("src/icons/weather-sun.png");
@@ -15,18 +29,21 @@ public class GUI1 extends javax.swing.JFrame {
     
     EditorKit editorKit;
     Connection c;
+    final static Properties prop = new Properties();
+    OutputStream output = null;
 
-    public GUI1(){
+    public GUI1() {
         super("Alpha IRC 0.1");
         setIconImage(mainIcon.getImage());
         
+        loadProperties();
         initComponents();
         ChannelPanel.tabbedPane = tabbedPane;
         Connection.tabbedPane = tabbedPane;
         ChannelPanel.tabInfo = tabInfo;
         Connection.tabInfo = tabInfo;
         
-        new Connection("irc.rizon.net", 6667);
+       new Connection("irc.rizon.net", 6667);
     }
 
     @SuppressWarnings("unchecked")
@@ -44,6 +61,7 @@ public class GUI1 extends javax.swing.JFrame {
         jMenuBar2 = new javax.swing.JMenuBar();
         fileMenu = new javax.swing.JMenu();
         editMenu = new javax.swing.JMenu();
+        settingsMenu = new javax.swing.JMenu();
         
         copyAction = new javax.swing.JMenuItem(new javax.swing.text.DefaultEditorKit.CopyAction());
         copyAction.setText("Copy");
@@ -61,82 +79,53 @@ public class GUI1 extends javax.swing.JFrame {
         quickConnect.addActionListener(new java.awt.event.ActionListener(){
             public void actionPerformed(java.awt.event.ActionEvent e)
             {
-                final javax.swing.JDialog dialog = new javax.swing.JDialog(GUI1.this);
-                final javax.swing.JPanel panel = new javax.swing.JPanel();
+                
+                String[] labels = {"Server", "Port", "Nick", "Password"};
+                int numPairs = labels.length;
+                final JDialog dialog = new JDialog(GUI1.this);
+                SpringLayout layout = new SpringLayout();
+                JPanel panel = new JPanel(layout);
+                final JTextField[] panes = new JTextField[numPairs];
+                
+                for (int i = 0; i < numPairs; i++)
+                {
+                    JLabel l = new JLabel(labels[i], JLabel.TRAILING);
+                    panel.add(l);
+                    JTextField textField = new JTextField(10);
+                    if (i == 1) textField.setText("6667");
+                    if (i == 2) textField.setText(Connection.currentNick);
+                    panes[i] = textField;
+                    textField.setMaximumSize(new java.awt.Dimension(10,10));
+                    l.setLabelFor(textField);
+                    panel.add(textField);
+                }
                 dialog.setTitle("Quick Connect");
-                dialog.setSize(new java.awt.Dimension(200,235));
+                dialog.setSize(new java.awt.Dimension(200,180));
                 dialog.setResizable(false);
                 dialog.setLocationRelativeTo(tabbedPane);
-                
-                javax.swing.JLabel channelNameLabel = new javax.swing.JLabel("Server");
-                final javax.swing.JTextField channelName = new javax.swing.JTextField(15);
-                channelName.setMaximumSize(channelName.getPreferredSize());
-                javax.swing.JLabel portLabel = new javax.swing.JLabel("Port");
-                final javax.swing.JTextField port = new javax.swing.JTextField(15);
-                port.setMaximumSize(port.getPreferredSize());
-                javax.swing.JLabel nickLabel = new javax.swing.JLabel("Nick");
-                final javax.swing.JTextField nick = new javax.swing.JTextField(15);
-                nick.setMaximumSize(nick.getPreferredSize());
-                javax.swing.JLabel passwordLabel = new javax.swing.JLabel("Password");
-                final javax.swing.JTextField password = new javax.swing.JTextField(15);
-                password.setMaximumSize(password.getPreferredSize());
+                dialog.add(panel);
+                dialog.setVisible(true);
                 java.awt.Button connectButton = new java.awt.Button("Connect");
-                connectButton.setSize(new java.awt.Dimension(85,30));
-                connectButton.setMaximumSize(connectButton.getPreferredSize());
+                connectButton.setPreferredSize(new java.awt.Dimension(80,30));
+                panel.add(connectButton);
+                layout.putConstraint(SpringLayout.SOUTH, connectButton, 0, SpringLayout.SOUTH, dialog);
+                layout.putConstraint(SpringLayout.EAST, connectButton, -30, SpringLayout.EAST, dialog);
+                SpringUtilities.makeCompactGrid(panel, numPairs, 2, 6, 6, 10, 10); //rows, cols, initX, initY, xPad, yPad
+
                 connectButton.addKeyListener(new java.awt.event.KeyAdapter(){
                 public void keyPressed(java.awt.event.KeyEvent evt)
                 {
-                    if (evt.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER){
-                        String chan = channelName.getText().trim();
-                        String p = port.getText().trim();
-                        String n = nick.getText().trim();
-                        String pass = password.getText().trim();
-                        
-                        if (chan.isEmpty() || p.isEmpty() || n.isEmpty())
-                        {
-                            javax.swing.JOptionPane.showMessageDialog(dialog, "Server, port and nick are required");
-                        }
-                        else
-                        {
-                        dialog.dispose();
-                        c = new Connection(chan, Integer.valueOf(p));
-                        c.nick = n;
-                        c.password = pass;
-                        }
+                    if (evt.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER)
+                    {
+                        quickConnectButtonFunctionality(panes, dialog);
                     }
                 }
                  });
-                
-                dialog.add(panel);
-                panel.add(channelNameLabel);
-                panel.add(channelName);
-                panel.add(portLabel);
-                panel.add(port);
-                panel.add(nickLabel);
-                panel.add(nick);
-                panel.add(passwordLabel);
-                panel.add(password);
-                panel.add(connectButton);    
-                dialog.setVisible(true);
                                 
                 connectButton.addActionListener(new java.awt.event.ActionListener(){
                     public void actionPerformed(java.awt.event.ActionEvent e)
                     {
-                        String chan = channelName.getText().trim();
-                        String p = port.getText().trim();
-                        String n = nick.getText().trim();
-                        String pass = password.getText().trim();
-                        
-                        if (chan.isEmpty() || p.isEmpty() || n.isEmpty())
-                        {
-                            javax.swing.JOptionPane.showMessageDialog(dialog, "Server, port and nick are required");
-                        }
-                        else{
-                        dialog.dispose();
-                        c = new Connection(chan, Integer.valueOf(p));
-                        c.nick = n;
-                        c.password = pass;
-                        }
+                        quickConnectButtonFunctionality(panes, dialog);
                     }
                     
                 });
@@ -145,62 +134,60 @@ public class GUI1 extends javax.swing.JFrame {
         
         //IDENTITIES
         identities = new javax.swing.JMenuItem("Identities", identitiesIcon);
-        fileMenu.add(identities);
+        settingsMenu.add(identities);
         identities.addActionListener(new java.awt.event.ActionListener(){
             public void actionPerformed(java.awt.event.ActionEvent e)
             {
-                final javax.swing.JDialog dialog = new javax.swing.JDialog(GUI1.this);
-                final javax.swing.JPanel panel = new javax.swing.JPanel();
-                dialog.setSize(new java.awt.Dimension(350,300));
+                final JDialog dialog = new JDialog(GUI1.this);
+                SpringLayout layout = new SpringLayout();
+                JPanel panel = new JPanel(layout);
+                String[] labelVal = {Connection.real, Connection.nicks[0], Connection.nicks[1], Connection.nicks[2]};
+                String[] labels = {"Real Name", "Nick", "Second choice", "Third choice"};
+                int numPairs = labels.length;
+                final JTextField[] panes = new JTextField[numPairs];
+                
+                for (int i = 0; i < numPairs; i++)
+                {
+                    JLabel l = new JLabel(labels[i], JLabel.TRAILING);
+                    panel.add(l);
+                    JTextField textField = new JTextField(10);
+                    textField.setText(labelVal[i]);
+                    panes[i] = textField;
+                    textField.setMaximumSize(new java.awt.Dimension(10,10));
+                    l.setLabelFor(textField);
+                    panel.add(textField);
+                }
+
+                dialog.setTitle("Identities");
+                dialog.setSize(new java.awt.Dimension(220,180));
                 dialog.setResizable(false);
-                dialog.setLocationRelativeTo(tabbedPane);                
-                javax.swing.JLabel channelNameLabel = new javax.swing.JLabel("Server");
+                dialog.setLocationRelativeTo(tabbedPane);                              
+                dialog.add(panel);
+                dialog.setVisible(true);
+                Button saveButton = new Button("Save");
+                saveButton.setPreferredSize(new java.awt.Dimension(80,30));
+                panel.add(saveButton);
+                layout.putConstraint(SpringLayout.SOUTH, saveButton, 0, SpringLayout.SOUTH, dialog);
+                layout.putConstraint(SpringLayout.EAST, saveButton, -35, SpringLayout.EAST, dialog);
+                SpringUtilities.makeCompactGrid(panel, numPairs, 2, 6, 6, 10, 10); //rows, cols, initX, initY, xPad, yPad
                 
+                //JLabel warning = new JLabel("Changes take place on next restart");
+                //panel.add(warning);
                 
-                final javax.swing.JTextField channelName = new javax.swing.JTextField(15);
-                channelName.setMaximumSize(channelName.getPreferredSize());
-                javax.swing.JLabel portLabel = new javax.swing.JLabel("Port");
-                final javax.swing.JTextField port = new javax.swing.JTextField(15);
-                port.setMaximumSize(port.getPreferredSize());
-                javax.swing.JLabel nickLabel = new javax.swing.JLabel("Nick");
-                final javax.swing.JTextField nick = new javax.swing.JTextField(15);
-                nick.setMaximumSize(nick.getPreferredSize());
-                javax.swing.JLabel passwordLabel = new javax.swing.JLabel("Password");
-                final javax.swing.JTextField password = new javax.swing.JTextField(15);
-                password.setMaximumSize(password.getPreferredSize());
-                java.awt.Button connectButton = new java.awt.Button("Connect");
-                connectButton.setSize(new java.awt.Dimension(85,30));
-                connectButton.setMaximumSize(connectButton.getPreferredSize());
-                
-                
-                
-                connectButton.addKeyListener(new java.awt.event.KeyAdapter(){
+                saveButton.addKeyListener(new java.awt.event.KeyAdapter(){
                 public void keyPressed(java.awt.event.KeyEvent evt)
                 {
                     if (evt.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER)
                     {
-                        //stuff to do when hit enter
-                        
+                        identityButtonFunctionality(panes, dialog);
                     }
                 }
                  });
                 
-                dialog.add(panel);
-                panel.add(channelNameLabel);
-                panel.add(channelName);
-                panel.add(portLabel);
-                panel.add(port);
-                panel.add(nickLabel);
-                panel.add(nick);
-                panel.add(passwordLabel);
-                panel.add(password);
-                panel.add(connectButton);                
-                dialog.setVisible(true);
-                
-                connectButton.addActionListener(new java.awt.event.ActionListener(){
+                saveButton.addActionListener(new java.awt.event.ActionListener(){
                     public void actionPerformed(java.awt.event.ActionEvent e)
                     {
-                        //stuff to do when submit butten pressed
+                        identityButtonFunctionality(panes,dialog);
                     }
                     
                 });
@@ -255,6 +242,8 @@ public class GUI1 extends javax.swing.JFrame {
         editMenu.setText("Edit");
         jMenuBar2.add(editMenu);
         
+        settingsMenu.setText("Settings");
+        jMenuBar2.add(settingsMenu);
 
         setJMenuBar(jMenuBar2);
 
@@ -278,7 +267,77 @@ public class GUI1 extends javax.swing.JFrame {
         );
         pack();
     }
+    private void loadProperties()
+    {
+	Properties prop = new Properties();
+	InputStream input = null;
+ 
+	try {
+		input = new FileInputStream("config.properties");
+		prop.load(input);
+ 
+                Connection.real = prop.getProperty("Real");
+                Connection.nicks[0] = prop.getProperty("Nick");
+                Connection.currentNick = Connection.nicks[0];
+                Connection.nicks[1] = prop.getProperty("Second");
+                Connection.nicks[2] = prop.getProperty("Third");
+ 
+	} catch (IOException ex) {
+		ex.printStackTrace();
+	} finally {
+		if (input != null) {
+			try {
+				input.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}        
+    }
+    private void quickConnectButtonFunctionality(JTextField[] panes, JDialog dialog)
+    {
+        String chan = panes[0].getText().trim();
+        String p = panes[1].getText().trim();
+        String n = panes[2].getText().trim();
+        String pass = panes[3].getText().trim();
 
+        if (chan.isEmpty() || p.isEmpty() || n.isEmpty())
+        {
+            javax.swing.JOptionPane.showMessageDialog(dialog, "Server, port and nick are required");
+        }
+        else
+        {
+        dialog.dispose();
+        c = new Connection(chan, Integer.valueOf(p));
+        c.nicks[0] = n;
+        c.password = pass;
+        return;
+        }
+    }
+    private void identityButtonFunctionality(JTextField[] panes, JDialog dialog)
+    {
+        try {
+            output = new FileOutputStream("config.properties");
+            prop.setProperty("Real", panes[0].getText().trim());
+            prop.setProperty("Nick", panes[1].getText().trim());
+            prop.setProperty("Second", panes[2].getText().trim() );
+            prop.setProperty("Third", panes[3].getText().trim());
+            prop.store(output, null);
+
+            } catch (IOException io) {
+                Logger.getLogger(GUI1.class.getName()).log(Level.SEVERE, null, io);
+            } finally {
+                if (output != null) {
+                    try {
+                        output.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        dialog.dispose();
+
+    }
     private void chatInputPaneKeyPressed(java.awt.event.KeyEvent evt)
     {
         Component aComponent = tabbedPane.getComponentAt(tabbedPane.getSelectedIndex());
@@ -298,7 +357,7 @@ public class GUI1 extends javax.swing.JFrame {
             if (msg.charAt(0) != '/')
             {          
                 channel.connection.send(output);
-                channel.insertString(("<" + channel.connection.nick + ">:".trim() +" "+ msg.trim()),ChannelPanel.chatColor);   
+                channel.insertString(("<" + Connection.currentNick + ">:".trim() +" "+ msg.trim()),ChannelPanel.chatColor);   
                 chatInputPane.setText(null);
                 evt.consume();
                 return;
@@ -311,7 +370,15 @@ public class GUI1 extends javax.swing.JFrame {
             }
                        
             } catch(IOException e){
-                System.out.println("IOException chatInputPane");
+                try {   
+                    channel.insertString("[Error] *** You are not connected to the server.",ChannelPanel.errorColor);
+                    chatInputPane.setText(null);
+                    evt.consume();
+                } catch (BadLocationException ex) {
+                    Logger.getLogger(GUI1.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (IOException ex) {
+                    Logger.getLogger(GUI1.class.getName()).log(Level.SEVERE, null, ex);
+                }
             } catch (BadLocationException ex) {
                 Logger.getLogger(GUI1.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -352,6 +419,7 @@ public class GUI1 extends javax.swing.JFrame {
     private javax.swing.JTextPane chatPane;
     private javax.swing.JMenu fileMenu;
     private javax.swing.JMenu editMenu;
+    private javax.swing.JMenu settingsMenu;
     private javax.swing.JMenuBar jMenuBar2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;

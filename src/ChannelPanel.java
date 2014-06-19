@@ -46,10 +46,10 @@ import javax.swing.text.StyleContext;
         SortedListModel<User> model = new SortedListModel<User>();
         ArrayList<String> list = new ArrayList<String>();
         
-        
         Document doc;  
         StyleContext sc = StyleContext.getDefaultStyleContext();
         Style style = sc.addStyle("DefaultStyle", null);
+        Style timestampStyle = sc.addStyle("DefaultStyle", null);
         
         static String errorColor = "#FF0000", chatColor="#000000", serverColor="#990099", connectColor="#993300", timestampColor="#909090";
         static String font = "monospace";
@@ -109,9 +109,6 @@ import javax.swing.text.StyleContext;
         
         ChangeListener changeListener = new ChangeListener(){ //use this.population ??
             public void stateChanged(ChangeEvent changeEvent){
-                //javax.swing.JTabbedPane tabbedPane = (javax.swing.JTabbedPane)changeEvent.getSource();
-                //int index = tabbedPane.getSelectedIndex();
-                //ChannelPanel c = (ChannelPanel)tabbedPane.getComponentAt(index);
                 updateTabInfo();
             }          
         };
@@ -119,10 +116,14 @@ import javax.swing.text.StyleContext;
         }
      
         
-        public void setStyles()
+        public void setStyles() //TODO: static styles so we dont have to decode on every insertString
         {
         StyleConstants.setFontFamily(style, "monospace");
         StyleConstants.setBold(style, true);
+        
+        StyleConstants.setFontFamily(timestampStyle, "monospace");
+        StyleConstants.setBold(timestampStyle, true);
+        StyleConstants.setForeground(timestampStyle, Color.decode(timestampColor) );
         }
         public String makeTimestamp()
         {
@@ -149,7 +150,9 @@ import javax.swing.text.StyleContext;
         }
         public void insertString(String line, String color) throws BadLocationException, IOException
         { 
+            String timestamp = makeTimestamp();
             StyleConstants.setForeground(style, Color.decode(color));
+            doc.insertString(doc.getLength(), "["+timestamp+"] ", timestampStyle);
             doc.insertString(doc.getLength(), line+"\n", style);
             return;
         }
@@ -293,7 +296,7 @@ import javax.swing.text.StyleContext;
         final static ImageIcon iconGreen = new ImageIcon("src/icons/user.png");
         final static ImageIcon iconOrange = new ImageIcon("src/icons/user-female.png");
         final static ImageIcon iconPurple = new ImageIcon("src/icons/user-red.png");
-        final static ImageIcon iconRed = new ImageIcon("user-green.png");
+        final static ImageIcon iconRed = new ImageIcon("src/icons/user-green.png");
         final static ImageIcon iconBlue = new ImageIcon("src/icons/user-gray.png");
 
         @Override

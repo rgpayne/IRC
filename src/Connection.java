@@ -23,7 +23,8 @@ public class Connection implements Runnable{
     BufferedReader reader;
     BufferedWriter writer;
     String server, host, password;
-    static String nick = "rieux";
+    static String[] nicks = {"", "", ""};
+    static String currentNick = "", real = "";
     int port;
     static JTabbedPane tabbedPane;
     static JLabel tabInfo;
@@ -31,7 +32,7 @@ public class Connection implements Runnable{
     
 
     public Connection(String server, int port) //need nick and password eventually
-    {
+    { 
        this.server = server;
        this.port = port;
        this.password = password;
@@ -42,7 +43,8 @@ public class Connection implements Runnable{
     public void send(String line) throws IOException, BadLocationException
     {
         if (line.toUpperCase().equals("QUIT")){
-            System.exit(0);
+            this.writer.write("quit+\r\n");
+            disconnect();
             return;
         }
         this.writer.write(line+"\r\n");
@@ -63,6 +65,7 @@ public class Connection implements Runnable{
     {
         Parser parser = new Parser(line);
         String command = parser.getCommand();
+        System.out.println(line);
         
         if (command.equals("AWAY"))
         {
@@ -79,7 +82,7 @@ public class Connection implements Runnable{
         }
         if (command.equals("JOIN"))
         {
-           if (nick.equals(parser.getNick())) //if joined is me
+           if (currentNick.equals(parser.getNick())) //if joined is me
            {
                String channelName = parser.getTrailing();
                if (channelName.startsWith("#"))
@@ -87,7 +90,7 @@ public class Connection implements Runnable{
                    int indexOfChannel = findTab(channelName);
                    if (indexOfChannel == -1)
                    {
-                       ChannelPanel c = new ChannelPanel(channelName, nick, this);
+                       ChannelPanel c = new ChannelPanel(channelName, currentNick, this);
                        int newTabIndex = findTab(c.name);
                        tabbedPane.setSelectedIndex(newTabIndex);                     
                        return;
@@ -129,13 +132,13 @@ public class Connection implements Runnable{
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             ChannelPanel channel = (ChannelPanel)aComponent;
                         
-            if (kicked.equals(nick)) //i am kicked
+            if (kicked.equals(currentNick)) //i am kicked
             {
                channel.insertString("*** You have been kicked from the channel by "+kickedBy+ " ("+kickMessage+")", ChannelPanel.serverColor);
                channel.clear();
                return;
             }
-            if (kickedBy.equals(nick)) //i kick somebody
+            if (kickedBy.equals(currentNick)) //i kick somebody
             {
                 channel.insertString("*** You have kicked "+kicked+" from the channel ("+kickMessage+")", ChannelPanel.serverColor);
                 channel.removeFromUserList(kicked);
@@ -149,8 +152,9 @@ public class Connection implements Runnable{
             }
         }
         if (command.equals("MODE"))
-        {           
-            if (parser.getServer().equals(nick)) //setting personal mode
+        {
+            System.out.println("__"+parser.getServer()+"__"+currentNick);
+            if (parser.getServer().equals(currentNick)) //setting personal mode
             {
                 Component aComponent = tabbedPane.getSelectedComponent();
                 ChannelPanel channel = ((ChannelPanel)aComponent);
@@ -198,7 +202,7 @@ public class Connection implements Runnable{
             String oldNick = parser.getNick();
             String newNick = parser.getTrailing();
             
-            if (!nick.equals(oldNick)) //if someone else changes name
+            if (!currentNick.equals(oldNick)) //if someone else changes name
             {
                 for (int i = 0; i < tabbedPane.getTabCount(); i++)
                 {
@@ -257,8 +261,8 @@ public class Connection implements Runnable{
                     Component aComponent = tabbedPane.getComponentAt(i);
                     ChannelPanel channel = ((ChannelPanel)aComponent);
                     channel.removeFromUserList(oldNick);
-                    this.nick = prefix+newNick.substring(1);
-                    channel.addToUserList(this.nick);
+                    this.currentNick = prefix+newNick.substring(1);
+                    channel.addToUserList(this.currentNick);
                     channel.insertString("*** You are now known as "+newNick, ChannelPanel.serverColor);
                     //this.nick = newNick;
                 }
@@ -290,7 +294,7 @@ public class Connection implements Runnable{
                 System.out.println("___/PART is broken___");
                 return;
             }
-            if (nick.equals(parser.getNick())){ //if i'm leaving
+            if (currentNick.equals(parser.getNick())){ //if i'm leaving
                 tabbedPane.remove(indexOfChannel);
                 return;
             }
@@ -311,7 +315,7 @@ public class Connection implements Runnable{
         {
             String channelName = parser.getMiddle();
            
-            if (channelName.equals(nick))
+            if (channelName.equals(currentNick))
             {
                 channelName = parser.getNick();
                 int indexOfChannel = findTab(channelName);
@@ -323,7 +327,7 @@ public class Connection implements Runnable{
                         return;
                         
                     }
-                    ChannelPanel channel = new ChannelPanel(channelName, nick, this);
+                    ChannelPanel channel = new ChannelPanel(channelName, currentNick, this);
                     channel.insertString("<"+channelName+">: "+parser.getTrailing(), ChannelPanel.chatColor);
                     return;
                 }
@@ -336,7 +340,7 @@ public class Connection implements Runnable{
             int indexOfChannel = findTab(channelName);
             if (indexOfChannel == -1)
             {
-                ChannelPanel channel = new ChannelPanel(channelName, nick, this);
+                ChannelPanel channel = new ChannelPanel(channelName, currentNick, this);
                 channel.insertString("<"+channelName+">: "+parser.getTrailing(), ChannelPanel.chatColor);
                 return;
             }
@@ -363,7 +367,7 @@ public class Connection implements Runnable{
             ChannelPanel channel = ((ChannelPanel)aComponent);
             channel.topic = parser.getTrailing();
             
-            if (nick.equals(parser.getNick()))
+            if (currentNick.equals(parser.getNick()))
             {
                 channel.insertString("*** You set the channel topic to: "+ channel.topic, ChannelPanel.serverColor);
             }
@@ -381,7 +385,7 @@ public class Connection implements Runnable{
             int indexOfChannel = findTab(host);
             if (indexOfChannel == -1)
             {
-                new ChannelPanel(host, nick, this);
+                new ChannelPanel(host, currentNick, this);
                 indexOfChannel = findTab(host);
             }
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
@@ -697,7 +701,31 @@ public class Connection implements Runnable{
         }
         if (command.equals("333")) //end of /list
         {
-            
+        }
+        if (command.equals("433")) //nick in use
+        {
+            String[] s = parser.getParams().trim().split(" ");
+            String newNick = "";
+            for (int i = 0; i < nicks.length; i++)
+            {
+                if (s[1].equals(nicks[i]))
+                {
+                    if (i < 2) newNick = nicks[i+1];
+                }
+            }
+            this.currentNick = newNick;
+            if (currentNick.equals(""))
+            {
+                ChannelPanel channel = ((ChannelPanel)tabbedPane.getSelectedComponent());
+                channel.insertString("[Error] All your nicks are taken", ChannelPanel.errorColor);
+                channel.connection.send("quit");
+                //disconnect();
+                return;
+            }
+            ChannelPanel channel = ((ChannelPanel)tabbedPane.getSelectedComponent());
+            channel.insertString("[Error] **"+parser.getParams().trim(), ChannelPanel.errorColor);
+            channel.connection.send("NICK "+currentNick);
+            return;       
         }
         if (command.equals("437")) //cannot change nickname while banned o moderated on channel
         {
@@ -707,7 +735,7 @@ public class Connection implements Runnable{
             int indexOfChannel = tabbedPane.getSelectedIndex();
             if (indexOfChannel == -1)
             {
-                new ChannelPanel(parser.getPrefix(), this.nick, this);
+                new ChannelPanel(parser.getPrefix(), this.currentNick, this);
                 indexOfChannel = findTab(parser.getPrefix());
             }
             ChannelPanel channel = ((ChannelPanel)tabbedPane.getComponentAt(indexOfChannel));
@@ -722,7 +750,7 @@ public class Connection implements Runnable{
         {
             return;
         }
-        if (command.equals("461")) //not enough parameters
+        if (command.equals("461")) //not enough parameters //on USER?
         {
             return;
         }
@@ -747,6 +775,15 @@ public class Connection implements Runnable{
             //((ChannelPanel)aComponent).insertString(parser.getCommand(), ChannelPanel.serverColor);
         }        
     }
+    public void disconnect()
+    {
+        try {
+            this.socket.close();
+            Thread.currentThread().interrupt();
+        } catch (IOException ex) {
+            //do nothing
+        }
+    }
     
     public void run()
     {
@@ -756,15 +793,17 @@ public class Connection implements Runnable{
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             String line;
-            while (socket.isConnected())
+            while (socket.isConnected() && !socket.isClosed())
             {
-                send("NICK "+nick);
-                send("USER "+nick+"123"+" 8 * : some guy");
+                send("NICK "+nicks[0]);
+                send("USER "+nicks[0]+"123"+" 8 * : "+real);
                 send("join #lmitb");
-                while ((line = reader.readLine()) != null)
-                {
-                    parseFromServer(line);
+                
+                while (!socket.isClosed() && (line = reader.readLine()) != null)
+                {                   
+                     parseFromServer(line);
                 }
+                
             }       
         } catch (IOException ex) {
             Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
