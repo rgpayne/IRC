@@ -79,6 +79,7 @@ import javax.swing.event.*;
         setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
         setDividerLocation(480);
         setResizeWeight(1.0);
+        setDividerSize(5);
         setVerifyInputWhenFocusTarget(false);
         
         chatPane.setEditable(false);
@@ -98,6 +99,8 @@ import javax.swing.event.*;
             }          
         };
         tabbedPane.addChangeListener(changeListener);   
+        
+        
         }
      
         

@@ -5,10 +5,11 @@ import java.util.*;
 import java.util.logging.*;
 import java.io.*;
 
-public class GUI1 extends javax.swing.JFrame {
+public class GUI extends javax.swing.JFrame {
     final static ImageIcon mainIcon = new ImageIcon("src/icons/weather-sun.png");
     final static ImageIcon quickConnectIcon = new ImageIcon("src/icons/connect.png");
     final static ImageIcon identitiesIcon = new ImageIcon("src/icons/edit-group.png");
+    final static ImageIcon serverListIcon = new ImageIcon("src/icons/unsortedlist1.png");
 
     
     EditorKit editorKit;
@@ -16,7 +17,7 @@ public class GUI1 extends javax.swing.JFrame {
     final static Properties prop = new Properties();
     OutputStream output = null;
 
-    public GUI1() {
+    public GUI() {
         super("Alpha IRC 0.1");
         setIconImage(mainIcon.getImage());
         
@@ -66,7 +67,7 @@ public class GUI1 extends javax.swing.JFrame {
                 
                 String[] labels = {"Server", "Port", "Nick", "Password"};
                 int numPairs = labels.length;
-                final JDialog dialog = new JDialog(GUI1.this);
+                final JDialog dialog = new JDialog(GUI.this);
                 SpringLayout layout = new SpringLayout();
                 JPanel panel = new JPanel(layout);
                 final JTextField[] panes = new JTextField[numPairs];
@@ -122,7 +123,7 @@ public class GUI1 extends javax.swing.JFrame {
         identities.addActionListener(new java.awt.event.ActionListener(){
             public void actionPerformed(java.awt.event.ActionEvent e)
             {
-                final JDialog dialog = new JDialog(GUI1.this);
+                final JDialog dialog = new JDialog(GUI.this);
                 SpringLayout layout = new SpringLayout();
                 JPanel panel = new JPanel(layout);
                 String[] labelVal = {Connection.real, Connection.nicks[0], Connection.nicks[1], Connection.nicks[2]};
@@ -177,6 +178,52 @@ public class GUI1 extends javax.swing.JFrame {
                 });
             }
         });
+        
+        //SERVER LIST
+        serverList = new javax.swing.JMenuItem("Server List", serverListIcon);
+        settingsMenu.add(serverList);
+        serverList.addActionListener(new java.awt.event.ActionListener(){
+            public void actionPerformed(java.awt.event.ActionEvent e)
+            {
+                
+                final JDialog dialog = new JDialog(GUI.this);
+                Container contentpane = dialog.getContentPane();
+                SpringLayout layout = new SpringLayout();
+                contentpane.setLayout(layout);
+                contentpane.setPreferredSize(new Dimension(388,200));
+                final JList list = new JList();
+                JScrollPane scrollPane = new JScrollPane();
+                scrollPane.setPreferredSize(new Dimension(380,150));
+                scrollPane.setViewportView(list);
+                JButton add = new JButton("Add");
+                JButton edit = new JButton ("Edit");
+                JButton remove = new JButton("Remove");
+                JButton connect = new JButton("Connect");
+                dialog.setResizable(false);
+                dialog.setTitle("Server List");
+                dialog.setLocationRelativeTo(tabbedPane);   
+                contentpane.add(scrollPane);
+                contentpane.add(add);
+                contentpane.add(edit);
+                contentpane.add(remove);
+                contentpane.add(connect);
+                
+                layout.putConstraint(SpringLayout.WEST, scrollPane , 5, SpringLayout.WEST, contentpane); 
+                layout.putConstraint(SpringLayout.SOUTH, add, -10, SpringLayout.SOUTH, contentpane);
+                layout.putConstraint(SpringLayout.WEST, add, 10, SpringLayout.WEST, contentpane);                
+                layout.putConstraint(SpringLayout.SOUTH, edit, -10, SpringLayout.SOUTH, contentpane);
+                layout.putConstraint(SpringLayout.WEST, edit, 10, SpringLayout.EAST, add);                
+                layout.putConstraint(SpringLayout.SOUTH, remove, -10, SpringLayout.SOUTH, contentpane);
+                layout.putConstraint(SpringLayout.WEST, remove, 10, SpringLayout.EAST, edit);                
+                layout.putConstraint(SpringLayout.SOUTH, connect, -10, SpringLayout.SOUTH, contentpane);
+                layout.putConstraint(SpringLayout.EAST, connect, -10 , SpringLayout.EAST, contentpane);
+                
+                dialog.setVisible(true);
+                dialog.pack();
+                
+            }
+        });
+                
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -309,7 +356,7 @@ public class GUI1 extends javax.swing.JFrame {
             prop.store(output, null);
 
             } catch (IOException io) {
-                Logger.getLogger(GUI1.class.getName()).log(Level.SEVERE, null, io);
+                Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, io);
             } finally {
                 if (output != null) {
                     try {
@@ -359,12 +406,12 @@ public class GUI1 extends javax.swing.JFrame {
                     chatInputPane.setText(null);
                     evt.consume();
                 } catch (BadLocationException ex) {
-                    Logger.getLogger(GUI1.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (IOException ex) {
-                    Logger.getLogger(GUI1.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
                 }
             } catch (BadLocationException ex) {
-                Logger.getLogger(GUI1.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         if (evt.getKeyCode() == java.awt.event.KeyEvent.VK_UP)
@@ -393,7 +440,7 @@ public class GUI1 extends javax.swing.JFrame {
 
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new GUI1().setVisible(true);
+                new GUI().setVisible(true);
             }
         });
         
@@ -417,4 +464,5 @@ public class GUI1 extends javax.swing.JFrame {
     private javax.swing.JMenuItem pasteAction;
     private javax.swing.JMenuItem quickConnect;
     private javax.swing.JMenuItem identities;
+    private javax.swing.JMenuItem serverList;
 }

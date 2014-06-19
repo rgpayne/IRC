@@ -56,7 +56,6 @@ public class Connection implements Runnable{
     {
         Parser parser = new Parser(line);
         String command = parser.getCommand();
-        System.out.println(line);
         
         if (command.equals("AWAY"))
         {
@@ -86,7 +85,7 @@ public class Connection implements Runnable{
                        tabbedPane.setSelectedIndex(newTabIndex);                     
                        return;
                    }
-                   else{ //joining a room for which you already have a tab (i.e. you were kicked or something)
+                   else{ //joining a room for which you already have a tab (i.e. you were kicked or lost connection or something)
                        
                        Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
                        ChannelPanel channel = ((ChannelPanel)aComponent);
@@ -310,9 +309,10 @@ public class Connection implements Runnable{
                     {
                         this.send("NOTICE "+channelName+" "+"\001AlphaClient:v0.1:LM17\001");  //placeholder
                         return;
-                        
                     }
                     ChannelPanel channel = new ChannelPanel(channelName, currentNick, this);
+                    channel.setRightComponent(null);
+                    channel.setDividerSize(0);
                     channel.insertString("<"+channelName+">: "+parser.getTrailing(), ChannelPanel.chatColor);
                     return;
                 }
@@ -726,7 +726,7 @@ public class Connection implements Runnable{
             ChannelPanel channel = ((ChannelPanel)tabbedPane.getComponentAt(indexOfChannel));
             channel.setDividerLocation(Integer.MAX_VALUE);
             channel.setDividerSize(0);
-            channel.setEnabled(false);
+            channel.setRightComponent(null);
             channel.insertString("Please wait while we process your connection...", ChannelPanel.connectColor);
             return;            
         }
