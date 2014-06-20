@@ -170,7 +170,7 @@ public class Parser{
          */
         public String toString()
         {
-          return ("command:"+command+"| host:"+host+"| middle:"+middle+"| nick:" + nick+"| params:"+params+"| prefix:"+prefix+ "| server:"+servername+"| trailing:"+trailing+"| user:"+user);                       
+          return ("command:"+getCommand()+"| host:"+getHost()+"| middle:"+getMiddle()+"| nick:" + getNick()+"| params:"+getParams()+"| prefix:"+getPrefix()+ "| server:"+getServer()+"| trailing:"+getTrailing()+"| user:"+getUser());                       
 
         }
 }

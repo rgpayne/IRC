@@ -54,16 +54,16 @@ public class Connection implements Runnable{
     public void parseFromServer(String line) throws IOException, BadLocationException
     {
         Parser parser = new Parser(line);
-        String command = parser.getCommand();
-        
+        String command = parser.getCommand();  
+        System.out.println(line);
+        System.out.println(parser.toString());
         if (command.equals("AWAY"))
         {
             String channelName = parser.getTrailing();
             int indexOfChannel = findTab("#" + channelName);
             if (indexOfChannel == -1)
             {
-                ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(0);
-                channel.insertString("___"+line, ChannelPanel.serverColor);
+                System.out.println(parser.toString());
             } 
             ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfChannel);
             channel.insertString(parser.getTrailing(), ChannelPanel.serverColor);
@@ -74,6 +74,7 @@ public class Connection implements Runnable{
            if (currentNick.equals(parser.getNick())) //if joined is me
            {
                String channelName = parser.getTrailing();
+               if (channelName.equals("")) channelName = parser.getParams().trim();
                if (channelName.startsWith("#"))
                {
                    int indexOfChannel = findTab(channelName);
@@ -385,7 +386,6 @@ public class Connection implements Runnable{
                     if (s[1].equals(this.server))
                     {
                         String[] c = (s[s.length-3]).trim().split(" ");
-                        System.out.println(c.toString());
                         for (int j = 0; j < c.length; j++)
                         {
                              send("JOIN "+c[j]);
@@ -401,6 +401,10 @@ public class Connection implements Runnable{
             return;
         }
         if (command.equals("042")) //unique id
+        {
+            return;
+        }
+        if (command.equals("221")) //requesting to see own modes
         {
             return;
         }
@@ -521,6 +525,10 @@ public class Connection implements Runnable{
         }
         if (command.equals("315")) //end of /who
         {
+            String s = parser.getMiddle().split(" ")[1];
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+            channel.insertString("[Who] End of /WHO list for "+s, ChannelPanel.serverColor);
+            return;
         }
         if (command.equals("317")) //whois idletime
         {
@@ -621,6 +629,17 @@ public class Connection implements Runnable{
         }
         if (command.equals("352")) //who reply
         {
+            String[] s = parser.getMiddle().split(" ");
+            String person;
+            if (s.length >= 5) person = s[5];
+            else 
+            {
+                String[] p = parser.getParams().split(" ");
+                person = p[5];
+            }
+            String msg = "[Who] "+person+" is "+s[2]+"@"+s[3]+" ("+parser.getTrailing().substring(2)+")";
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+            channel.insertString(msg, ChannelPanel.serverColor);
             
         }
         if (command.equals("353")) //names command
@@ -630,6 +649,7 @@ public class Connection implements Runnable{
             int index2 = channelName.indexOf(":");
             if (index2 != -1) channelName = channelName.substring(index, index2 - 1);
             else channelName = channelName.substring(index);
+            System.out.println(channelName);
             int indexOfChannel = findTab(channelName);
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             String[] nn = parser.getTrailing().split(" ");
@@ -686,14 +706,32 @@ public class Connection implements Runnable{
         }
         if (command.equals("403")) //no such channel 
         {
-            //does this exist?
+            String[] s = parser.getParams().split(" ");
+            String chan = s[1].trim();
+            ChannelPanel channel = ((ChannelPanel)tabbedPane.getSelectedComponent());
+            channel.insertString("[Error] "+chan+": No such channel. ", ChannelPanel.errorColor);
+        }
+        if (command.equals("404"))
+        {
+            String[] s = parser.getParams().split(" ");
+            String chan = s[1].trim();
+            ChannelPanel channel = ((ChannelPanel)tabbedPane.getSelectedComponent());
+            channel.insertString("[Error] "+chan+": Cannot send to channel.", ChannelPanel.errorColor);
+            return;          
+        }
+        if (command.equals("405"))
+        {
+            String[] s = parser.getParams().trim().split(" ");
+            String chan = s[1].trim();
+            ChannelPanel channel = ((ChannelPanel)tabbedPane.getSelectedComponent());
+            channel.insertString("[Error] "+chan+": You have joined too many channels.", ChannelPanel.errorColor);
             return;
         }
         if (command.equals("412")) //no text to send
         {
             String[] s = parser.getParams().trim().split(" ");
             ChannelPanel channel = ((ChannelPanel)tabbedPane.getSelectedComponent());
-            channel.insertString("[Error] "+s[0]+" no text to send", ChannelPanel.errorColor);
+            channel.insertString("[Error] "+s[0]+" no text to send.", ChannelPanel.errorColor);
             return;
         }
         if (command.equals("421")) //unknown command
@@ -703,15 +741,11 @@ public class Connection implements Runnable{
             channel.insertString("[Error] "+s[1]+": Unknown command.", ChannelPanel.errorColor);
             return;
         }
-        if (command.equals("322")) // /list
-        {
-        }
-        if (command.equals("333")) //end of /list
-        {
-        }
         if (command.equals("432")) //eroneous nickname
         {
-            
+            ChannelPanel channel = ((ChannelPanel)tabbedPane.getSelectedComponent());
+            channel.insertString("[Nick] Erroneous Nickname", ChannelPanel.errorColor);
+            return;
         }        
         if (command.equals("433")) //nick in use
         {
@@ -749,9 +783,6 @@ public class Connection implements Runnable{
                 indexOfChannel = findTab(parser.getPrefix());
             }
             ChannelPanel channel = ((ChannelPanel)tabbedPane.getComponentAt(indexOfChannel));
-            channel.setDividerLocation(Integer.MAX_VALUE);
-            channel.setDividerSize(0);
-            channel.setRightComponent(null);
             channel.insertString("Please wait while we process your connection...", ChannelPanel.connectColor);
             return;            
         }

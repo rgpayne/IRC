@@ -31,14 +31,13 @@ public class GUI extends JFrame {
         setIconImage(mainIcon.getImage());
         
         loadProperties();
-        System.out.println(savedServers.toString());
         initComponents();
         ChannelPanel.tabbedPane = tabbedPane;
         Connection.tabbedPane = tabbedPane;
         ChannelPanel.tabInfo = tabInfo;
         Connection.tabInfo = tabInfo;
         
-       //new Connection("irc.rizon.net", 6667);
+        autoConnect();
     }
 
     @SuppressWarnings("unchecked")
@@ -323,7 +322,6 @@ public class GUI extends JFrame {
                             return;
                         }
                         String entry = (String)model.getElementAt(index);
-                        System.out.println(entry);
                         String[] s = entry.split(",");
                         int choice = Integer.valueOf(s[0]);
                         try{
@@ -477,6 +475,20 @@ public class GUI extends JFrame {
 			}
 		}
 	}        
+    }
+    private void autoConnect()
+    {
+        for (int i = 0; i < savedServers.size(); i++)
+        {
+            String[] s = savedServers.get(i).split(",");
+            if (s[s.length-2].equals("true"))
+            {
+                String srv = s[1];
+                int port = Integer.valueOf(s[2]);
+                new Connection(srv, port);
+            }
+        }
+
     }
     private void quickConnectButtonFunctionality(JTextField[] panes, JDialog dialog)
     {

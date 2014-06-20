@@ -91,8 +91,11 @@ import javax.swing.event.*;
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 
         setLeftComponent(jScrollPane2);
-        setRightComponent(jScrollPane1);
-        
+        if (name.startsWith("#")) setRightComponent(jScrollPane1);
+        else{
+            setRightComponent(null);
+            setDividerSize(0);
+        }
         
         ChangeListener changeListener = new ChangeListener(){
             public void stateChanged(ChangeEvent changeEvent){
