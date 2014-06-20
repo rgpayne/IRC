@@ -1,9 +1,10 @@
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.io.IOException;
-import java.lang.management.ThreadMXBean;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -74,9 +75,9 @@ import javax.swing.event.*;
         userListPane.setCellRenderer(new CustomRenderer());   
         userListPane.setAutoscrolls(false);
         userListPane.setFocusable(false);
-        userListPane.setMaximumSize(new java.awt.Dimension(25, 25));
+        userListPane.setMaximumSize(new Dimension(25, 25));
         
-        setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
+        setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
         setDividerLocation(480);
         setResizeWeight(1.0);
         setDividerSize(5);
@@ -269,7 +270,7 @@ import javax.swing.event.*;
                 fireIntervalRemoved(this,0,set.size());
             }
         }
-            public class NickComparator implements java.util.Comparator{
+            public class NickComparator implements Comparator{
                 public int compare(Object o1, Object o2)
                 {
                     String p1 = ((User)o1).getText().toLowerCase();
@@ -317,7 +318,6 @@ import javax.swing.event.*;
         @Override
         public int compareTo(Object o)
         {
-            System.out.println("CHECKHECK");
             User u = (User)o;
             return (this.getText().compareTo(u.getText()));
         }

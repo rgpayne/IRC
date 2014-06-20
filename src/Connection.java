@@ -148,6 +148,7 @@ public class Connection implements Runnable{
                 Component aComponent = tabbedPane.getSelectedComponent();
                 ChannelPanel channel = ((ChannelPanel)aComponent);
                 channel.insertString("[Mode] You have set personal modes: "+parser.getTrailing(), ChannelPanel.serverColor);
+                return;
             }    
             
             else //setting a user's mode
@@ -687,6 +688,10 @@ public class Connection implements Runnable{
         if (command.equals("333")) //end of /list
         {
         }
+        if (command.equals("432")) //eroneous nickname
+        {
+            
+        }        
         if (command.equals("433")) //nick in use
         {
             String[] s = parser.getParams().trim().split(" ");
