@@ -94,7 +94,7 @@ import javax.swing.event.*;
         setRightComponent(jScrollPane1);
         
         
-        ChangeListener changeListener = new ChangeListener(){ //use this.population ??
+        ChangeListener changeListener = new ChangeListener(){
             public void stateChanged(ChangeEvent changeEvent){
                 updateTabInfo();
             }          

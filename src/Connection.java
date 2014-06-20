@@ -19,14 +19,13 @@ public class Connection implements Runnable{
     int port;
     static JTabbedPane tabbedPane;
     static JLabel tabInfo;
-    ChannelPanel first;
     
 
     public Connection(String server, int port) //need nick and password eventually
     { 
        this.server = server;
        this.port = port;
-       this.password = password;
+       //this.password = password;
        
        thread = new Thread(this);
        thread.start();
@@ -179,14 +178,19 @@ public class Connection implements Runnable{
                 channel.addToUserList(newNick);
                 return;
                 }
+                if (giver.equals(""))
+                {
+                    channel.insertString("*** "+"Channel mode set to: "+power, ChannelPanel.serverColor); //channel mode set by nobody
+                    return;
+                }
                 else
                 {
                     channel.insertString("*** "+giver+" set the channel to: "+power, ChannelPanel.serverColor); //channel mode
+                    return;
                 }
             }
-            return;
         }
-        if (command.equals("NICK")) //BROKEN
+        if (command.equals("NICK"))
         {
             String prefix = parser.getNick().substring(0,1);
             String oldNick = parser.getNick();
@@ -254,7 +258,6 @@ public class Connection implements Runnable{
                     this.currentNick = prefix+newNick.substring(1);
                     channel.addToUserList(this.currentNick);
                     channel.insertString("*** You are now known as "+newNick, ChannelPanel.serverColor);
-                    //this.nick = newNick;
                 }
                 return;
             }
@@ -373,6 +376,24 @@ public class Connection implements Runnable{
             {
                 new ChannelPanel(host, currentNick, this);
                 indexOfChannel = findTab(host);
+            }
+            if (command.equals("001"))
+            {
+                for (int i = 0; i < GUI.savedServers.size(); i++)
+                {
+                    String[] s = GUI.savedServers.get(i).split(",");
+                    if (s[1].equals(this.server))
+                    {
+                        String[] c = (s[s.length-3]).trim().split(" ");
+                        System.out.println(c.toString());
+                        for (int j = 0; j < c.length; j++)
+                        {
+                             send("JOIN "+c[j]);
+                        }
+                    }
+                }
+                
+                
             }
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             ChannelPanel channel = ((ChannelPanel)aComponent);
@@ -709,7 +730,6 @@ public class Connection implements Runnable{
                 ChannelPanel channel = ((ChannelPanel)tabbedPane.getSelectedComponent());
                 channel.insertString("[Error] All your nicks are taken", ChannelPanel.errorColor);
                 channel.connection.send("quit");
-                //disconnect();
                 return;
             }
             ChannelPanel channel = ((ChannelPanel)tabbedPane.getSelectedComponent());
@@ -717,7 +737,7 @@ public class Connection implements Runnable{
             channel.connection.send("NICK "+currentNick);
             return;       
         }
-        if (command.equals("437")) //cannot change nickname while banned o moderated on channel
+        if (command.equals("437")) //cannot change nickname while banned or moderated on channel
         {
         }
         if (command.equals("439")) //please wait until we process your connection
@@ -743,7 +763,7 @@ public class Connection implements Runnable{
         {
             return;
         }
-        if (command.equals("461")) //not enough parameters //on USER?
+        if (command.equals("461")) //not enough parameters (on USER?)
         {
             return;
         }
@@ -790,8 +810,6 @@ public class Connection implements Runnable{
             {
                 send("NICK "+nicks[0]);
                 send("USER "+nicks[0]+"123"+" 8 * : "+real);
-                send("join #lmitb");
-                
                 while (!socket.isClosed() && (line = reader.readLine()) != null)
                 {                   
                      parseFromServer(line);

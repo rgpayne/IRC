@@ -8,6 +8,7 @@ import javax.swing.text.*;
 import java.util.*;
 import java.util.logging.*;
 import java.io.*;
+import org.apache.commons.lang3.StringUtils;
 
 public class GUI extends JFrame {
     final static ImageIcon mainIcon = new ImageIcon("src/icons/weather-sun.png");
@@ -37,7 +38,7 @@ public class GUI extends JFrame {
         ChannelPanel.tabInfo = tabInfo;
         Connection.tabInfo = tabInfo;
         
-       new Connection("irc.rizon.net", 6667);
+       //new Connection("irc.rizon.net", 6667);
     }
 
     @SuppressWarnings("unchecked")
@@ -106,7 +107,7 @@ public class GUI extends JFrame {
                 dialog.add(panel);
                 dialog.setVisible(true);
                 JButton connectButton = new JButton("Connect");
-                connectButton.setPreferredSize(new Dimension(80,30));
+                connectButton.setPreferredSize(new Dimension(92,30));
                 panel.add(connectButton);
                 layout.putConstraint(SpringLayout.SOUTH, connectButton, 0, SpringLayout.SOUTH, dialog);
                 layout.putConstraint(SpringLayout.EAST, connectButton, -30, SpringLayout.EAST, dialog);
@@ -229,12 +230,9 @@ public class GUI extends JFrame {
                 layout.putConstraint(SpringLayout.WEST, remove, 10, SpringLayout.EAST, edit);                
                 layout.putConstraint(SpringLayout.SOUTH, connect, -10, SpringLayout.SOUTH, contentpane);
                 layout.putConstraint(SpringLayout.EAST, connect, -10 , SpringLayout.EAST, contentpane);
-                for (int i = 0; i < savedServers.size(); i++)
-                {
-                    model.addElement(savedServers.get(i));
-                }
                 
-                
+                for (int i = 0; i < savedServers.size(); i++) model.addElement(savedServers.get(i));
+
                 dialog.pack();
                 dialog.setVisible(true);
                 
@@ -267,12 +265,12 @@ public class GUI extends JFrame {
                             return;
                         }
                         String settings = (String)model.getElementAt(index);
-                        String[] s = settings.split(" ");
+                        String[] s = settings.split(",");
                         String chans = "";
                         for (String str: s) if (str.startsWith("#"))chans += " "+str;
                         
-                        JTextField server = new JTextField(s[0]+" ");
-                        JTextField port = new JTextField(s[1]+" ");
+                        JTextField server = new JTextField(s[1]);
+                        JTextField port = new JTextField(s[2]);
                         JTextField channels = new JTextField(chans.trim());
                         JCheckBox autoconnect = new JCheckBox();
                         if ((s[s.length-2]).equals("true")) autoconnect.setSelected(true);
@@ -288,15 +286,15 @@ public class GUI extends JFrame {
                             "Connect on startup", autoconnect,
                             "Secure connection (SSL)", secure
                         };
-                        int x = JOptionPane.showConfirmDialog(dialog, fields, "New Server",JOptionPane.OK_CANCEL_OPTION);
+                        int x = JOptionPane.showConfirmDialog(dialog, fields, "Edit Server",JOptionPane.OK_CANCEL_OPTION);
                         if (x == JOptionPane.CLOSED_OPTION || x == JOptionPane.CANCEL_OPTION) return;
 
-                            String entry = server.getText().trim() + " " + port.getText().trim() + " "+ 
-                                           channels.getText().trim() + " " + autoconnect.isSelected() + " " + secure.isSelected();
+                            String entry = s[0]+ ","+server.getText().trim() + "," + port.getText().trim() + ","+ 
+                                           channels.getText().trim() + "," + autoconnect.isSelected() + "," + secure.isSelected();
 
                             try {
                                 prop.load(new FileInputStream("config.properties"));
-                                prop.setProperty("ss"+index, entry);
+                                prop.setProperty("ss"+s[0], entry);
                                 prop.store(new FileOutputStream("config.properties"), null);
                                 model.remove(index);
                                 model.addElement(entry);
@@ -324,12 +322,16 @@ public class GUI extends JFrame {
                             JOptionPane.showMessageDialog(dialog,"Please select a server to remove.","Error",JOptionPane.ERROR_MESSAGE);
                             return;
                         }
-                        model.removeElementAt(index);
+                        String entry = (String)model.getElementAt(index);
+                        System.out.println(entry);
+                        String[] s = entry.split(",");
+                        int choice = Integer.valueOf(s[0]);
                         try{
                         prop.load(new FileInputStream("config.properties"));
-                        prop.remove("ss"+index);
+                        prop.remove("ss"+choice);
                         prop.store(new FileOutputStream("config.properties"), null);
                         savedServers.remove(index);
+                        model.removeElement(entry);
                         } catch (FileNotFoundException ex) {
                             Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
                         } catch (IOException ex) {
@@ -344,7 +346,7 @@ public class GUI extends JFrame {
                 {
                     public void actionPerformed(ActionEvent e) 
                     {
-                        //serverListEditButtonFunctionality(dialog, list);
+                        serverListConnectButtonFunctionality(list, dialog);
                     }
                 });
                 
@@ -354,7 +356,7 @@ public class GUI extends JFrame {
                     {
                         if (evt.getKeyCode() == KeyEvent.VK_ENTER)
                         {
-                            //serverListEditButtonFunctionality(dialog, list);
+                            serverListConnectButtonFunctionality(list, dialog);
                         }
                     }
                 });
@@ -489,11 +491,11 @@ public class GUI extends JFrame {
         }
         else
         {
-        dialog.dispose();
-        c = new Connection(chan, Integer.valueOf(p));
-        c.nicks[0] = n;
-        c.password = pass;
-        return;
+            dialog.dispose();
+            new Connection(chan, Integer.valueOf(p));
+            c.nicks[0] = n;
+            c.password = pass;
+            return;
         }
     }
     private void identityButtonFunctionality(JTextField[] panes, JDialog dialog)
@@ -602,14 +604,14 @@ public class GUI extends JFrame {
             "Connect on startup", autoconnect,
             "Secure connection (SSL)", secure
         };
-        int x = JOptionPane.showConfirmDialog(dialog, fields, "Edit", JOptionPane.OK_CANCEL_OPTION);
+        int savedServerCount = list.getModel().getSize();
+        int x = JOptionPane.showConfirmDialog(dialog, fields, "Add Server", JOptionPane.OK_CANCEL_OPTION);
         if (x == JOptionPane.CLOSED_OPTION || x == JOptionPane.CANCEL_OPTION) return;
-        String entry = server.getText().trim() + " " + port.getText().trim() + " "+ 
-                       channels.getText().trim() + " " + autoconnect.isSelected() + " " + secure.isSelected();
+        String entry = savedServerCount+","+server.getText().trim() + "," + port.getText().trim() + ","+ 
+                       channels.getText().trim() + "," + autoconnect.isSelected() + "," + secure.isSelected();
         server.requestFocusInWindow();
         try {
             prop.load(new FileInputStream("config.properties"));
-            int savedServerCount = list.getModel().getSize();
             prop.setProperty("ss"+savedServerCount, entry);
             prop.store(new FileOutputStream("config.properties"), null);
             DefaultListModel model = (DefaultListModel)list.getModel();
@@ -628,7 +630,38 @@ public class GUI extends JFrame {
             }
         return;
     }
+    private void serverListConnectButtonFunctionality(JList list, JDialog dialog)
+    {
+        int index = list.getSelectedIndex();
+        if (index == -1)
+        {
+            JOptionPane.showMessageDialog(dialog, "Please select a server", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        try{
+        prop.load(new FileInputStream("config.properties"));
+        String selection = prop.getProperty("ss"+index);
+        prop.store(new FileOutputStream("config.properties"), null);
+        String[] s = selection.split(",");
+        if (((!StringUtils.isNumeric(s[2])) || s[2].equals("") || s[1].equals("") || s.length < 5))
+        {
+            JOptionPane.showMessageDialog(dialog, "Invalid server", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        String srv = s[1];
+        int port = Integer.valueOf(s[2]);
+        dialog.dispose();
+        new Connection(srv, port);
+        return;
 
+
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    
+    }
     public static void main(String args[]) {
 
         java.awt.EventQueue.invokeLater(new Runnable() {
