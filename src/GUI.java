@@ -18,6 +18,11 @@ public class GUI extends JFrame {
     final static ImageIcon copyIcon = new ImageIcon("src/icons/edit-copy-3.png");
     final static ImageIcon cutIcon = new ImageIcon("src/icons/edit-cut-red.png");
     final static ImageIcon pasteIcon = new ImageIcon("src/icons/edit-paste-7.png");
+    final static ImageIcon prevTabIcon = new ImageIcon("src/icons/go-previous.png");
+    final static ImageIcon nextTabIcon = new ImageIcon("src/icons/go-next.png");
+    final static ImageIcon moveTabLeftIcon = new ImageIcon("src/icons/go-previous-3.png");
+    final static ImageIcon moveTabRightIcon = new ImageIcon("src/icons/go-next-3.png");
+    final static ImageIcon closeTabIcon = new ImageIcon("src/icons/tab-close-2.png");
 
     
     EditorKit editorKit;
@@ -31,6 +36,7 @@ public class GUI extends JFrame {
         setIconImage(mainIcon.getImage());
         
         loadProperties();
+        System.out.println(savedServers.toString());
         initComponents();
         ChannelPanel.tabbedPane = tabbedPane;
         Connection.tabbedPane = tabbedPane;
@@ -53,9 +59,10 @@ public class GUI extends JFrame {
         userListPane = new JTextPane();
         tabInfo = new JLabel();
         jMenuBar2 = new JMenuBar();
-        fileMenu = new JMenu();
-        editMenu = new JMenu();
-        settingsMenu = new JMenu();
+        fileMenu = new JMenu("File");
+        editMenu = new JMenu("Edit");
+        windowMenu = new JMenu("Settings");
+        settingsMenu = new JMenu("Menu");
         
         copyAction = new JMenuItem(new DefaultEditorKit.CopyAction());
         copyAction.setText("Copy");
@@ -69,7 +76,96 @@ public class GUI extends JFrame {
         pasteAction.setText("Paste");
         pasteAction.setIcon(pasteIcon);
         editMenu.add(pasteAction);
-        
+        editMenu.add(new JSeparator());
+        clearWindow = new JMenuItem("Clear Window");
+        editMenu.add (clearWindow);
+        clearWindow.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+                try {
+                    channel.doc.remove(0, channel.doc.getLength());
+                } catch (BadLocationException ex) {
+                    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        });
+        clearAllWindows = new JMenuItem("Clear All Windows");
+        editMenu.add(clearAllWindows);
+        clearAllWindows.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                for (int i = 0; i < tabbedPane.getTabCount(); i++)
+                {
+                    ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
+                    try {
+                       channel.doc.remove(0, channel.doc.getLength());
+                    } catch (BadLocationException ex) {
+                       Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }                  
+            }
+        });
+        previousTab = new JMenuItem("Previous Tab", prevTabIcon);
+        windowMenu.add(previousTab);
+        previousTab.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int indexOfChannel = tabbedPane.getSelectedIndex();
+                if (indexOfChannel > 0) tabbedPane.setSelectedIndex(indexOfChannel-1);
+                return;
+            }
+        });
+        nextTab = new JMenuItem("Next Tab", nextTabIcon);
+        windowMenu.add(nextTab);
+        windowMenu.add(new JSeparator());
+        nextTab.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int indexOfChannel = tabbedPane.getSelectedIndex();
+                if (indexOfChannel < tabbedPane.getTabCount()-1) tabbedPane.setSelectedIndex(indexOfChannel+1);
+                return;
+            }
+        });
+        moveTabLeft = new JMenuItem("Move Tab Left", moveTabLeftIcon);
+        windowMenu.add(moveTabLeft);
+        moveTabLeft.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int index = tabbedPane.getSelectedIndex();
+                if (index <= 0) return;
+                ChannelPanel moved = (ChannelPanel)tabbedPane.getComponentAt(index);
+                String label = tabbedPane.getTitleAt(index);
+                tabbedPane.add(moved,index-1);
+                tabbedPane.setTitleAt(index-1, label);
+                tabbedPane.setSelectedComponent(moved);
+                return;
+            }
+        });
+        moveTabRight = new JMenuItem("Move Tab Right", moveTabRightIcon);
+        windowMenu.add(moveTabRight);
+        moveTabRight.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int index = tabbedPane.getSelectedIndex()+1;
+                if (index >= tabbedPane.getTabCount()) return;
+                ChannelPanel moved = (ChannelPanel)tabbedPane.getComponentAt(index);
+                String label = tabbedPane.getTitleAt(index);
+                tabbedPane.add(moved,index-1);
+                tabbedPane.setTitleAt(index-1, label);
+                tabbedPane.setSelectedIndex(index);
+                return;               
+            }
+        });
+        closeTab = new JMenuItem("Close Tab", closeTabIcon);
+        windowMenu.add(closeTab);
+        closeTab.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                tabbedPane.remove(tabbedPane.getSelectedComponent());
+            }
+        });
         
         
         //QUICK CONNECT
@@ -404,14 +500,11 @@ public class GUI extends JFrame {
         jMenuBar2.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
         jMenuBar2.setFocusable(false);
 
-        fileMenu.setText("File");
         jMenuBar2.add(fileMenu);
-
-        editMenu.setText("Edit");
         jMenuBar2.add(editMenu);
-        
-        settingsMenu.setText("Settings");
         jMenuBar2.add(settingsMenu);
+        jMenuBar2.add(windowMenu);
+        
 
         setJMenuBar(jMenuBar2);
 
@@ -541,6 +634,7 @@ public class GUI extends JFrame {
         
         if (evt.getKeyCode() == KeyEvent.VK_ENTER)
         {
+            if (chatInputPane.getText().equals("")) return;
             try
             {
             
@@ -548,7 +642,7 @@ public class GUI extends JFrame {
             String target = channel.name;
             channel.history.add(msg);
             String output = "PRIVMSG "+target+" :"+msg;
-            channel.historyCounter = channel.history.size()-1;
+            channel.historyCounter = channel.history.size();
             
             if (msg.charAt(0) != '/')
             {          
@@ -581,22 +675,20 @@ public class GUI extends JFrame {
         }
         if (evt.getKeyCode() == KeyEvent.VK_UP)
         {
+            if (channel.history.size() <= 0) return;
             String msg = "";
-            if (channel.historyCounter >= 0){
-                msg = channel.history.get(channel.historyCounter);
-                if (channel.historyCounter > 0) channel.historyCounter--;
-            }            
+            if (channel.historyCounter > 0) msg = channel.history.get(channel.historyCounter-1);
             chatInputPane.setText(msg);
+            if (channel.historyCounter > 0) channel.historyCounter--;
             return;
         }
         if (evt.getKeyCode() == KeyEvent.VK_DOWN)
         {
+            if (channel.historyCounter == channel.history.size()) return;
             String msg = "";
-            if (channel.historyCounter < channel.history.size()-1){
-                msg = channel.history.get(channel.historyCounter);
-                channel.historyCounter++;
-            }
+            if (channel.historyCounter < channel.history.size()) msg = channel.history.get(channel.historyCounter);
             chatInputPane.setText(msg);
+            if (channel.historyCounter < channel.history.size()) channel.historyCounter++;
             return;
         }
     }
@@ -689,6 +781,7 @@ public class GUI extends JFrame {
     private JMenu fileMenu;
     private JMenu editMenu;
     private JMenu settingsMenu;
+    private JMenu windowMenu;
     private JMenuBar jMenuBar2;
     private JScrollPane jScrollPane1;
     private JScrollPane jScrollPane2;
@@ -703,4 +796,11 @@ public class GUI extends JFrame {
     private JMenuItem quickConnect;
     private JMenuItem identities;
     private JMenuItem serverList;
+    private JMenuItem clearWindow;
+    private JMenuItem clearAllWindows;
+    private JMenuItem previousTab;
+    private JMenuItem nextTab;
+    private JMenuItem moveTabLeft;
+    private JMenuItem moveTabRight;
+    private JMenuItem closeTab;
 }

@@ -719,7 +719,7 @@ public class Connection implements Runnable{
             channel.insertString("[Error] "+chan+": Cannot send to channel.", ChannelPanel.errorColor);
             return;          
         }
-        if (command.equals("405"))
+        if (command.equals("405")) //joined too many channels
         {
             String[] s = parser.getParams().trim().split(" ");
             String chan = s[1].trim();
