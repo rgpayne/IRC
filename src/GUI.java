@@ -260,20 +260,61 @@ public class GUI extends JFrame {
                 {
                     public void actionPerformed(ActionEvent e) 
                     {
-                        //serverListAddButtonFunctionality(dialog, list);
-                    }
+                        int index = list.getSelectedIndex();
+                        DefaultListModel model = (DefaultListModel)list.getModel();
+                        if (index == -1){
+                            JOptionPane.showMessageDialog(dialog,"Please select a server to edit.","Error",JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
+                        String settings = (String)model.getElementAt(index);
+                        String[] s = settings.split(" ");
+                        String chans = "";
+                        for (String str: s) if (str.startsWith("#"))chans += " "+str;
+                        
+                        JTextField server = new JTextField(s[0]+" ");
+                        JTextField port = new JTextField(s[1]+" ");
+                        JTextField channels = new JTextField(chans.trim());
+                        JCheckBox autoconnect = new JCheckBox();
+                        if ((s[s.length-2]).equals("true")) autoconnect.setSelected(true);
+                        else autoconnect.setSelected(false);
+                        JCheckBox secure = new JCheckBox(s[s.length-1]);
+                        if ((s[s.length-1]).equals("true")) secure.setSelected(true);
+                        else secure.setSelected(false);        
+
+                        Object[] fields = {
+                            "Server", server,
+                            "Port", port,
+                            "Auto-join channels (#c1 #c2)", channels,
+                            "Connect on startup", autoconnect,
+                            "Secure connection (SSL)", secure
+                        };
+                        int x = JOptionPane.showConfirmDialog(dialog, fields, "New Server",JOptionPane.OK_CANCEL_OPTION);
+                        if (x == JOptionPane.CLOSED_OPTION || x == JOptionPane.CANCEL_OPTION) return;
+
+                            String entry = server.getText().trim() + " " + port.getText().trim() + " "+ 
+                                           channels.getText().trim() + " " + autoconnect.isSelected() + " " + secure.isSelected();
+
+                            try {
+                                prop.load(new FileInputStream("config.properties"));
+                                prop.setProperty("ss"+index, entry);
+                                prop.store(new FileOutputStream("config.properties"), null);
+                                model.remove(index);
+                                model.addElement(entry);
+                                } catch (IOException io) {
+                                    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, io);
+                                } finally {
+                                    if (output != null) {
+                                        try {
+                                            output.close();
+                                        } catch (IOException f) {
+                                            f.printStackTrace();
+                                        }
+                                    }
+                                }
+                            return;
+                    }                    
                 });
                 
-                edit.addKeyListener(new KeyAdapter()
-                {
-                    public void keyPressed(KeyEvent evt)
-                    {
-                        if (evt.getKeyCode() == KeyEvent.VK_ENTER)
-                        {
-                            //serverListAddButtonFunctionality(dialog, list);
-                        }
-                    }
-                });
                 remove.addActionListener(new ActionListener()
                 {
                     public void actionPerformed(ActionEvent e) 
@@ -282,7 +323,6 @@ public class GUI extends JFrame {
                         if (index == -1){
                             JOptionPane.showMessageDialog(dialog,"Please select a server to remove.","Error",JOptionPane.ERROR_MESSAGE);
                             return;
-                            
                         }
                         model.removeElementAt(index);
                         try{
@@ -304,7 +344,7 @@ public class GUI extends JFrame {
                 {
                     public void actionPerformed(ActionEvent e) 
                     {
-                        //serverListAddButtonFunctionality(dialog, list);
+                        //serverListEditButtonFunctionality(dialog, list);
                     }
                 });
                 
@@ -314,7 +354,7 @@ public class GUI extends JFrame {
                     {
                         if (evt.getKeyCode() == KeyEvent.VK_ENTER)
                         {
-                            //serverListAddButtonFunctionality(dialog, list);
+                            //serverListEditButtonFunctionality(dialog, list);
                         }
                     }
                 });
@@ -549,42 +589,44 @@ public class GUI extends JFrame {
     
     private void serverListAddButtonFunctionality(JDialog dialog, JList list)
     {
-            JTextField server = new JTextField();
-            JTextField port = new JTextField();
-            JTextField channels = new JTextField();
-            JCheckBox autoconnect = new JCheckBox();
-            JCheckBox secure = new JCheckBox();
+        JTextField server = new JTextField();
+        JTextField port = new JTextField();
+        JTextField channels = new JTextField();
+        JCheckBox autoconnect = new JCheckBox();
+        JCheckBox secure = new JCheckBox();
 
-            Object[] fields = {
-                "Server", server,
-                "Port", port,
-                "Auto-join channels (#c1 #c2)", channels,
-                "Connect on startup", autoconnect,
-                "Secure connection (SSL)", secure
-            };
-            JOptionPane.showMessageDialog(dialog, fields, "New Server",JOptionPane.OK_CANCEL_OPTION);
-            String entry = server.getText().trim() + " " + port.getText().trim() + " "+ 
-                           channels.getText().trim() + " " + autoconnect.isSelected() + " " + secure.isSelected();
-
-            try {
-                prop.load(new FileInputStream("config.properties"));
-                int savedServerCount = list.getModel().getSize();
-                prop.setProperty("ss"+savedServerCount, entry);
-                prop.store(new FileOutputStream("config.properties"), null);
-                DefaultListModel model = (DefaultListModel)list.getModel();
-                model.addElement(entry);
-                } catch (IOException io) {
-                    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, io);
-                } finally {
-                    if (output != null) {
-                        try {
-                            output.close();
-                        } catch (IOException f) {
-                            f.printStackTrace();
-                        }
+        Object[] fields = {
+            "Server", server,
+            "Port", port,
+            "Auto-join channels (#c1 #c2)", channels,
+            "Connect on startup", autoconnect,
+            "Secure connection (SSL)", secure
+        };
+        int x = JOptionPane.showConfirmDialog(dialog, fields, "Edit", JOptionPane.OK_CANCEL_OPTION);
+        if (x == JOptionPane.CLOSED_OPTION || x == JOptionPane.CANCEL_OPTION) return;
+        String entry = server.getText().trim() + " " + port.getText().trim() + " "+ 
+                       channels.getText().trim() + " " + autoconnect.isSelected() + " " + secure.isSelected();
+        server.requestFocusInWindow();
+        try {
+            prop.load(new FileInputStream("config.properties"));
+            int savedServerCount = list.getModel().getSize();
+            prop.setProperty("ss"+savedServerCount, entry);
+            prop.store(new FileOutputStream("config.properties"), null);
+            DefaultListModel model = (DefaultListModel)list.getModel();
+            model.addElement(entry);
+            savedServers.add(entry);
+            } catch (IOException io) {
+                Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, io);
+            } finally {
+                if (output != null) {
+                    try {
+                        output.close();
+                    } catch (IOException f) {
+                        f.printStackTrace();
                     }
                 }
-            return;
+            }
+        return;
     }
 
     public static void main(String args[]) {
