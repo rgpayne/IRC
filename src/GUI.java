@@ -197,6 +197,46 @@ public class GUI extends JFrame {
                 }
             }
         });
+        disconnect = new JMenuItem("Disconnect");
+        fileMenu.add(disconnect);
+        disconnect.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int index = tabbedPane.getSelectedIndex();
+                if (index == -1) return;
+                ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+                channel.model.removeAll();
+                channel.connection.disconnect();
+                for (int i = 0; i < tabbedPane.getTabCount(); i++)
+                {
+                    ChannelPanel otherChannel = (ChannelPanel)tabbedPane.getComponentAt(i);
+                    System.out.println("+"+otherChannel.server);
+
+                    if (otherChannel.name.equals(channel.server))
+                    {
+                        try {
+                            otherChannel.insertString("[Info] Disconnected from "+otherChannel.server+" (port "+otherChannel.connection.port+")", ChannelPanel.serverColor);
+                            continue;
+                        } catch (BadLocationException ex) {
+                            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                        } catch (IOException ex) {
+                            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                    if (otherChannel.server.equals(channel.server))
+                    {
+                        tabbedPane.setForegroundAt(i, Color.gray);
+                        otherChannel.model.removeAll();
+                    }
+
+                }
+                channel.updateTabInfo();
+                return;
+            }
+        });
+        
+        
         
         
         //QUICK CONNECT
@@ -609,7 +649,7 @@ public class GUI extends JFrame {
             {
                 String srv = s[1];
                 int port = Integer.valueOf(s[2]);
-                new Connection(srv, port);
+                new Connection(srv, port, true);
             }
         }
 
@@ -834,4 +874,5 @@ public class GUI extends JFrame {
     private JMenuItem moveTabLeft;
     private JMenuItem moveTabRight;
     private JMenuItem closeTab;
+    private JMenuItem disconnect;
 }

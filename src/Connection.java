@@ -63,7 +63,8 @@ public class Connection implements Runnable{
     public void parseFromServer(String line) throws IOException, BadLocationException
     {
         Parser parser = new Parser(line);
-        String command = parser.getCommand();  
+        String command = parser.getCommand();
+        //System.out.println(line);
         System.out.println(parser.toString());
         if (command.equals("AWAY"))
         {
@@ -151,7 +152,7 @@ public class Connection implements Runnable{
         }
         if (command.equals("MODE"))
         {
-            if (parser.getServer().equals(currentNick)) //setting personal mode
+            if (parser.getServer().equals(currentNick) || parser.getPrefix().equals(currentNick)) //setting personal mode
             {
                 Component aComponent = tabbedPane.getSelectedComponent();
                 ChannelPanel channel = ((ChannelPanel)aComponent);
@@ -271,14 +272,30 @@ public class Connection implements Runnable{
                 return;
             }
         }
-        if (command.equals("NOTICE"))
+        if (command.equals("NOTICE")) 
         {
-            String host = parser.getPrefix();
-            int indexOfChannel = findTab(host);
-            if (indexOfChannel == -1) return;
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ChannelPanel channel = ((ChannelPanel)aComponent);
-            channel.insertString(parser.getTrailing(), ChannelPanel.connectColor);
+            String h = parser.getPrefix();
+            int indexOfChannel = findTab(h);
+            ChannelPanel channel;
+            
+            if (indexOfChannel == -1) channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+            else channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfChannel);
+            
+            if (channel == null){
+                return; //this is shit
+            }
+            
+            String nick = parser.getNick();
+            
+            if (!nick.equals("")){
+                channel.insertString("[Notice] -"+nick+"- "+parser.getTrailing(), ChannelPanel.connectColor);
+            }
+            else{
+                channel.insertString("[Notice] "+parser.getTrailing(), ChannelPanel.connectColor);
+                if (!h.equals("")) channel.server = parser.getPrefix();
+
+            }
+
             return;
         }
         if (command.equals("PART"))
@@ -383,14 +400,15 @@ public class Connection implements Runnable{
             int indexOfChannel = findTab(host);
             if (indexOfChannel == -1)
             {
-                new ChannelPanel(host, currentNick, this);
+                ChannelPanel c = new ChannelPanel(host, currentNick, this);
                 indexOfChannel = findTab(host);
+                c.server = parser.getPrefix();
             }
             if (command.equals("001" ) && this.autoconnect )
             {
                 for (int i = 0; i < GUI.savedServers.size(); i++)
                 {
-                    String[] s = GUI.savedServers.get(i).split(",");
+                    String[] s = GUI.savedServers.get(i).split(","); //this setion auto joins channels saved in savedServers
                     if (s[1].equals(this.server))
                     {
                         String[] c = (s[s.length-3]).trim().split(" ");
@@ -412,7 +430,11 @@ public class Connection implements Runnable{
         {
             return;
         }
-        if (command.equals("221")) //requesting to see own modes
+        if (command.equals("219")) //end of /STATS
+        {
+            return;
+        }
+        if (command.equals("221")) //requesting to see own modes (/modes rieux)
         {
             return;
         }
@@ -592,6 +614,7 @@ public class Connection implements Runnable{
         }
         if (command.equals("331")) //no topic
         {
+            //channel.server = parser.getPrefix();
             return;
         }
         if (command.equals("332")) //topic
@@ -606,6 +629,7 @@ public class Connection implements Runnable{
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             ChannelPanel channel = ((ChannelPanel)aComponent);
             channel.topic = parser.getTrailing();
+            channel.server = parser.getPrefix();
             channel.insertString("Current Topic: "+channel.topic, ChannelPanel.serverColor);
             return;
         }
@@ -710,6 +734,7 @@ public class Connection implements Runnable{
             int indexOfChannel = findTab(host);
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             ChannelPanel channel = ((ChannelPanel)aComponent);
+            if (command.equals("372")) channel.server = host;
             channel.insertString("[MOTD] "+parser.getTrailing(), ChannelPanel.connectColor);
             return;
         }
@@ -815,13 +840,13 @@ public class Connection implements Runnable{
         {
             return;
         }
-        if (command.equals("461")) //not enough parameters (on USER?)
+        if (command.equals("461")) //not enough parameters  (/stats rieux)
         {
             return;
         }
-        if (command.equals("481")) //permission denied
+        if (command.equals("481")) //permission denied (/stats rieux)
         {
-            
+            return;
         }
         if (command.equals("671")) //whois: using secure connection
         {

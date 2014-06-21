@@ -1,6 +1,7 @@
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -37,8 +38,8 @@ import javax.swing.event.*;
         Style style = sc.addStyle("DefaultStyle", null);
         Style timestampStyle = sc.addStyle("DefaultStyle", null);
         
-        static String errorColor = "#FF0000", chatColor="#000000", serverColor="#990099", connectColor="#993300", timestampColor="#909090";
-        static String font = "monospace";
+        static String errorColor = "#FF0000", chatColor="#000000", serverColor="#990066", connectColor="#993300", timestampColor="#909090";
+        static String font = "sans serif";
         boolean showTimestamp = true;
         
         ArrayList<String> history;
@@ -49,9 +50,7 @@ import javax.swing.event.*;
         {
             this.name = name;
             this.connection = c;
-            
-            this.server = c.server;
-                    
+                                
             doc = chatPane.getStyledDocument();
             
             setStyles();
@@ -78,6 +77,7 @@ import javax.swing.event.*;
         userListPane.setAutoscrolls(false);
         userListPane.setFocusable(false);
         userListPane.setMaximumSize(new Dimension(25, 25));
+
         
         setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
         setDividerLocation(480);
@@ -89,8 +89,8 @@ import javax.swing.event.*;
         jScrollPane1.setViewportView(userListPane);
         jScrollPane2.setViewportView(chatPane);
         
-        DefaultCaret caret = (DefaultCaret)chatPane.getCaret();
-        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+        //DefaultCaret caret = (DefaultCaret)chatPane.getCaret();
+        //caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 
         setLeftComponent(jScrollPane2);
         if (name.startsWith("#")) setRightComponent(jScrollPane1);
@@ -101,6 +101,10 @@ import javax.swing.event.*;
         
         ChangeListener changeListener = new ChangeListener(){
             public void stateChanged(ChangeEvent changeEvent){
+                JTabbedPane pane = (JTabbedPane)changeEvent.getSource();
+                int index = pane.getSelectedIndex();
+                ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(index);
+                pane.setForegroundAt(index, Color.BLACK);
                 updateTabInfo();
             }          
         };
@@ -112,12 +116,15 @@ import javax.swing.event.*;
         
         public void setStyles() //TODO: static styles so we dont have to decode on every insertString
         {
-        StyleConstants.setFontFamily(style, "monospace");
-        StyleConstants.setBold(style, true);
+        StyleConstants.setFontFamily(style, font);
+        StyleConstants.setFontSize(style, 12);
+        //StyleConstants.setBold(style, true);
         
-        StyleConstants.setFontFamily(timestampStyle, "monospace");
-        StyleConstants.setBold(timestampStyle, true);
+        StyleConstants.setFontFamily(timestampStyle, font);
+        StyleConstants.setFontSize(timestampStyle, 12);
+        //StyleConstants.setBold(timestampStyle, true);
         StyleConstants.setForeground(timestampStyle, Color.decode(timestampColor) );
+                
         }
         public String makeTimestamp()
         {
@@ -129,6 +136,11 @@ import javax.swing.event.*;
         public void updateTabInfo()
         {
             if (tabbedPane.getTabCount() == 0)
+            {
+                tabInfo.setText("Disconnected    ");
+                return;
+            }
+            if (connection.socket.isClosed())
             {
                 tabInfo.setText("Disconnected    ");
                 return;
@@ -154,8 +166,26 @@ import javax.swing.event.*;
             StyleConstants.setForeground(style, Color.decode(color));
             doc.insertString(doc.getLength(), "["+timestamp+"] ", timestampStyle);
             doc.insertString(doc.getLength(), line+"\n", style);
+           
+            
+            if (!this.isShowing()) //chck for foreground color?
+            { 
+                System.out.println("__");
+                int totalTabs = tabbedPane.getTabCount();
+                int indexOfTab = -1;
+                for (int i = 0; i < totalTabs; i++)
+                {
+                    String tabTitle = tabbedPane.getTitleAt(i);
+                    if (tabTitle.equalsIgnoreCase(this.name))
+                    {
+                        indexOfTab = i;
+                        break;
+                    }
+                }
+            tabbedPane.setForegroundAt(indexOfTab, Color.blue);
+            }
             return;
-        }
+            }
                 
         public void addToUserList(String nick) throws BadLocationException, IOException
         {
@@ -320,11 +350,14 @@ import javax.swing.event.*;
     }
     class User extends JLabel implements Comparable
     {
+
         final char mode;
         public User(String nick)
         {
             super(nick.substring(1));
             mode = nick.charAt(0);
+            setFont(new Font("sans serif", Font.PLAIN, 12));
+
         }
         @Override
         public int compareTo(Object o)
