@@ -14,8 +14,10 @@ public class Connection implements Runnable{
     BufferedReader reader;
     BufferedWriter writer;
     String server, host, password;
+    boolean autoconnect = true;
+    static boolean away = false;
     static String[] nicks = {"", "", ""};
-    static String currentNick = "", real = "";
+    static String currentNick = "", real = "", awayMessage="";
     int port;
     static JTabbedPane tabbedPane;
     static JLabel tabInfo;
@@ -25,11 +27,18 @@ public class Connection implements Runnable{
     { 
        this.server = server;
        this.port = port;
-       //this.password = password;
        
        thread = new Thread(this);
        thread.start();
-    }     
+    }
+    public Connection(String server, int port, boolean autoconnect)
+    {
+        this.server = server;
+        this.port = port;
+        this.autoconnect = autoconnect;
+        thread = new Thread(this);
+        thread.start();
+    }
     public void send(String line) throws IOException, BadLocationException
     {
         if (line.toUpperCase().equals("QUIT")){
@@ -55,7 +64,6 @@ public class Connection implements Runnable{
     {
         Parser parser = new Parser(line);
         String command = parser.getCommand();  
-        System.out.println(line);
         System.out.println(parser.toString());
         if (command.equals("AWAY"))
         {
@@ -378,7 +386,7 @@ public class Connection implements Runnable{
                 new ChannelPanel(host, currentNick, this);
                 indexOfChannel = findTab(host);
             }
-            if (command.equals("001"))
+            if (command.equals("001" ) && this.autoconnect )
             {
                 for (int i = 0; i < GUI.savedServers.size(); i++)
                 {
@@ -455,7 +463,7 @@ public class Connection implements Runnable{
             channel.insertString("[Users] "+parser.getTrailing(), ChannelPanel.connectColor);
             return;
         }
-        if (command.equals("301"))
+        if (command.equals("301")) //received when target of whois, privmsg, etc is set to away
         {
             String[] s = parser.getMiddle().split(" ");
             String target = s[1];
@@ -463,7 +471,19 @@ public class Connection implements Runnable{
             int indexOfChannel = tabbedPane.getSelectedIndex();
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             ChannelPanel channel = ((ChannelPanel)aComponent);
-            channel.insertString("[Whois] "+target+" "+info, ChannelPanel.serverColor);             
+            channel.insertString("[Whois] "+target+" is away: "+info, ChannelPanel.serverColor);             
+        }
+        if (command.equals("305")) //no longer away
+        {
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+            channel.insertString("[Away] You are no longer marked as away.", ChannelPanel.serverColor);
+            return;
+        }
+        if (command.equals("306")) //away
+        {
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+            channel.insertString("[Away] You have been marked as away (reason: "+awayMessage+"", ChannelPanel.serverColor);
+            return;            
         }
         if (command.equals("307"))
         {
@@ -649,7 +669,6 @@ public class Connection implements Runnable{
             int index2 = channelName.indexOf(":");
             if (index2 != -1) channelName = channelName.substring(index, index2 - 1);
             else channelName = channelName.substring(index);
-            System.out.println(channelName);
             int indexOfChannel = findTab(channelName);
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             String[] nn = parser.getTrailing().split(" ");
@@ -781,8 +800,10 @@ public class Connection implements Runnable{
             {
                 new ChannelPanel(parser.getPrefix(), this.currentNick, this);
                 indexOfChannel = findTab(parser.getPrefix());
+                
             }
             ChannelPanel channel = ((ChannelPanel)tabbedPane.getComponentAt(indexOfChannel));
+            channel.server = parser.getPrefix();
             channel.insertString("Please wait while we process your connection...", ChannelPanel.connectColor);
             return;            
         }
@@ -837,18 +858,18 @@ public class Connection implements Runnable{
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             String line;
-            while (socket.isConnected() && !socket.isClosed())
+            while (socket.isConnected())
             {
                 send("NICK "+nicks[0]);
                 send("USER "+nicks[0]+"123"+" 8 * : "+real);
-                while (!socket.isClosed() && (line = reader.readLine()) != null)
+                while ((line = reader.readLine()) != null)
                 {                   
                      parseFromServer(line);
                 }
                 
             }       
         } catch (IOException ex) {
-            Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
+            //do nothing
         } catch (BadLocationException ex) {
             Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
         }

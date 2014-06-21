@@ -49,6 +49,8 @@ import javax.swing.event.*;
         {
             this.name = name;
             this.connection = c;
+            
+            this.server = c.server;
                     
             doc = chatPane.getStyledDocument();
             
@@ -126,14 +128,20 @@ import javax.swing.event.*;
         }
         public void updateTabInfo()
         {
+            if (tabbedPane.getTabCount() == 0)
+            {
+                tabInfo.setText("Disconnected    ");
+                return;
+            }
             
             if (this.isShowing())
             {
                 String text ="";
                 if (ops != 1) text = " ops) ";
                 if (ops == 1) text = " op) ";
-                        
-                if (server == null)
+                    
+                ChannelPanel cc = (ChannelPanel)tabbedPane.getSelectedComponent();
+                if (!cc.name.startsWith("#"))
                 {
                     tabInfo.setText(name+"  ");
                 }

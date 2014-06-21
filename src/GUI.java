@@ -36,7 +36,6 @@ public class GUI extends JFrame {
         setIconImage(mainIcon.getImage());
         
         loadProperties();
-        System.out.println(savedServers.toString());
         initComponents();
         ChannelPanel.tabbedPane = tabbedPane;
         Connection.tabbedPane = tabbedPane;
@@ -163,7 +162,39 @@ public class GUI extends JFrame {
         closeTab.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                tabbedPane.remove(tabbedPane.getSelectedComponent());
+                int index = tabbedPane.getSelectedIndex();
+                if (index == -1) return;
+                ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+                String title = tabbedPane.getTitleAt(index);            
+ 
+                if (!title.startsWith("#") && !title.equals(channel.server)){ //closing IM
+                    tabbedPane.remove(channel);
+                }
+                
+                if (title.startsWith("#")) try { //closing channel
+                    channel.connection.send("PART "+title);
+                    return;
+                } catch (IOException ex) {
+                    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (BadLocationException ex) {
+                    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                
+                if (title.equals(channel.server)){ //closing server
+                    int warning = JOptionPane.showConfirmDialog(null, "Do you wish to disconnect from "+channel.server+"? All tabs will be closed.", "Are you sure?", JOptionPane.WARNING_MESSAGE);
+                    if (warning == JOptionPane.CANCEL_OPTION || warning == JOptionPane.CLOSED_OPTION) return;
+                    for (int i = 0; i < tabbedPane.getTabCount(); i++)
+                    {
+                        ChannelPanel c = (ChannelPanel)tabbedPane.getComponentAt(i);
+                        if (c.server.equals(channel.server)){
+                            tabbedPane.remove(i);
+                            i--;
+                        }
+                    }       
+                    tabbedPane.remove(channel);
+                    channel.connection.disconnect();
+                    return;
+                }
             }
         });
         
@@ -597,9 +628,9 @@ public class GUI extends JFrame {
         else
         {
             dialog.dispose();
-            new Connection(chan, Integer.valueOf(p));
             c.nicks[0] = n;
-            c.password = pass;
+            new Connection(chan, Integer.valueOf(p), false);
+            if (!pass.isEmpty()) c.password = pass;
             return;
         }
     }
