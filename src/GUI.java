@@ -23,6 +23,12 @@ public class GUI extends JFrame {
     final static ImageIcon moveTabLeftIcon = new ImageIcon("src/icons/go-previous-3.png");
     final static ImageIcon moveTabRightIcon = new ImageIcon("src/icons/go-next-3.png");
     final static ImageIcon closeTabIcon = new ImageIcon("src/icons/tab-close-2.png");
+    final static ImageIcon disconnectIcon = new ImageIcon("src/icons/disconnect.png");
+    final static ImageIcon reconnectIcon = new ImageIcon("src/icons/database-connect.png");
+    final static ImageIcon globalAwayIcon = new ImageIcon("src/icons/im-user-away.png");
+    final static ImageIcon joinChannelIcon = new ImageIcon("src/icons/irc-join-channel.png");
+    final static ImageIcon quitProgramIcon = new ImageIcon("src/icons/document-close.png");
+
 
     
     EditorKit editorKit;
@@ -60,8 +66,8 @@ public class GUI extends JFrame {
         jMenuBar2 = new JMenuBar();
         fileMenu = new JMenu("File");
         editMenu = new JMenu("Edit");
-        windowMenu = new JMenu("Settings");
-        settingsMenu = new JMenu("Menu");
+        windowMenu = new JMenu("Window");
+        settingsMenu = new JMenu("Settings");
         
         copyAction = new JMenuItem(new DefaultEditorKit.CopyAction());
         copyAction.setText("Copy");
@@ -78,8 +84,46 @@ public class GUI extends JFrame {
         editMenu.add(new JSeparator());
         clearWindow = new JMenuItem("Clear Window");
         editMenu.add (clearWindow);
+        clearAllWindows = new JMenuItem("Clear All Windows");
+        editMenu.add(clearAllWindows);        
+        previousTab = new JMenuItem("Previous Tab", prevTabIcon);
+        windowMenu.add(previousTab);       
+        nextTab = new JMenuItem("Next Tab", nextTabIcon);
+        windowMenu.add(nextTab);
+        windowMenu.add(new JSeparator()); 
+        moveTabLeft = new JMenuItem("Move Tab Left", moveTabLeftIcon);
+        windowMenu.add(moveTabLeft);    
+        moveTabRight = new JMenuItem("Move Tab Right", moveTabRightIcon);
+        windowMenu.add(moveTabRight);
+        closeTab = new JMenuItem("Close Tab", closeTabIcon);
+        windowMenu.add(closeTab);
+        serverList = new JMenuItem("Server List", serverListIcon);
+        fileMenu.add(serverList);
+        quickConnect = new JMenuItem("Quick Connect", quickConnectIcon);
+        fileMenu.add(quickConnect);
+        fileMenu.add(new JSeparator());
+        disconnect = new JMenuItem("Disconnect", disconnectIcon);
+        fileMenu.add(disconnect);
+        identities = new JMenuItem("Identities", identitiesIcon);
+        settingsMenu.add(identities);        
+        reconnect = new JMenuItem("Reconnect", reconnectIcon);
+        fileMenu.add(reconnect);
+        joinChannel = new JMenuItem("Join Channel", joinChannelIcon);
+        fileMenu.add(joinChannel);
+        fileMenu.add(new JSeparator());
+        globalAway = new JMenuItem("Global Away", globalAwayIcon);
+        fileMenu.add(globalAway);
+        fileMenu.add(new JSeparator());
+        quitProgram = new JMenuItem("Quit", quitProgramIcon);
+        fileMenu.add(quitProgram);
+        
+        joinChannel.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+        });
         clearWindow.addActionListener(new ActionListener() {
-
             @Override
             public void actionPerformed(ActionEvent e) {
                 ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
@@ -90,8 +134,6 @@ public class GUI extends JFrame {
                 }
             }
         });
-        clearAllWindows = new JMenuItem("Clear All Windows");
-        editMenu.add(clearAllWindows);
         clearAllWindows.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -106,8 +148,6 @@ public class GUI extends JFrame {
                 }                  
             }
         });
-        previousTab = new JMenuItem("Previous Tab", prevTabIcon);
-        windowMenu.add(previousTab);
         previousTab.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -116,9 +156,6 @@ public class GUI extends JFrame {
                 return;
             }
         });
-        nextTab = new JMenuItem("Next Tab", nextTabIcon);
-        windowMenu.add(nextTab);
-        windowMenu.add(new JSeparator());
         nextTab.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -127,8 +164,6 @@ public class GUI extends JFrame {
                 return;
             }
         });
-        moveTabLeft = new JMenuItem("Move Tab Left", moveTabLeftIcon);
-        windowMenu.add(moveTabLeft);
         moveTabLeft.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -142,8 +177,6 @@ public class GUI extends JFrame {
                 return;
             }
         });
-        moveTabRight = new JMenuItem("Move Tab Right", moveTabRightIcon);
-        windowMenu.add(moveTabRight);
         moveTabRight.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -157,8 +190,6 @@ public class GUI extends JFrame {
                 return;               
             }
         });
-        closeTab = new JMenuItem("Close Tab", closeTabIcon);
-        windowMenu.add(closeTab);
         closeTab.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -197,10 +228,7 @@ public class GUI extends JFrame {
                 }
             }
         });
-        disconnect = new JMenuItem("Disconnect");
-        fileMenu.add(disconnect);
         disconnect.addActionListener(new ActionListener() {
-
             @Override
             public void actionPerformed(ActionEvent e) {
                 int index = tabbedPane.getSelectedIndex();
@@ -235,14 +263,43 @@ public class GUI extends JFrame {
                 return;
             }
         });
-        
-        
-        
+        reconnect.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ChannelPanel selected = (ChannelPanel)tabbedPane.getSelectedComponent();
+                
+                for (int j = 0; j < tabbedPane.getTabCount(); j++)
+                {
+                    String title = tabbedPane.getTitleAt(j);
+                    if (title.equals(selected.server)){
+                        System.out.println("uuuuuguuuuuu");
+                        selected.connection.thread = new Thread(selected.connection);
+                        selected.connection.thread.start();
+                        break;
+                    }
+                }
+                for (int i = 0; i < tabbedPane.getTabCount(); i++)
+                {
+                    ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
+                    String title = tabbedPane.getTitleAt(i);
+                    if (channel.connection == selected.connection)
+                    {
+                        if (title.startsWith("#"))
+                        {
+                            try {
+                                selected.connection.send("JOIN "+title);
+                            } catch (IOException ex) {
+                                //do nothing
+                            } catch (BadLocationException ex) {
+                                Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+                    }
+                }
+            }
+        });
         
         //QUICK CONNECT
-        quickConnect = new JMenuItem("Quick Connect", quickConnectIcon);
-        
-        fileMenu.add(quickConnect);
         quickConnect.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e)
             {
@@ -298,10 +355,7 @@ public class GUI extends JFrame {
                 });
             }
         });
-        
         //IDENTITIES
-        identities = new JMenuItem("Identities", identitiesIcon);
-        settingsMenu.add(identities);
         identities.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e)
             {
@@ -357,10 +411,7 @@ public class GUI extends JFrame {
                 });
             }
         });
-        
         //SERVER LIST
-        serverList = new JMenuItem("Server List", serverListIcon);
-        settingsMenu.add(serverList);
         serverList.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e)
             {
@@ -527,16 +578,16 @@ public class GUI extends JFrame {
                 });
             }
         });
-                
-
-        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-
         chatInputPane.addKeyListener(new KeyAdapter()
         {
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 chatInputPaneKeyPressed(evt);
             }
         });
+        
+        
+        
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         tabbedPane.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
         tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
@@ -875,4 +926,8 @@ public class GUI extends JFrame {
     private JMenuItem moveTabRight;
     private JMenuItem closeTab;
     private JMenuItem disconnect;
+    private JMenuItem reconnect;
+    private JMenuItem globalAway;
+    private JMenuItem joinChannel;
+    private JMenuItem quitProgram;
 }

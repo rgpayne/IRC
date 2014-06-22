@@ -2,6 +2,8 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -26,7 +28,7 @@ import javax.swing.event.*;
         final JList<User> userListPane;
         
         
-        final JScrollPane jScrollPane1 = new JScrollPane(), jScrollPane2 = new JScrollPane();
+        final JScrollPane userListScrollPane = new JScrollPane(), chatScrollPane = new JScrollPane();
         static JTabbedPane tabbedPane;
         static JLabel tabInfo;
         
@@ -86,24 +88,29 @@ import javax.swing.event.*;
         setVerifyInputWhenFocusTarget(false);
         
         chatPane.setEditable(false);
-        jScrollPane1.setViewportView(userListPane);
-        jScrollPane2.setViewportView(chatPane);
+        chatPane.setAutoscrolls(true);
+        userListScrollPane.setViewportView(userListPane);
+        chatScrollPane.setViewportView(chatPane);
         
         //DefaultCaret caret = (DefaultCaret)chatPane.getCaret();
         //caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 
-        setLeftComponent(jScrollPane2);
-        if (name.startsWith("#")) setRightComponent(jScrollPane1);
+
+        setLeftComponent(chatScrollPane);
+        if (name.startsWith("#")) setRightComponent(userListScrollPane);
         else{
             setRightComponent(null);
             setDividerSize(0);
         }
-        
-        ChangeListener changeListener = new ChangeListener(){
+        chatScrollPane.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {  
+            public void adjustmentValueChanged(AdjustmentEvent e) {  
+                e.getAdjustable().setValue(e.getAdjustable().getMaximum());  
+            }
+        });
+                ChangeListener changeListener = new ChangeListener(){
             public void stateChanged(ChangeEvent changeEvent){
                 JTabbedPane pane = (JTabbedPane)changeEvent.getSource();
                 int index = pane.getSelectedIndex();
-                ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(index);
                 pane.setForegroundAt(index, Color.BLACK);
                 updateTabInfo();
             }          
@@ -170,7 +177,6 @@ import javax.swing.event.*;
             
             if (!this.isShowing()) //chck for foreground color?
             { 
-                System.out.println("__");
                 int totalTabs = tabbedPane.getTabCount();
                 int indexOfTab = -1;
                 for (int i = 0; i < totalTabs; i++)
@@ -270,7 +276,7 @@ import javax.swing.event.*;
                 set = new TreeSet<User>(comparator);
             }
             @Override
-            public int getSize()
+            public synchronized int getSize()
             {
                 return set.size();
             }
@@ -279,27 +285,27 @@ import javax.swing.event.*;
             {
                 return (User) set.toArray()[index];
             }
-            public boolean contains(Object o)
+            public synchronized boolean contains(Object o)
             {
                 User u = (User)o;
                 return set.contains(u);
             }
-            public boolean addElement(User x)
+            public synchronized boolean addElement(User x)
             {
                 boolean success = set.add(x);
                 fireIntervalAdded(this, 0, set.size()-1);
                 return success;
             }
-            public void addManyElements(User x)
+            public synchronized void addManyElements(User x)
             {
                 set.add(x);
                 return;
             }
-            public void fireIntervalAdded()
+            public synchronized void fireIntervalAdded()
             {
                 fireIntervalAdded(this, 0,0);
             }
-            public boolean removeElement(User x)
+            public synchronized boolean removeElement(User x)
             {  
                 boolean success = set.remove(x);
                 fireIntervalRemoved(this, 0, 0);
