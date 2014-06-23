@@ -15,7 +15,6 @@ public class Connection implements Runnable{
     BufferedWriter writer;
     String server, host, password;
     boolean autoconnect = true;
-    static boolean away = false;
     static String[] nicks = {"", "", ""};
     static String currentNick = "", real = "", awayMessage="";
     int port;
@@ -504,7 +503,7 @@ public class Connection implements Runnable{
         if (command.equals("306")) //away
         {
             ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
-            channel.insertString("[Away] You have been marked as away (reason: "+awayMessage+"", ChannelPanel.serverColor);
+            channel.insertString("[Away] You have been marked as away (Reason: "+ChannelPanel.awayMessage+")", ChannelPanel.serverColor);
             return;            
         }
         if (command.equals("307"))

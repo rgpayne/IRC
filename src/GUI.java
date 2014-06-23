@@ -8,6 +8,8 @@ import javax.swing.text.*;
 import java.util.*;
 import java.util.logging.*;
 import java.io.*;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
 import org.apache.commons.lang3.StringUtils;
 
 public class GUI extends JFrame {
@@ -117,10 +119,138 @@ public class GUI extends JFrame {
         quitProgram = new JMenuItem("Quit", quitProgramIcon);
         fileMenu.add(quitProgram);
         
+        
+        globalAway.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                for (int i = 0; i < tabbedPane.getTabCount(); i++)
+                {
+                    ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
+                    String name = channel.name;
+                    String server = channel.server;
+                    String message = "";
+                    if (name.equals(server))
+                    {
+                        if (ChannelPanel.awayStatus == true){
+                            message = "AWAY";
+                            ChannelPanel.awayStatus = false;
+                        }
+                        else
+                        {
+                            message = "AWAY "+ChannelPanel.awayMessage;
+                            ChannelPanel.awayStatus = true;
+                        }
+                        try {
+                            channel.connection.send(message);
+                        } catch (IOException ex) {
+                            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                        } catch (BadLocationException ex) {
+                            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                }                
+                        
+            }
+        });
+        quitProgram.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+            }
+        });
         joinChannel.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                
+                SortedSet set = new TreeSet();
+                for (int i = 0; i < tabbedPane.getTabCount(); i++)
+                {
+                    ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
+                    String srv = channel.server;
+                    set.add(srv);
+                }
+                Object[] things = set.toArray();
+                
+                
+                final JDialog dialog = new JDialog(GUI.this);
+                dialog.setTitle("Join Channel");
+                dialog.setSize(new Dimension(330,220));
+                SpringLayout layout = new SpringLayout();
+                JPanel panel = new JPanel(layout);
+                dialog.setResizable(false);
+                dialog.setLocationRelativeTo(tabbedPane);  
+                dialog.add(panel);
+                dialog.setVisible(true);
+                final JComboBox combobox = new JComboBox(things);
+                JLabel serverLabel = new JLabel("Connection");
+                JLabel chanLabel = new JLabel("Channel");
+                JLabel pwLabel = new JLabel("Password");
+                final JTextField channelField = new JTextField();
+                channelField.setPreferredSize(new Dimension(180,20));
+                JTextField pwField = new JTextField();
+                pwField.setPreferredSize(new Dimension(180,20));
+                combobox.setPreferredSize(new Dimension(180,20));
+                JButton cancel = new JButton("Cancel");
+                JButton ok = new JButton("Join");
+                panel.add(serverLabel);
+                panel.add(combobox);
+                panel.add(chanLabel);
+                panel.add(channelField);
+                panel.add(pwLabel);
+                panel.add(pwField);
+                panel.add(cancel);
+                panel.add(ok);
+                
+                
+                layout.putConstraint(SpringLayout.NORTH, serverLabel, 25, SpringLayout.NORTH, dialog);
+                layout.putConstraint(SpringLayout.WEST, serverLabel, 25, SpringLayout.WEST, dialog);
+                layout.putConstraint(SpringLayout.NORTH, combobox, 23, SpringLayout.NORTH, dialog);
+                layout.putConstraint(SpringLayout.WEST, combobox, 10, SpringLayout.EAST, serverLabel);
+                layout.putConstraint(SpringLayout.NORTH, chanLabel, 16, SpringLayout.SOUTH, combobox);
+                layout.putConstraint(SpringLayout.WEST, chanLabel, 0, SpringLayout.WEST, serverLabel);
+                layout.putConstraint(SpringLayout.NORTH, channelField, 15, SpringLayout.SOUTH, combobox);
+                layout.putConstraint(SpringLayout.WEST, channelField, 0, SpringLayout.WEST, combobox);
+                layout.putConstraint(SpringLayout.NORTH, pwLabel, 18, SpringLayout.SOUTH, chanLabel);
+                layout.putConstraint(SpringLayout.WEST, pwLabel, 0, SpringLayout.WEST, serverLabel);
+                layout.putConstraint(SpringLayout.NORTH, pwField, 13, SpringLayout.SOUTH, channelField);
+                layout.putConstraint(SpringLayout.WEST, pwField, 0, SpringLayout.WEST, combobox);
+                layout.putConstraint(SpringLayout.WEST, cancel, 122, SpringLayout.WEST, dialog);
+                layout.putConstraint(SpringLayout.SOUTH, cancel, 55, SpringLayout.SOUTH, pwLabel);
+                layout.putConstraint(SpringLayout.WEST, ok, 25, SpringLayout.EAST, cancel);
+                layout.putConstraint(SpringLayout.SOUTH, ok, 55, SpringLayout.SOUTH, pwLabel);
+                
+                cancel.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        dialog.dispose();
+                    }
+                });
+                cancel.addKeyListener(new KeyAdapter() {
+                     public void keyPressed(KeyEvent evt)
+                     {
+                         if (evt.getKeyCode() == KeyEvent.VK_ENTER) dialog.dispose();  
+                     }  
+                });
+                ok.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        String choice = (String)combobox.getSelectedItem();
+                        String server = channelField.getText();
+                        joinOKButtonFunctionality(dialog, choice, server);
+                    }
+                });
+                ok.addKeyListener(new KeyAdapter() {
+                    public void keyPressed(KeyEvent evt)
+                    {
+                        if (evt.getKeyCode() == KeyEvent.VK_ENTER)
+                        {
+                            String choice = (String)combobox.getSelectedItem();
+                            String server = channelField.getText();
+                            joinOKButtonFunctionality(dialog, choice, server);
+                        }
+                    }
+                });
             }
         });
         clearWindow.addActionListener(new ActionListener() {
@@ -239,7 +369,7 @@ public class GUI extends JFrame {
                 for (int i = 0; i < tabbedPane.getTabCount(); i++)
                 {
                     ChannelPanel otherChannel = (ChannelPanel)tabbedPane.getComponentAt(i);
-                    System.out.println("+"+otherChannel.server);
+                    System.out.println("+++"+otherChannel.server);
 
                     if (otherChannel.name.equals(channel.server))
                     {
@@ -252,14 +382,16 @@ public class GUI extends JFrame {
                             Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
-                    if (otherChannel.server.equals(channel.server))
+                    if (otherChannel.connection == channel.connection)
                     {
                         tabbedPane.setForegroundAt(i, Color.gray);
                         otherChannel.model.removeAll();
                     }
 
                 }
+                System.out.println("4");
                 channel.updateTabInfo();
+                System.out.println("5");
                 return;
             }
         });
@@ -421,11 +553,12 @@ public class GUI extends JFrame {
                 SpringLayout layout = new SpringLayout();
                 contentpane.setLayout(layout);
                 contentpane.setPreferredSize(new Dimension(388,200));
-                final DefaultListModel model = new DefaultListModel();
-                final JList list = new JList(model);
+                Object[] rowLabels = {"Network", "Channels"};
+                TableModel model = new DefaultTableModel(rowLabels, 5);
+                JTable table = new JTable(model);
                 JScrollPane scrollPane = new JScrollPane();
                 scrollPane.setPreferredSize(new Dimension(380,150));
-                scrollPane.setViewportView(list);
+                scrollPane.setViewportView(table);
                 JButton add = new JButton("Add");
                 JButton edit = new JButton ("Edit");
                 JButton remove = new JButton("Remove");
@@ -448,16 +581,15 @@ public class GUI extends JFrame {
                 layout.putConstraint(SpringLayout.SOUTH, connect, -10, SpringLayout.SOUTH, contentpane);
                 layout.putConstraint(SpringLayout.EAST, connect, -10 , SpringLayout.EAST, contentpane);
                 
-                for (int i = 0; i < savedServers.size(); i++) model.addElement(savedServers.get(i));
 
                 dialog.pack();
                 dialog.setVisible(true);
-                
+            
                 add.addActionListener(new ActionListener()
                 {
                     public void actionPerformed(ActionEvent e) 
                     {
-                        serverListAddButtonFunctionality(dialog, list);
+                        serverListAddButtonFunctionality(dialog);
                     }
                 });
                 
@@ -467,7 +599,6 @@ public class GUI extends JFrame {
                     {
                         if (evt.getKeyCode() == KeyEvent.VK_ENTER)
                         {
-                            serverListAddButtonFunctionality(dialog, list);
                         }
                     }
                 });
@@ -475,86 +606,13 @@ public class GUI extends JFrame {
                 {
                     public void actionPerformed(ActionEvent e) 
                     {
-                        int index = list.getSelectedIndex();
-                        DefaultListModel model = (DefaultListModel)list.getModel();
-                        if (index == -1){
-                            JOptionPane.showMessageDialog(dialog,"Please select a server to edit.","Error",JOptionPane.ERROR_MESSAGE);
-                            return;
-                        }
-                        String settings = (String)model.getElementAt(index);
-                        String[] s = settings.split(",");
-                        String chans = "";
-                        for (String str: s) if (str.startsWith("#"))chans += " "+str;
-                        
-                        JTextField server = new JTextField(s[1]);
-                        JTextField port = new JTextField(s[2]);
-                        JTextField channels = new JTextField(chans.trim());
-                        JCheckBox autoconnect = new JCheckBox();
-                        if ((s[s.length-2]).equals("true")) autoconnect.setSelected(true);
-                        else autoconnect.setSelected(false);
-                        JCheckBox secure = new JCheckBox(s[s.length-1]);
-                        if ((s[s.length-1]).equals("true")) secure.setSelected(true);
-                        else secure.setSelected(false);        
-
-                        Object[] fields = {
-                            "Server", server,
-                            "Port", port,
-                            "Auto-join channels (#c1 #c2)", channels,
-                            "Connect on startup", autoconnect,
-                            "Secure connection (SSL)", secure
-                        };
-                        int x = JOptionPane.showConfirmDialog(dialog, fields, "Edit Server",JOptionPane.OK_CANCEL_OPTION);
-                        if (x == JOptionPane.CLOSED_OPTION || x == JOptionPane.CANCEL_OPTION) return;
-
-                            String entry = s[0]+ ","+server.getText().trim() + "," + port.getText().trim() + ","+ 
-                                           channels.getText().trim() + "," + autoconnect.isSelected() + "," + secure.isSelected();
-
-                            try {
-                                prop.load(new FileInputStream("config.properties"));
-                                prop.setProperty("ss"+s[0], entry);
-                                prop.store(new FileOutputStream("config.properties"), null);
-                                model.remove(index);
-                                model.addElement(entry);
-                                } catch (IOException io) {
-                                    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, io);
-                                } finally {
-                                    if (output != null) {
-                                        try {
-                                            output.close();
-                                        } catch (IOException f) {
-                                            f.printStackTrace();
-                                        }
-                                    }
-                                }
-                            return;
-                    }                    
+                    }              
                 });
                 
                 remove.addActionListener(new ActionListener()
                 {
                     public void actionPerformed(ActionEvent e) 
                     {
-                        int index = list.getSelectedIndex();
-                        if (index == -1){
-                            JOptionPane.showMessageDialog(dialog,"Please select a server to remove.","Error",JOptionPane.ERROR_MESSAGE);
-                            return;
-                        }
-                        String entry = (String)model.getElementAt(index);
-                        String[] s = entry.split(",");
-                        int choice = Integer.valueOf(s[0]);
-                        try{
-                        prop.load(new FileInputStream("config.properties"));
-                        prop.remove("ss"+choice);
-                        prop.store(new FileOutputStream("config.properties"), null);
-                        savedServers.remove(index);
-                        model.removeElement(entry);
-                        } catch (FileNotFoundException ex) {
-                            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-                        } catch (IOException ex) {
-                            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                        
-                        
                     }
                 });
                 
@@ -562,7 +620,6 @@ public class GUI extends JFrame {
                 {
                     public void actionPerformed(ActionEvent e) 
                     {
-                        serverListConnectButtonFunctionality(list, dialog);
                     }
                 });
                 
@@ -572,7 +629,6 @@ public class GUI extends JFrame {
                     {
                         if (evt.getKeyCode() == KeyEvent.VK_ENTER)
                         {
-                            serverListConnectButtonFunctionality(list, dialog);
                         }
                     }
                 });
@@ -705,6 +761,30 @@ public class GUI extends JFrame {
         }
 
     }
+    private void joinOKButtonFunctionality(JDialog dialog, String choice, String server)
+    {
+        if (!server.startsWith("#")) server = "#"+server;
+        if (choice == null){
+            JOptionPane.showConfirmDialog(dialog, "Please choose a connection.","No connection chosen", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        ChannelPanel channel = null;
+        for (int i = 0; i < tabbedPane.getTabCount(); i++)
+        {
+            channel = ((ChannelPanel)tabbedPane.getComponentAt(i));
+            if (channel.server.equals(choice)){
+                break;
+            }
+        }
+        try {
+            channel.connection.send("JOIN "+server);
+            dialog.dispose();
+        } catch (IOException ex) {
+            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (BadLocationException ex) {
+            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
     private void quickConnectButtonFunctionality(JTextField[] panes, JDialog dialog)
     {
         String chan = panes[0].getText().trim();
@@ -815,7 +895,7 @@ public class GUI extends JFrame {
         }
     }
     
-    private void serverListAddButtonFunctionality(JDialog dialog, JList list)
+    private void serverListAddButtonFunctionality(JDialog dialog)
     {
         JTextField server = new JTextField();
         JTextField port = new JTextField();
@@ -830,62 +910,24 @@ public class GUI extends JFrame {
             "Connect on startup", autoconnect,
             "Secure connection (SSL)", secure
         };
-        int savedServerCount = list.getModel().getSize();
         int x = JOptionPane.showConfirmDialog(dialog, fields, "Add Server", JOptionPane.OK_CANCEL_OPTION);
         if (x == JOptionPane.CLOSED_OPTION || x == JOptionPane.CANCEL_OPTION) return;
-        String entry = savedServerCount+","+server.getText().trim() + "," + port.getText().trim() + ","+ 
-                       channels.getText().trim() + "," + autoconnect.isSelected() + "," + secure.isSelected();
+        
+        //stuff
+        
         server.requestFocusInWindow();
-        try {
-            prop.load(new FileInputStream("config.properties"));
-            prop.setProperty("ss"+savedServerCount, entry);
-            prop.store(new FileOutputStream("config.properties"), null);
-            DefaultListModel model = (DefaultListModel)list.getModel();
-            model.addElement(entry);
-            savedServers.add(entry);
-            } catch (IOException io) {
-                Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, io);
-            } finally {
-                if (output != null) {
-                    try {
-                        output.close();
-                    } catch (IOException f) {
-                        f.printStackTrace();
-                    }
-                }
-            }
         return;
     }
-    private void serverListConnectButtonFunctionality(JList list, JDialog dialog)
+    private void serverListConnectButtonFunctionality(JDialog dialog)
     {
-        int index = list.getSelectedIndex();
-        if (index == -1)
+        /*if (index == -1)
         {
             JOptionPane.showMessageDialog(dialog, "Please select a server", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        try{
-        prop.load(new FileInputStream("config.properties"));
-        String selection = prop.getProperty("ss"+index);
-        prop.store(new FileOutputStream("config.properties"), null);
-        String[] s = selection.split(",");
-        if (((!StringUtils.isNumeric(s[2])) || s[2].equals("") || s[1].equals("") || s.length < 5))
-        {
-            JOptionPane.showMessageDialog(dialog, "Invalid server", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        String srv = s[1];
-        int port = Integer.valueOf(s[2]);
-        dialog.dispose();
-        new Connection(srv, port);
-        return;
-
-
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        
+        //new Connection(srv, port);
+        return;*/
     
     }
     public static void main(String args[]) {
@@ -930,4 +972,23 @@ public class GUI extends JFrame {
     private JMenuItem globalAway;
     private JMenuItem joinChannel;
     private JMenuItem quitProgram;
+}
+class SavedConnection{
+    String name;
+    String server;
+    String password;
+    ArrayList<String> channels;
+    boolean autoConnect;
+    boolean useSSL;
+    int port;
+    
+    SavedConnection(String name, String server, String password, ArrayList<String> channels, boolean autoConnect, boolean useSSL, int port){
+        this.name = name;
+        this.server = server;
+        this.password = password;
+        this.channels = channels;
+        this.autoConnect = autoConnect;
+        this.useSSL = useSSL;
+        this.port = port;
+    }   
 }

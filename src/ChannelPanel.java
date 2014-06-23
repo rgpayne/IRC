@@ -20,6 +20,8 @@ import javax.swing.event.*;
         final String name;
         String topic="", signOnTime, topicAuthor, server;
         int population, ops = 0;
+        static boolean awayStatus = false;
+        static String awayMessage = "Reason";
         
         Connection connection;
         
