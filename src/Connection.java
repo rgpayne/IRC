@@ -405,18 +405,7 @@ public class Connection implements Runnable{
             }
             if (command.equals("001" ) && this.autoconnect )
             {
-                for (int i = 0; i < GUI.savedServers.size(); i++)
-                {
-                    String[] s = GUI.savedServers.get(i).split(","); //this setion auto joins channels saved in savedServers
-                    if (s[1].equals(this.server))
-                    {
-                        String[] c = (s[s.length-3]).trim().split(" ");
-                        for (int j = 0; j < c.length; j++)
-                        {
-                             send("JOIN "+c[j]);
-                        }
-                    }
-                }
+                System.out.println("AUTOJOINING SAVED SERVERS UNIMPLEMENTED -- CONNECTION COMMAND 101");
                 
                 
             }
@@ -810,6 +799,10 @@ public class Connection implements Runnable{
                 return;
             }
             ChannelPanel channel = ((ChannelPanel)tabbedPane.getSelectedComponent());
+            if (channel == null){
+                System.out.println("_____NULL POINTER IN 433");
+                return;
+            }
             channel.insertString("[Error] **"+parser.getParams().trim(), ChannelPanel.errorColor);
             channel.connection.send("NICK "+currentNick);
             return;       

@@ -8,6 +8,7 @@ import javax.swing.text.*;
 import java.util.*;
 import java.util.logging.*;
 import java.io.*;
+import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import org.apache.commons.lang3.StringUtils;
@@ -36,7 +37,7 @@ public class GUI extends JFrame {
     EditorKit editorKit;
     Connection c;
     final static Properties prop = new Properties();
-    static ArrayList<String> savedServers;
+    static ArrayList<SavedConnection> savedConnections = new ArrayList<SavedConnection>();
     OutputStream output = null;
 
     public GUI() {
@@ -552,12 +553,23 @@ public class GUI extends JFrame {
                 Container contentpane = dialog.getContentPane();
                 SpringLayout layout = new SpringLayout();
                 contentpane.setLayout(layout);
-                contentpane.setPreferredSize(new Dimension(388,200));
-                Object[] rowLabels = {"Network", "Channels"};
-                TableModel model = new DefaultTableModel(rowLabels, 5);
-                JTable table = new JTable(model);
+                contentpane.setPreferredSize(new Dimension(550,200));
+                final BeanTableModel model = new BeanTableModel(SavedConnection.class);
+                model.sortColumnNames();
+                for (int i = 0; i < savedConnections.size(); i++) model.addRow(savedConnections.get(i));
+                
+                
+                final JTable table = new JTable(model){
+                    public boolean isCellEditable(int row, int column){  
+                        return false;  
+                    }  
+                };
+                table.getColumnModel().getColumn(0).setPreferredWidth(150);
+                table.getColumnModel().getColumn(1).setPreferredWidth(120);
+                table.getColumnModel().getColumn(2).setPreferredWidth(272);
+
                 JScrollPane scrollPane = new JScrollPane();
-                scrollPane.setPreferredSize(new Dimension(380,150));
+                scrollPane.setPreferredSize(new Dimension(542,150));
                 scrollPane.setViewportView(table);
                 JButton add = new JButton("Add");
                 JButton edit = new JButton ("Edit");
@@ -589,7 +601,7 @@ public class GUI extends JFrame {
                 {
                     public void actionPerformed(ActionEvent e) 
                     {
-                        serverListAddButtonFunctionality(dialog);
+                        serverListAddButtonFunctionality(dialog, model);
                     }
                 });
                 
@@ -599,6 +611,7 @@ public class GUI extends JFrame {
                     {
                         if (evt.getKeyCode() == KeyEvent.VK_ENTER)
                         {
+                            serverListAddButtonFunctionality(dialog, model);
                         }
                     }
                 });
@@ -613,23 +626,25 @@ public class GUI extends JFrame {
                 {
                     public void actionPerformed(ActionEvent e) 
                     {
+                        int rowIndex = table.getSelectedRow();
+                        if (rowIndex == -1) return;
+                        int modelIndex = table.convertRowIndexToModel(rowIndex);
+                        SavedConnection conn = (SavedConnection)model.modelData.get(table.convertRowIndexToModel(rowIndex));
+                        savedConnections.remove(conn);
+                        serializeSavedConnections();
+                        model.removeRowRange(modelIndex, modelIndex);
                     }
-                });
-                
+                });                
                 connect.addActionListener(new ActionListener()
                 {
                     public void actionPerformed(ActionEvent e) 
                     {
-                    }
-                });
-                
-                connect.addKeyListener(new KeyAdapter()
-                {
-                    public void keyPressed(KeyEvent evt)
-                    {
-                        if (evt.getKeyCode() == KeyEvent.VK_ENTER)
-                        {
-                        }
+                        int rowIndex = table.getSelectedRow();
+                        if (rowIndex == -1) return;
+                        SavedConnection conn = (SavedConnection)model.modelData.get(table.convertRowIndexToModel(rowIndex));
+                        new Connection(conn.getServer(), conn.retrievePort());
+                        dialog.dispose();
+                        return;
                     }
                 });
             }
@@ -709,7 +724,6 @@ public class GUI extends JFrame {
     private void loadProperties()
     {
 	Properties prop = new Properties();
-        savedServers = new ArrayList<String>();
 	InputStream input = null;
  
 	try {
@@ -721,20 +735,9 @@ public class GUI extends JFrame {
                 Connection.currentNick = Connection.nicks[0];
                 Connection.nicks[1] = prop.getProperty("Second");
                 Connection.nicks[2] = prop.getProperty("Third");
-                boolean isMore = true;
-                int i = 0;
-                while (isMore == true)
-                {
-                    String srv = prop.getProperty("ss"+i, "nosrv");
-                    if (srv.equals("nosrv"))
-                    {
-                        isMore = false;
-                        break;
-                    } 
-                    savedServers.add(srv);
-                    i++;
-                }
- 
+                System.out.println("LOAD PROPERTIES UNFINISHED IMPLEMENTATION --- SERIALIZE");
+               
+                deserializeSavedConnections();
 	} catch (IOException ex) {
 		ex.printStackTrace();
 	} finally {
@@ -749,17 +752,35 @@ public class GUI extends JFrame {
     }
     private void autoConnect()
     {
-        for (int i = 0; i < savedServers.size(); i++)
-        {
-            String[] s = savedServers.get(i).split(",");
-            if (s[s.length-2].equals("true"))
-            {
-                String srv = s[1];
-                int port = Integer.valueOf(s[2]);
-                new Connection(srv, port, true);
-            }
-        }
+        System.out.println("AUTOCONNECT UNIMPLEMENTED");
 
+    }
+    public static void serializeSavedConnections()
+    {
+        String filename = "servers.ser";
+        FileOutputStream fos = null;
+        ObjectOutputStream out = null;
+        try {
+            fos = new FileOutputStream(filename);
+            out = new ObjectOutputStream(fos);
+            out.writeObject(savedConnections);
+            
+            out.close();
+        }catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+    public static void deserializeSavedConnections()
+    {
+        FileInputStream fis = null;
+        ObjectInputStream in = null;
+        try{
+        fis = new FileInputStream("servers.ser");
+        in = new ObjectInputStream(fis);
+        savedConnections = (ArrayList<SavedConnection>)in.readObject();
+        } catch (Exception ex){
+            ex.printStackTrace();
+        }
     }
     private void joinOKButtonFunctionality(JDialog dialog, String choice, String server)
     {
@@ -895,41 +916,43 @@ public class GUI extends JFrame {
         }
     }
     
-    private void serverListAddButtonFunctionality(JDialog dialog)
+    private void serverListAddButtonFunctionality(JDialog dialog, BeanTableModel model)
     {
+        JTextField name = new JTextField();
         JTextField server = new JTextField();
         JTextField port = new JTextField();
+        JTextField password = new JTextField();
         JTextField channels = new JTextField();
         JCheckBox autoconnect = new JCheckBox();
         JCheckBox secure = new JCheckBox();
 
         Object[] fields = {
+            "Name", name,
             "Server", server,
             "Port", port,
-            "Auto-join channels (#c1 #c2)", channels,
+            "Password", password,
+            "Auto Join Channels (#c1 #c2)", channels,
             "Connect on startup", autoconnect,
             "Secure connection (SSL)", secure
         };
         int x = JOptionPane.showConfirmDialog(dialog, fields, "Add Server", JOptionPane.OK_CANCEL_OPTION);
         if (x == JOptionPane.CLOSED_OPTION || x == JOptionPane.CANCEL_OPTION) return;
         
-        //stuff
-        
-        server.requestFocusInWindow();
-        return;
-    }
-    private void serverListConnectButtonFunctionality(JDialog dialog)
-    {
-        /*if (index == -1)
-        {
-            JOptionPane.showMessageDialog(dialog, "Please select a server", "Error", JOptionPane.ERROR_MESSAGE);
+        String[] s = channels.getText().split(" ");
+        ArrayList<String> channelList = new ArrayList<String>(Arrays.asList(s));
+        if (!StringUtils.isNumeric(port.getText())){
+            JOptionPane.showMessageDialog(dialog, "Port must be an integer.");
             return;
         }
-        
-        //new Connection(srv, port);
-        return;*/
-    
+        SavedConnection connection = new SavedConnection(name.getText(), server.getText(), password.getText(), channelList, autoconnect.isSelected(), secure.isSelected(), Integer.valueOf(port.getText().trim()));
+        model.addRow(connection);
+        savedConnections.add(connection);
+        serializeSavedConnections();
+        return;
     }
+    
+    
+    
     public static void main(String args[]) {
 
         java.awt.EventQueue.invokeLater(new Runnable() {
@@ -973,22 +996,38 @@ public class GUI extends JFrame {
     private JMenuItem joinChannel;
     private JMenuItem quitProgram;
 }
-class SavedConnection{
-    String name;
-    String server;
-    String password;
-    ArrayList<String> channels;
-    boolean autoConnect;
-    boolean useSSL;
-    int port;
+
+/*class ServerTableModel extends DefaultTableModel {
+    private Vector<SavedConnection> dataList = new Vector<SavedConnection>();
+
+    public ServerTableModel(Object[] columnNames, int rowCount){
+        super(columnNames, rowCount);
+    }
     
-    SavedConnection(String name, String server, String password, ArrayList<String> channels, boolean autoConnect, boolean useSSL, int port){
-        this.name = name;
-        this.server = server;
-        this.password = password;
-        this.channels = channels;
-        this.autoConnect = autoConnect;
-        this.useSSL = useSSL;
-        this.port = port;
-    }   
-}
+    @Override
+    public int getRowCount() {
+        System.out.println(dataList);
+        return dataList.size();
+    }
+
+    @Override
+    public int getColumnCount() {
+        return 2;
+    }
+    @Override
+    public Object getValueAt(int rowIndex, int columnIndex) {
+        SavedConnection connection = dataList.get(rowIndex);
+        return connection;
+    }
+    public void addServer(SavedConnection connection)
+    {
+        dataList.add(connection);
+    }
+
+    @Override
+    public void addRow(Object[] rowData) {
+        super.addRow(rowData); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    
+}*/
