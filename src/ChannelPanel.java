@@ -39,16 +39,20 @@ import javax.swing.event.*;
         
         Document doc;  
         StyleContext sc = StyleContext.getDefaultStyleContext();
-        Style style = sc.addStyle("DefaultStyle", null);
-        Style timestampStyle = sc.addStyle("DefaultStyle", null);
-        
-        static String errorColor = "#FF0000", chatColor="#000000", serverColor="#990066", connectColor="#993300", timestampColor="#909090";
-        static String font = "sans serif";
+        static Style style;
+        static Style timestampStyle;
+        static Style actionStyle;
+        static Style errorStyle;
+        static Style serverStyle;
+        static Style connectStyle;
+
+        final static String errorColor = "#FF0000", chatColor="#000000", serverColor="#990066", connectColor="#993300", timestampColor="#909090";
+        final static String actionColor = "#0000FF";
+        final static String font = "sans serif";
         boolean showTimestamp = true;
         
         ArrayList<String> history;
         int historyCounter = 0;
-
            
         public ChannelPanel(String title, String name, String nick, Connection c) throws BadLocationException, IOException
         {
@@ -118,14 +122,21 @@ import javax.swing.event.*;
         
         public void setStyles() //TODO: static styles so we dont have to decode on every insertString
         {
+        style = sc.addStyle("DefaultStyle", null);
+        timestampStyle = sc.addStyle("DefaultStyle", style);
+        actionStyle = sc.addStyle("Defaultstyle", style);
+        errorStyle = sc.addStyle("DefaultStyle", style);
+        serverStyle = sc.addStyle("Defaultstyle", style);
+        connectStyle = sc.addStyle("Defaultstyle", style);
+        
         StyleConstants.setFontFamily(style, font);
         StyleConstants.setFontSize(style, 12);
-        //StyleConstants.setBold(style, true);
-        
-        StyleConstants.setFontFamily(timestampStyle, font);
-        StyleConstants.setFontSize(timestampStyle, 12);
-        //StyleConstants.setBold(timestampStyle, true);
         StyleConstants.setForeground(timestampStyle, Color.decode(timestampColor) );
+        StyleConstants.setForeground(actionStyle, Color.decode(actionColor));
+        StyleConstants.setForeground(errorStyle, Color.decode(errorColor));
+        StyleConstants.setForeground(serverStyle, Color.decode(serverColor));
+        StyleConstants.setForeground(connectStyle, Color.decode(connectColor));
+        
                 
         }
         public String makeTimestamp()
@@ -162,10 +173,9 @@ import javax.swing.event.*;
                 else tabInfo.setText(name+" - "+population+" nicks ("+ops+text+server+"  ");
             }
         }
-        public void insertString(String line, String color) throws BadLocationException, IOException
+        public void insertString(String line, Style style) throws BadLocationException, IOException
         { 
             String timestamp = makeTimestamp();
-            StyleConstants.setForeground(style, Color.decode(color));
             doc.insertString(doc.getLength(), "["+timestamp+"] ", timestampStyle);
             doc.insertString(doc.getLength(), line+"\n", style);
             
@@ -188,7 +198,18 @@ import javax.swing.event.*;
             }
             return;
             }
-                
+        public void insertCTCPAction (String[] line) throws BadLocationException
+        {
+            String nick = line[0];
+            String msg = line[1].trim();
+            String timestamp = makeTimestamp();
+            doc.insertString(doc.getLength(), "["+timestamp+"] " ,timestampStyle);
+            doc.insertString(doc.getLength(),"* " , actionStyle);
+            doc.insertString(doc.getLength(),nick+" ", style);
+            doc.insertString(doc.getLength(), msg, actionStyle);
+            return;
+        }
+                        
         public void addToUserList(String nick) throws BadLocationException, IOException
         {
             nick = nick.trim();

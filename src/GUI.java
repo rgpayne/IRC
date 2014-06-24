@@ -28,6 +28,7 @@ public class GUI extends JFrame {
     final static ImageIcon globalAwayIcon = new ImageIcon("src/icons/im-user-away.png");
     final static ImageIcon joinChannelIcon = new ImageIcon("src/icons/irc-join-channel.png");
     final static ImageIcon quitProgramIcon = new ImageIcon("src/icons/document-close.png");
+    final static ImageIcon showNicklistIcon = new ImageIcon("src/icons/preferences-system-windows-move.png");
 
 
     
@@ -85,7 +86,7 @@ public class GUI extends JFrame {
         clearWindow = new JMenuItem("Clear Window");
         editMenu.add (clearWindow);
         clearAllWindows = new JMenuItem("Clear All Windows");
-        editMenu.add(clearAllWindows);        
+        editMenu.add(clearAllWindows);      
         previousTab = new JMenuItem("Previous Tab", prevTabIcon);
         windowMenu.add(previousTab);       
         nextTab = new JMenuItem("Next Tab", nextTabIcon);
@@ -105,6 +106,8 @@ public class GUI extends JFrame {
         disconnect = new JMenuItem("Disconnect", disconnectIcon);
         fileMenu.add(disconnect);
         identities = new JMenuItem("Identities", identitiesIcon);
+        showNickList = new JMenuItem("Show/Hide Nicklist", showNicklistIcon);
+        settingsMenu.add(showNickList);
         settingsMenu.add(identities);        
         reconnect = new JMenuItem("Reconnect", reconnectIcon);
         fileMenu.add(reconnect);
@@ -117,7 +120,32 @@ public class GUI extends JFrame {
         quitProgram = new JMenuItem("Quit", quitProgramIcon);
         fileMenu.add(quitProgram);
         
-        
+        showNickList.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                for (int i = 0; i < tabbedPane.getTabCount(); i++){
+                    ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
+                    if (channel.title.equals(channel.name))
+                    {
+                        if (channel.getRightComponent() != null)
+                        {
+                            channel.setRightComponent(null);
+                            channel.setDividerSize(0);
+                            channel.setDividerLocation(0);
+                        }
+                        else
+                        {
+                            
+                            channel.setRightComponent(channel.userListScrollPane);
+                            channel.setDividerSize(5);
+                            channel.setDividerLocation(540);
+                        }
+                    }                    
+                }
+                
+                   
+            }
+        });
         globalAway.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -372,7 +400,7 @@ public class GUI extends JFrame {
                     if (otherChannel.name.equals(channel.server))
                     {
                         try {
-                            otherChannel.insertString("[Info] Disconnected from "+otherChannel.server+" (port "+otherChannel.connection.port+")", ChannelPanel.serverColor);
+                            otherChannel.insertString("[Info] Disconnected from "+otherChannel.server+" (port "+otherChannel.connection.port+")", ChannelPanel.serverStyle);
                             continue;
                         } catch (BadLocationException ex) {
                             Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
@@ -921,7 +949,7 @@ public class GUI extends JFrame {
             if (msg.charAt(0) != '/')
             {          
                 channel.connection.send(output);
-                channel.insertString(("<" + Connection.currentNick + ">:".trim() +" "+ msg.trim()),ChannelPanel.chatColor);   
+                channel.insertString(("<" + Connection.currentNick + ">:".trim() +" "+ msg.trim()),ChannelPanel.style);   
                 chatInputPane.setText(null);
                 evt.consume();
                 return;
@@ -935,7 +963,7 @@ public class GUI extends JFrame {
                        
             } catch(IOException e){
                 try {   
-                    channel.insertString("[Error] *** You are not connected to the server.",ChannelPanel.errorColor);
+                    channel.insertString("[Error] *** You are not connected to the server.",ChannelPanel.errorStyle);
                     chatInputPane.setText(null);
                     evt.consume();
                 } catch (BadLocationException ex) {
@@ -1036,6 +1064,7 @@ public class GUI extends JFrame {
     private JMenuItem serverList;
     private JMenuItem clearWindow;
     private JMenuItem clearAllWindows;
+    private JMenuItem showNickList;
     private JMenuItem previousTab;
     private JMenuItem nextTab;
     private JMenuItem moveTabLeft;
