@@ -84,7 +84,7 @@ import javax.swing.event.*;
 
         
         setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
-        setDividerLocation(480);
+        setDividerLocation(540);
         setResizeWeight(1.0);
         setDividerSize(5);
         setVerifyInputWhenFocusTarget(false);
@@ -94,8 +94,8 @@ import javax.swing.event.*;
         userListScrollPane.setViewportView(userListPane);
         chatScrollPane.setViewportView(chatPane);
         
-        //DefaultCaret caret = (DefaultCaret)chatPane.getCaret();
-        //caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+        DefaultCaret caret = (DefaultCaret)chatPane.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 
 
         setLeftComponent(chatScrollPane);
@@ -104,11 +104,11 @@ import javax.swing.event.*;
             setRightComponent(null);
             setDividerSize(0);
         }
-        chatScrollPane.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {  
+        /*chatScrollPane.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {  
             public void adjustmentValueChanged(AdjustmentEvent e) {  
                 e.getAdjustable().setValue(e.getAdjustable().getMaximum());  
             }
-        });
+        });*/
                 ChangeListener changeListener = new ChangeListener(){
             public void stateChanged(ChangeEvent changeEvent){
                 JTabbedPane pane = (JTabbedPane)changeEvent.getSource();

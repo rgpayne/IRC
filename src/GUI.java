@@ -8,9 +8,6 @@ import javax.swing.text.*;
 import java.util.*;
 import java.util.logging.*;
 import java.io.*;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
 import org.apache.commons.lang3.StringUtils;
 
 public class GUI extends JFrame {
@@ -564,17 +561,22 @@ public class GUI extends JFrame {
                         return false;  
                     }  
                 };
+
+                table.setShowGrid(false);
                 table.getColumnModel().getColumn(0).setPreferredWidth(150);
                 table.getColumnModel().getColumn(1).setPreferredWidth(120);
                 table.getColumnModel().getColumn(2).setPreferredWidth(272);
 
-                JScrollPane scrollPane = new JScrollPane();
+                JScrollPane scrollPane = new JScrollPane(table);
                 scrollPane.setPreferredSize(new Dimension(542,150));
                 scrollPane.setViewportView(table);
                 JButton add = new JButton("Add");
                 JButton edit = new JButton ("Edit");
                 JButton remove = new JButton("Remove");
                 JButton connect = new JButton("Connect");
+                scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+                scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+                scrollPane.getViewport().setBackground(Color.white);
                 dialog.setResizable(false);
                 dialog.setTitle("Server List");
                 dialog.setLocationRelativeTo(tabbedPane);   
@@ -619,6 +621,49 @@ public class GUI extends JFrame {
                 {
                     public void actionPerformed(ActionEvent e) 
                     {
+                        int rowIndex = table.getSelectedRow();
+                        if (rowIndex == -1) return;
+                        int modelIndex = table.convertRowIndexToModel(rowIndex);
+                        SavedConnection conn = (SavedConnection)model.modelData.get(modelIndex);
+                        
+                        JTextField ename = new JTextField(conn.retrieveName());
+                        JTextField eserver = new JTextField(conn.retrieveServer());
+                        JTextField eport = new JTextField(Integer.toString(conn.retrievePort()));
+                        JTextField epassword = new JTextField(conn.retrievePassword());
+                        String c = conn.retrieveChannels().toString();
+                        JTextField echannels = new JTextField(c.substring(1, c.length()-1));
+                        JCheckBox eautoconnect = new JCheckBox();
+                        if (conn.retrieveAutoConnect() == true) eautoconnect.setSelected(true);
+                        else eautoconnect.setSelected(false);
+                        JCheckBox esecure = new JCheckBox();
+                        if (conn.retrieveUseSSL() == true) esecure.setSelected(true);
+                        else esecure.setSelected(false);
+
+                        Object[] efields = {
+                            "Name", ename,
+                            "Server", eserver,
+                            "Port", eport,
+                            "Password", epassword,
+                            "Auto Join Channels (#c1 #c2)", echannels,
+                            "Connect on startup", eautoconnect,
+                            "Secure connection (SSL)", esecure
+                        };
+                        int ex = JOptionPane.showConfirmDialog(dialog, efields, "Edit Server", JOptionPane.OK_CANCEL_OPTION);
+                        if (ex == JOptionPane.CLOSED_OPTION || ex == JOptionPane.CANCEL_OPTION) return;
+
+                        String[] es = echannels.getText().split(" ");
+                        ArrayList<String> echannelList = new ArrayList<String>(Arrays.asList(es));
+                        if (!StringUtils.isNumeric(eport.getText())){
+                            JOptionPane.showMessageDialog(dialog, "Port must be an integer.");
+                            return;
+                        }
+                        model.removeRowRange(modelIndex, modelIndex);
+                        savedConnections.remove(conn);
+                        SavedConnection connection = new SavedConnection(ename.getText(), eserver.getText(), epassword.getText(), echannelList, eautoconnect.isSelected(), esecure.isSelected(), Integer.valueOf(eport.getText().trim()));
+                        model.addRow(connection);
+                        savedConnections.add(connection);
+                        serializeSavedConnections();
+                        return;
                     }              
                 });
                 
@@ -629,7 +674,7 @@ public class GUI extends JFrame {
                         int rowIndex = table.getSelectedRow();
                         if (rowIndex == -1) return;
                         int modelIndex = table.convertRowIndexToModel(rowIndex);
-                        SavedConnection conn = (SavedConnection)model.modelData.get(table.convertRowIndexToModel(rowIndex));
+                        SavedConnection conn = (SavedConnection)model.modelData.get(modelIndex);
                         savedConnections.remove(conn);
                         serializeSavedConnections();
                         model.removeRowRange(modelIndex, modelIndex);
@@ -734,9 +779,7 @@ public class GUI extends JFrame {
                 Connection.nicks[0] = prop.getProperty("Nick");
                 Connection.currentNick = Connection.nicks[0];
                 Connection.nicks[1] = prop.getProperty("Second");
-                Connection.nicks[2] = prop.getProperty("Third");
-                System.out.println("LOAD PROPERTIES UNFINISHED IMPLEMENTATION --- SERIALIZE");
-               
+                Connection.nicks[2] = prop.getProperty("Third");               
                 deserializeSavedConnections();
 	} catch (IOException ex) {
 		ex.printStackTrace();
@@ -752,7 +795,14 @@ public class GUI extends JFrame {
     }
     private void autoConnect()
     {
-        System.out.println("AUTOCONNECT UNIMPLEMENTED");
+        for (int i = 0; i < savedConnections.size(); i++)
+        {
+            SavedConnection conn = savedConnections.get(i);
+            if (conn.retrieveAutoConnect() == true){
+                new Connection(conn.retrieveServer(), conn.retrievePort(), true);
+            }
+            
+        }
 
     }
     public static void serializeSavedConnections()
@@ -779,7 +829,7 @@ public class GUI extends JFrame {
         in = new ObjectInputStream(fis);
         savedConnections = (ArrayList<SavedConnection>)in.readObject();
         } catch (Exception ex){
-            ex.printStackTrace();
+            System.out.println("Deserialization exception");
         }
     }
     private void joinOKButtonFunctionality(JDialog dialog, String choice, String server)

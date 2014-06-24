@@ -13,7 +13,7 @@ public class Connection implements Runnable{
     Socket socket;
     BufferedReader reader;
     BufferedWriter writer;
-    String server, host, password;
+    String server, password;
     boolean autoconnect = true;
     static String[] nicks = {"", "", ""};
     static String currentNick = "", real = "", awayMessage="";
@@ -22,7 +22,7 @@ public class Connection implements Runnable{
     static JLabel tabInfo;
     
 
-    public Connection(String server, int port) //need nick and password eventually
+    public Connection(String server, int port)
     { 
        this.server = server;
        this.port = port;
@@ -403,15 +403,29 @@ public class Connection implements Runnable{
                 indexOfChannel = findTab(host);
                 c.server = parser.getPrefix();
             }
-            if (command.equals("001" ) && this.autoconnect )
-            {
-                System.out.println("AUTOJOINING SAVED SERVERS UNIMPLEMENTED -- CONNECTION COMMAND 101");
-                
-                
-            }
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             ChannelPanel channel = ((ChannelPanel)aComponent);
             channel.insertString("[Welcome] "+parser.getTrailing(), ChannelPanel.connectColor);
+            
+            if (command.equals("001" ) && this.autoconnect )
+            {
+                for (int i = 0; i < GUI.savedConnections.size(); i++)
+                {
+                    SavedConnection conn = GUI.savedConnections.get(i);
+                    System.out.println(conn.getServer()+"  "+channel.server);
+                    if (conn.getServer().equals(channel.connection.server))
+                    {
+                        ArrayList<String> c = conn.retrieveChannels();
+                        for(int j = 0; j < c.size(); j++)
+                        {
+                            send("JOIN "+c.get(j));
+                        }
+                    }
+                }  
+            }  
+            
+            
+            
             return;
         }
         if (command.equals("042")) //unique id
