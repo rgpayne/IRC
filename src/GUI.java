@@ -434,7 +434,7 @@ public class GUI extends JFrame {
             public void actionPerformed(ActionEvent e)
             {
                 
-                String[] labels = {"Server", "Port", "Nick", "Password"};
+                String[] labels = {"Network Name","Server", "Port", "Nick", "Password"};
                 int numPairs = labels.length;
                 final JDialog dialog = new JDialog(GUI.this);
                 SpringLayout layout = new SpringLayout();
@@ -446,15 +446,15 @@ public class GUI extends JFrame {
                     JLabel l = new JLabel(labels[i], JLabel.TRAILING);
                     panel.add(l);
                     JTextField textField = new JTextField(10);
-                    if (i == 1) textField.setText("6667");
-                    if (i == 2) textField.setText(Connection.currentNick);
+                    if (i == 2) textField.setText("6667");
+                    if (i == 3) textField.setText(Connection.currentNick);
                     panes[i] = textField;
                     textField.setMaximumSize(new Dimension(10,10));
                     l.setLabelFor(textField);
                     panel.add(textField);
                 }
                 dialog.setTitle("Quick Connect");
-                dialog.setSize(new Dimension(200,180));
+                dialog.setSize(new Dimension(250,220));
                 dialog.setResizable(false);
                 dialog.setLocationRelativeTo(tabbedPane);
                 dialog.add(panel);
@@ -687,7 +687,7 @@ public class GUI extends JFrame {
                         int rowIndex = table.getSelectedRow();
                         if (rowIndex == -1) return;
                         SavedConnection conn = (SavedConnection)model.modelData.get(table.convertRowIndexToModel(rowIndex));
-                        new Connection(conn.getServer(), conn.retrievePort());
+                        new Connection(conn.getNetwork(), conn.getServer(), conn.retrievePort());
                         dialog.dispose();
                         return;
                     }
@@ -799,7 +799,7 @@ public class GUI extends JFrame {
         {
             SavedConnection conn = savedConnections.get(i);
             if (conn.retrieveAutoConnect() == true){
-                new Connection(conn.retrieveServer(), conn.retrievePort(), true);
+                new Connection(conn.retrieveName(), conn.retrieveServer(), conn.retrievePort(), true);
             }
             
         }
@@ -858,20 +858,21 @@ public class GUI extends JFrame {
     }
     private void quickConnectButtonFunctionality(JTextField[] panes, JDialog dialog)
     {
-        String chan = panes[0].getText().trim();
-        String p = panes[1].getText().trim();
-        String n = panes[2].getText().trim();
-        String pass = panes[3].getText().trim();
+        String name = panes[0].getText().trim();
+        String chan = panes[1].getText().trim();
+        String p = panes[2].getText().trim();
+        String n = panes[3].getText().trim();
+        String pass = panes[4].getText().trim();
 
-        if (chan.isEmpty() || p.isEmpty() || n.isEmpty())
+        if (name.isEmpty() || chan.isEmpty() || p.isEmpty() || n.isEmpty())
         {
-            JOptionPane.showMessageDialog(dialog, "Server, port and nick are required");
+            JOptionPane.showMessageDialog(dialog, "Network name, server, port and nick are required");
         }
         else
         {
             dialog.dispose();
             c.nicks[0] = n;
-            new Connection(chan, Integer.valueOf(p), false);
+            new Connection(name, chan, Integer.valueOf(p), false); //FIXFIXFIX
             if (!pass.isEmpty()) c.password = pass;
             return;
         }

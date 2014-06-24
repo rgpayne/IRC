@@ -13,7 +13,7 @@ public class Connection implements Runnable{
     Socket socket;
     BufferedReader reader;
     BufferedWriter writer;
-    String server, password;
+    String server, password, title;
     boolean autoconnect = true;
     static String[] nicks = {"", "", ""};
     static String currentNick = "", real = "", awayMessage="";
@@ -22,16 +22,18 @@ public class Connection implements Runnable{
     static JLabel tabInfo;
     
 
-    public Connection(String server, int port)
+    public Connection(String title, String server, int port)
     { 
+       this.title = title;
        this.server = server;
        this.port = port;
        
        thread = new Thread(this);
        thread.start();
     }
-    public Connection(String server, int port, boolean autoconnect)
+    public Connection(String title, String server, int port, boolean autoconnect)
     {
+        this.title = title;
         this.server = server;
         this.port = port;
         this.autoconnect = autoconnect;
@@ -53,8 +55,9 @@ public class Connection implements Runnable{
     {
         int totalTabs = tabbedPane.getTabCount();
         for (int i = 0; i < totalTabs; i++){
-            String tabTitle = tabbedPane.getTitleAt(i);
-            if (tabTitle.equalsIgnoreCase(title)) return i;
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
+            String channelName = channel.name;
+            if (channelName.equalsIgnoreCase(title)) return i;
         }
         return -1;
     }
@@ -64,7 +67,7 @@ public class Connection implements Runnable{
         Parser parser = new Parser(line);
         String command = parser.getCommand();
         //System.out.println(line);
-        System.out.println(parser.toString());
+       // System.out.println(parser.toString());
         if (command.equals("AWAY"))
         {
             String channelName = parser.getTrailing();
@@ -88,7 +91,7 @@ public class Connection implements Runnable{
                    int indexOfChannel = findTab(channelName);
                    if (indexOfChannel == -1)
                    {
-                       ChannelPanel c = new ChannelPanel(channelName, currentNick, this);
+                       ChannelPanel c = new ChannelPanel(channelName, channelName, currentNick, this);
                        int newTabIndex = findTab(c.name);
                        tabbedPane.setSelectedIndex(newTabIndex);                     
                        return;
@@ -339,7 +342,7 @@ public class Connection implements Runnable{
                         this.send("NOTICE "+channelName+" "+"\001AlphaClient:v0.1:LM17\001");  //placeholder
                         return;
                     }
-                    ChannelPanel channel = new ChannelPanel(channelName, currentNick, this);
+                    ChannelPanel channel = new ChannelPanel(channelName, channelName, currentNick, this);
                     channel.setRightComponent(null);
                     channel.setDividerSize(0);
                     channel.insertString("<"+channelName+">: "+parser.getTrailing(), ChannelPanel.chatColor);
@@ -354,7 +357,7 @@ public class Connection implements Runnable{
             int indexOfChannel = findTab(channelName);
             if (indexOfChannel == -1)
             {
-                ChannelPanel channel = new ChannelPanel(channelName, currentNick, this);
+                ChannelPanel channel = new ChannelPanel(channelName, channelName, currentNick, this);
                 channel.insertString("<"+channelName+">: "+parser.getTrailing(), ChannelPanel.chatColor);
                 return;
             }
@@ -399,7 +402,7 @@ public class Connection implements Runnable{
             int indexOfChannel = findTab(host);
             if (indexOfChannel == -1)
             {
-                ChannelPanel c = new ChannelPanel(host, currentNick, this);
+                ChannelPanel c = new ChannelPanel(this.title, host, currentNick, this);
                 indexOfChannel = findTab(host);
                 c.server = parser.getPrefix();
             }
@@ -440,6 +443,12 @@ public class Connection implements Runnable{
         {
             return;
         }
+        if (command.equals("242")) //uptime
+        {
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+            channel.insertString(parser.getTrailing(), ChannelPanel.serverColor);
+            return;
+        }
         if (command.equals("251") || command.equals("255"))
         {
             String p = parser.getParams();
@@ -476,7 +485,9 @@ public class Connection implements Runnable{
         }
         if (command.equals("263")) //server load too heavy. please try again (happens with /list)
         {
-            
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+            channel.insertString(parser.getTrailing(), ChannelPanel.serverColor);
+            return;
         }
         if (command.equals("265") || command.equals("266"))
         {
@@ -565,6 +576,12 @@ public class Connection implements Runnable{
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             ChannelPanel channel = ((ChannelPanel)aComponent);
             channel.insertString("[Whois] "+target+" is an IRC Operator", ChannelPanel.serverColor);        
+            return;
+        }
+        if (command.equals("314"))
+        {
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+            channel.insertString(parser.getTrailing(), ChannelPanel.serverColor);
             return;
         }
         if (command.equals("315")) //end of /who
@@ -730,6 +747,12 @@ public class Connection implements Runnable{
             channel.fireIntervalAdded();
             return;
             }
+        if (command.equals("369")) //end of whowas
+        {
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+            channel.insertString(parser.getTrailing(), ChannelPanel.serverColor);
+            return;
+        }
         if (command.equals("371") || command.equals("372") || command.equals("374") || command.equals("375") || command.equals("376"))
         {
             String host = parser.getPrefix();
@@ -771,6 +794,12 @@ public class Connection implements Runnable{
             String chan = s[1].trim();
             ChannelPanel channel = ((ChannelPanel)tabbedPane.getSelectedComponent());
             channel.insertString("[Error] "+chan+": You have joined too many channels.", ChannelPanel.errorColor);
+            return;
+        }
+        if (command.equals("406")) //there was no such nickname (whowas)
+        {
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+            channel.insertString(parser.getTrailing(), ChannelPanel.serverColor);
             return;
         }
         if (command.equals("412")) //no text to send
@@ -829,7 +858,7 @@ public class Connection implements Runnable{
             int indexOfChannel = tabbedPane.getSelectedIndex();
             if (indexOfChannel == -1)
             {
-                new ChannelPanel(parser.getPrefix(), this.currentNick, this);
+                new ChannelPanel(title, parser.getPrefix(), this.currentNick, this);
                 indexOfChannel = findTab(parser.getPrefix());
                 
             }
@@ -848,6 +877,9 @@ public class Connection implements Runnable{
         }
         if (command.equals("461")) //not enough parameters  (/stats rieux)
         {
+            String[] s = parser.getParams().split(" ");
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+            channel.insertString(s[1]+": "+parser.getTrailing(), ChannelPanel.serverColor);
             return;
         }
         if (command.equals("481")) //permission denied (/stats rieux)

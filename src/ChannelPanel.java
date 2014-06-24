@@ -17,7 +17,7 @@ import javax.swing.event.*;
 
     public class ChannelPanel extends JSplitPane{
            
-        final String name;
+        final String name, title;
         String topic="", signOnTime, topicAuthor, server;
         int population, ops = 0;
         static boolean awayStatus = false;
@@ -50,13 +50,14 @@ import javax.swing.event.*;
         int historyCounter = 0;
 
            
-        public ChannelPanel(String name, String nick, Connection c) throws BadLocationException, IOException
+        public ChannelPanel(String title, String name, String nick, Connection c) throws BadLocationException, IOException
         {
+            this.title = title; //this is what is shown on a tab
             this.name = name;
             this.connection = c;
                                 
             doc = chatPane.getStyledDocument();
-            
+                    
             setStyles();
             
             chatPane.setDocument(doc);
@@ -66,7 +67,7 @@ import javax.swing.event.*;
             
             makePanel();
                        
-            tabbedPane.add(this, this.name);
+            tabbedPane.add(this, this.title);
             
                 
         }
@@ -93,9 +94,6 @@ import javax.swing.event.*;
         chatPane.setAutoscrolls(true);
         userListScrollPane.setViewportView(userListPane);
         chatScrollPane.setViewportView(chatPane);
-        
-        DefaultCaret caret = (DefaultCaret)chatPane.getCaret();
-        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 
 
         setLeftComponent(chatScrollPane);
@@ -104,11 +102,6 @@ import javax.swing.event.*;
             setRightComponent(null);
             setDividerSize(0);
         }
-        /*chatScrollPane.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {  
-            public void adjustmentValueChanged(AdjustmentEvent e) {  
-                e.getAdjustable().setValue(e.getAdjustable().getMaximum());  
-            }
-        });*/
                 ChangeListener changeListener = new ChangeListener(){
             public void stateChanged(ChangeEvent changeEvent){
                 JTabbedPane pane = (JTabbedPane)changeEvent.getSource();
@@ -175,7 +168,6 @@ import javax.swing.event.*;
             StyleConstants.setForeground(style, Color.decode(color));
             doc.insertString(doc.getLength(), "["+timestamp+"] ", timestampStyle);
             doc.insertString(doc.getLength(), line+"\n", style);
-           
             
             if (!this.isShowing()) //chck for foreground color?
             { 
@@ -183,8 +175,10 @@ import javax.swing.event.*;
                 int indexOfTab = -1;
                 for (int i = 0; i < totalTabs; i++)
                 {
-                    String tabTitle = tabbedPane.getTitleAt(i);
-                    if (tabTitle.equalsIgnoreCase(this.name))
+                    ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
+
+                    String channelName = channel.name;
+                    if (channelName.equalsIgnoreCase(this.name))
                     {
                         indexOfTab = i;
                         break;
