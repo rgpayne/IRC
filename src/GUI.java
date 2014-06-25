@@ -949,7 +949,7 @@ public class GUI extends JFrame {
             if (msg.charAt(0) != '/')
             {          
                 channel.connection.send(output);
-                channel.insertString(("<" + Connection.currentNick + ">:".trim() +" "+ msg.trim()),ChannelPanel.style);   
+                channel.insertString(("<" + Connection.currentNick + ">:".trim() +" "+ msg.trim()),ChannelPanel.chatStyle);   
                 chatInputPane.setText(null);
                 evt.consume();
                 return;

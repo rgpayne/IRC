@@ -2,18 +2,21 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.event.AdjustmentEvent;
-import java.awt.event.AdjustmentListener;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.*;
 import javax.swing.text.*;
 import javax.swing.event.*;
+import org.apache.commons.lang3.StringUtils;
 
     public class ChannelPanel extends JSplitPane{
            
@@ -40,15 +43,22 @@ import javax.swing.event.*;
         Document doc;  
         StyleContext sc = StyleContext.getDefaultStyleContext();
         static Style style;
+        static Style chatStyle;
         static Style timestampStyle;
         static Style actionStyle;
         static Style errorStyle;
         static Style serverStyle;
         static Style connectStyle;
+        static Style ctcpStyle;
 
         final static String errorColor = "#FF0000", chatColor="#000000", serverColor="#990066", connectColor="#993300", timestampColor="#909090";
         final static String actionColor = "#0000FF";
         final static String font = "sans serif";
+        final static Color CTCP0 = Color.WHITE, CTCP1 = Color.BLACK, CTCP2 = Color.blue, CTCP3 = Color.green, CTCP4 = Color.red,
+                           CTCP5 = Color.decode("#800000"), CTCP6 = Color.decode("#800080"), CTCP7 = Color.ORANGE, CTCP8 = Color.YELLOW,
+                           CTCP9 = Color.decode("#00FF00"), CTCP10 = Color.decode("#008080"), CTCP11 = Color.CYAN, CTCP12 = Color.decode("#ADD8E6"),
+                           CTCP13 = Color.PINK, CTCP14 = Color.gray, CTCP15 = Color.LIGHT_GRAY;
+        final static Map CTCPMap = new HashMap();
         boolean showTimestamp = true;
         
         ArrayList<String> history;
@@ -70,6 +80,7 @@ import javax.swing.event.*;
             
             
             makePanel();
+            makeHashMap();
                        
             tabbedPane.add(this, this.title);
             
@@ -123,21 +134,42 @@ import javax.swing.event.*;
         public void setStyles() //TODO: static styles so we dont have to decode on every insertString
         {
         style = sc.addStyle("DefaultStyle", null);
+        chatStyle = sc.addStyle("DefaultStyle", style);
         timestampStyle = sc.addStyle("DefaultStyle", style);
         actionStyle = sc.addStyle("Defaultstyle", style);
         errorStyle = sc.addStyle("DefaultStyle", style);
         serverStyle = sc.addStyle("Defaultstyle", style);
         connectStyle = sc.addStyle("Defaultstyle", style);
+        ctcpStyle = sc.addStyle("Defaultstyle", style);
         
         StyleConstants.setFontFamily(style, font);
         StyleConstants.setFontSize(style, 12);
+        StyleConstants.setForeground(chatStyle, Color.decode(chatColor));
         StyleConstants.setForeground(timestampStyle, Color.decode(timestampColor) );
         StyleConstants.setForeground(actionStyle, Color.decode(actionColor));
         StyleConstants.setForeground(errorStyle, Color.decode(errorColor));
         StyleConstants.setForeground(serverStyle, Color.decode(serverColor));
-        StyleConstants.setForeground(connectStyle, Color.decode(connectColor));
-        
+        StyleConstants.setForeground(connectStyle, Color.decode(connectColor));  
                 
+        }
+        public void makeHashMap()
+        {
+            CTCPMap.put(0, CTCP0);
+            CTCPMap.put(1, CTCP1);
+            CTCPMap.put(2, CTCP2);
+            CTCPMap.put(3, CTCP3);
+            CTCPMap.put(4, CTCP4);
+            CTCPMap.put(5, CTCP5);
+            CTCPMap.put(6, CTCP6);
+            CTCPMap.put(7, CTCP7);
+            CTCPMap.put(8, CTCP8);
+            CTCPMap.put(9, CTCP9);
+            CTCPMap.put(10, CTCP10);
+            CTCPMap.put(11, CTCP11);
+            CTCPMap.put(12, CTCP12);
+            CTCPMap.put(13, CTCP13);
+            CTCPMap.put(14, CTCP14);
+            CTCPMap.put(15, CTCP15);
         }
         public String makeTimestamp()
         {
@@ -178,8 +210,76 @@ import javax.swing.event.*;
             String timestamp = makeTimestamp();
             doc.insertString(doc.getLength(), "["+timestamp+"] ", timestampStyle);
             doc.insertString(doc.getLength(), line+"\n", style);
+            checkForActiveTab();
+        }
+        public void insertCTCPAction (String[] line) throws BadLocationException
+        {
+            String nick = line[0];
+            String msg = line[1].trim();
+            String timestamp = makeTimestamp();
+            doc.insertString(doc.getLength(), "["+timestamp+"] " ,timestampStyle);
+            doc.insertString(doc.getLength(),"* " , actionStyle);
+            doc.insertString(doc.getLength(),nick+" ", style);
+            doc.insertString(doc.getLength(), msg+"\n", actionStyle);
+            checkForActiveTab();
+        }
+        public void insertCTCPColoredString(String[] line) throws BadLocationException
+        {
+            String timestamp = makeTimestamp();
+            doc.insertString(doc.getLength(), "["+timestamp+"] " ,timestampStyle);
+            doc.insertString(doc.getLength(), "<"+line[0]+"> ", chatStyle);
+            String[] s = line[1].trim().split(Connection.CTCP_COLOR_DELIM);
+            Pattern pattern = Pattern.compile("(\\d{1,2}+)(,?+)(\\d{1,2}+)(.+)|(\\d{1,2})(,)(.*)|(,?+)(\\d{1,2}+)(.+)");
+            Matcher matcher;
             
-            if (!this.isShowing()) //chck for foreground color?
+            String foreground;
+            String background;
+            String message;
+            for (int i = 0; i < s.length; i++)
+            {
+                matcher = pattern.matcher(s[i]);
+                while (matcher.find())
+                {
+                    if (matcher.group(8) != null && matcher.group(8).equals(",")) //invalid (ex. ,5this is a message) prints plain
+                    {
+                        message = matcher.group(10);
+                        doc.insertString(doc.getLength(), message, chatStyle);
+                    }
+                    if (matcher.group(6) != null && matcher.group(6).equals(",")) //foreground color, no bg color (ex. 5,this is a message)
+                    {
+                        foreground = matcher.group(5);
+                        message = matcher.group(7);
+                        Color f = (Color)CTCPMap.get(Integer.valueOf(foreground));
+                        StyleConstants.setForeground(ctcpStyle, f);
+                        doc.insertString(doc.getLength(), message, ctcpStyle);
+                    }
+                    if (matcher.group(8) != null && matcher.group(8).equals(" ")) //foregrond color, no bg color (ex. 5this is a message
+                    {
+                        foreground = matcher.group(9);
+                        message = matcher.group(10);
+                        Color f = (Color)CTCPMap.get(Integer.valueOf(foreground));
+                        StyleConstants.setForeground(ctcpStyle, f);
+                        doc.insertString(doc.getLength(), message, ctcpStyle);
+                    }
+                    if (matcher.group(2) != null && matcher.group(2).equals(",")) //foreground and background (ex. 5,5this is a message)
+                    {
+                        foreground = matcher.group(1);
+                        background = matcher.group(3);
+                        message = matcher.group(4);
+                        Color f = (Color)CTCPMap.get(Integer.valueOf(foreground));
+                        Color b = (Color)CTCPMap.get(Integer.valueOf(background));
+                        StyleConstants.setForeground(ctcpStyle, f);
+                        StyleConstants.setBackground(ctcpStyle, b);
+                        doc.insertString(doc.getLength(), message, ctcpStyle);
+                    }
+                }                
+            }
+            doc.insertString(doc.getLength(), "\n", style);
+            checkForActiveTab();
+        }
+        private void checkForActiveTab()
+        {
+            if (!this.isShowing()) //check for foreground color?
             { 
                 int totalTabs = tabbedPane.getTabCount();
                 int indexOfTab = -1;
@@ -197,19 +297,7 @@ import javax.swing.event.*;
             tabbedPane.setForegroundAt(indexOfTab, Color.blue);
             }
             return;
-            }
-        public void insertCTCPAction (String[] line) throws BadLocationException
-        {
-            String nick = line[0];
-            String msg = line[1].trim();
-            String timestamp = makeTimestamp();
-            doc.insertString(doc.getLength(), "["+timestamp+"] " ,timestampStyle);
-            doc.insertString(doc.getLength(),"* " , actionStyle);
-            doc.insertString(doc.getLength(),nick+" ", style);
-            doc.insertString(doc.getLength(), msg, actionStyle);
-            return;
         }
-                        
         public void addToUserList(String nick) throws BadLocationException, IOException
         {
             nick = nick.trim();

@@ -11,6 +11,7 @@ import java.util.logging.*;
 public class Connection implements Runnable{
     
     public static final String CTCP_DELIM = "\001";
+    public static final String CTCP_COLOR_DELIM = "\003"; //""
     Thread thread;
     Socket socket;
     BufferedReader reader;
@@ -69,7 +70,6 @@ public class Connection implements Runnable{
         Parser parser = new Parser(line);
         String command = parser.getCommand();
         System.out.println(parser.toString());
-        if (parser.getTrailing().startsWith(CTCP_DELIM)) System.out.println("CTCP");
         if (command.equals("AWAY"))
         {
             String channelName = parser.getTrailing();
@@ -331,7 +331,7 @@ public class Connection implements Runnable{
         }
         if (command.equals("PRIVMSG") || command.equals("MSG"))
         {
-            //CTCP MESSAGE
+            //CTCP PRIV MESSAGE
             if (parser.getTrailing().startsWith(CTCP_DELIM)&& !parser.getTrailing().trim().equals("VERSION"))
             {
                 if (parser.getTrailing().substring(1).startsWith("ACTION"))
@@ -344,6 +344,18 @@ public class Connection implements Runnable{
                     channel.insertCTCPAction(s);
                     return;                    
                 }
+                else
+                {
+                }
+            }
+            if (parser.getTrailing().startsWith(CTCP_COLOR_DELIM))
+            {
+                String channelName = parser.getMiddle();
+                int indexOfChannel = findTab(channelName);
+                ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfChannel);
+                String[] msg = {parser.getNick(), parser.getTrailing()};
+                channel.insertCTCPColoredString(msg);
+                return;
             }
             
             
@@ -365,11 +377,11 @@ public class Connection implements Runnable{
                     ChannelPanel channel = new ChannelPanel(channelName, channelName, currentNick, this);
                     channel.setRightComponent(null);
                     channel.setDividerSize(0);
-                    channel.insertString("<"+channelName+">: "+parser.getTrailing(), ChannelPanel.style);
+                    channel.insertString("<"+channelName+">: "+parser.getTrailing(), ChannelPanel.chatStyle);
                     return;
                 }
                 Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-                ((ChannelPanel)aComponent).insertString(("<" + parser.getNick() + ">: " + parser.getTrailing()).trim(), ChannelPanel.style);
+                ((ChannelPanel)aComponent).insertString(("<" + parser.getNick() + ">: " + parser.getTrailing()).trim(), ChannelPanel.chatStyle);
                 return;
             }
             
@@ -378,11 +390,11 @@ public class Connection implements Runnable{
             if (indexOfChannel == -1)
             {
                 ChannelPanel channel = new ChannelPanel(channelName, channelName, currentNick, this);
-                channel.insertString("<"+channelName+">: "+parser.getTrailing(), ChannelPanel.style);
+                channel.insertString("<"+channelName+">: "+parser.getTrailing(), ChannelPanel.chatStyle);
                 return;
             }
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ((ChannelPanel)aComponent).insertString(("<" + parser.getNick() + ">: " + parser.getTrailing()).trim(), ChannelPanel.style);   
+            ((ChannelPanel)aComponent).insertString(("<" + parser.getNick() + ">: " + parser.getTrailing()).trim(), ChannelPanel.chatStyle);   
             return;
         }
         if (command.equals("QUIT"))
