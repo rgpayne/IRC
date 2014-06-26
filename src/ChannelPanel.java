@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.SortedSet;
+import java.util.StringTokenizer;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,7 +41,7 @@ import org.apache.commons.lang3.StringUtils;
         SortedListModel<User> model = new SortedListModel<User>();
         ArrayList<String> list = new ArrayList<String>();
         
-        Document doc;  
+        StyledDocument doc;  
         StyleContext sc = StyleContext.getDefaultStyleContext();
         static Style style;
         static Style chatStyle;
@@ -50,14 +51,13 @@ import org.apache.commons.lang3.StringUtils;
         static Style serverStyle;
         static Style connectStyle;
         static Style ctcpStyle;
-
         final static String errorColor = "#FF0000", chatColor="#000000", serverColor="#990066", connectColor="#993300", timestampColor="#909090";
         final static String actionColor = "#0000FF";
         final static String font = "sans serif";
-        final static Color CTCP0 = Color.WHITE, CTCP1 = Color.BLACK, CTCP2 = Color.blue, CTCP3 = Color.green, CTCP4 = Color.red,
-                           CTCP5 = Color.decode("#800000"), CTCP6 = Color.decode("#800080"), CTCP7 = Color.ORANGE, CTCP8 = Color.YELLOW,
-                           CTCP9 = Color.decode("#00FF00"), CTCP10 = Color.decode("#008080"), CTCP11 = Color.CYAN, CTCP12 = Color.decode("#ADD8E6"),
-                           CTCP13 = Color.PINK, CTCP14 = Color.gray, CTCP15 = Color.LIGHT_GRAY;
+        final static Color CTCP0 = Color.WHITE, CTCP1 = Color.BLACK, CTCP2 = Color.decode("#000080"), CTCP3 = Color.decode("#008000"), CTCP4 = Color.decode("#FF0000"),
+                           CTCP5 = Color.decode("#A52A2A"), CTCP6 = Color.decode("#800080"), CTCP7 = Color.decode("#FF8000"), CTCP8 = Color.decode("#808000"),
+                           CTCP9 = Color.decode("#00FF00"), CTCP10 = Color.decode("#008080"), CTCP11 = Color.decode("#00FFFF"), CTCP12 = Color.decode("#0000FF"),
+                           CTCP13 = Color.decode("#FFC0CB"), CTCP14 = Color.decode("#A0A0A0"), CTCP15 = Color.decode("#C0C0C0");
         final static Map CTCPMap = new HashMap();
         boolean showTimestamp = true;
         
@@ -225,76 +225,104 @@ import org.apache.commons.lang3.StringUtils;
         }
         public void insertCTCPColoredString(String[] line) throws BadLocationException
         {
+            ctcpStyle = sc.addStyle("Defaultstyle", style);
             String timestamp = makeTimestamp();
-            //String replaced = line[1].replaceAll(Connection.CTCP_COLOR_DELIM+"[^0-9]", "");
             doc.insertString(doc.getLength(), "["+timestamp+"] " ,timestampStyle);
             doc.insertString(doc.getLength(), "<"+line[0]+"> ", chatStyle);
-            String[] s = line[1].trim().split(Connection.CTCP_COLOR_DELIM);
-            Pattern pattern = Pattern.compile("(\\d{1,2}+)(,?+)(\\d{1,2}+)(.+)|(\\d{1,2})(,)(.*)|(,?+)(\\d{1,2}+)(.+)");
+            
+            
+            Pattern pattern;
             Matcher matcher;
             
-            String foreground;
-            String background;
-            String message;
-            for (int i = 0; i < s.length; i++)
+            StringTokenizer st = new StringTokenizer(line[1],Connection.CTCP_COLOR_DELIM + Connection.CTCP_UNDERLINE_DELIM + Connection.CTCP_BOLD_DELIM, true);
+            while (st.hasMoreTokens())
             {
-                matcher = pattern.matcher(s[i]);
-                System.out.println("__"+s[i]);
-                if (!StringUtils.isNumeric(s[i].substring(0,1)) && !s[i].startsWith(","))
+                String token = st.nextToken();
+                System.out.println("___"+token);
+                if (token.equals(Connection.CTCP_BOLD_DELIM))
                 {
-                    doc.insertString(doc.getLength(), s[i], chatStyle);
+                    StyleConstants.setBold(ctcpStyle, !StyleConstants.isBold(ctcpStyle));
+                    continue;
                 }
-                while (matcher.find())
+                if (token.equals(Connection.CTCP_UNDERLINE_DELIM))
                 {
-                    if (matcher.group(8) != null && matcher.group(8).equals(",")) //invalid (ex. ,5this is a message) prints plain
+                    StyleConstants.setUnderline(ctcpStyle, !StyleConstants.isUnderline(ctcpStyle));
+                    continue;
+                }
+                if (token.equals(Connection.CTCP_COLOR_DELIM))
+                {
+                    if (st.hasMoreTokens())
                     {
-                        System.out.println(matcher.group(9)+"       "+matcher.group(10));
-                        message = matcher.group(10);
-                        doc.insertString(doc.getLength(), message, chatStyle);
-                        continue;
+                        token = st.nextToken();
+                        pattern = Pattern.compile("(\\d{1,2}+)(,?+)(\\d{1,2}+)(.+)|(\\d{1,2})(,)(.*)|(,?+)(\\d{1,2}+)(.+)");
+                        matcher = pattern.matcher(token);
+                        String foreground;
+                        String background;
+                        String message;                      
+
+                        if (!StringUtils.isNumeric(token.substring(0,1)) && !token.startsWith(","))
+                        {
+                            doc.insertString(doc.getLength(), token, chatStyle);
+                            continue;
+                        }
+                        while (matcher.find())
+                        {
+                            if (matcher.group(8) != null && matcher.group(8).equals(",")) //invalid (ex. ,5this is a message) prints plain
+                            {
+                                message = matcher.group(10);
+                                doc.insertString(doc.getLength(), message, chatStyle);
+                                continue;
+                            }
+                            if (matcher.group(6) != null && matcher.group(6).equals(",")) //foreground color, no bg color (ex. 5,this is a message)
+                            {
+                                foreground = matcher.group(5);
+                                message = matcher.group(7);
+                                int index = Integer.valueOf(foreground);
+                                if (index > 15) index = 1;
+                                Color f = (Color)CTCPMap.get(index);
+                                StyleConstants.setForeground(ctcpStyle, f);
+                                doc.insertString(doc.getLength(), message, ctcpStyle);
+                                continue;
+                            }
+                            if (matcher.group(8) != null && matcher.group(8).equals("")) //foregrond color, no bg color (ex. 5this is a message)
+                            {
+                                foreground = matcher.group(9);
+                                message = matcher.group(10);
+                                int index = Integer.valueOf(foreground);
+                                if (index > 15) index = 1;
+                                Color f = (Color)CTCPMap.get(index);
+                                StyleConstants.setBackground(ctcpStyle, Color.WHITE);
+                                StyleConstants.setForeground(ctcpStyle, f);
+                                doc.insertString(doc.getLength(), message, ctcpStyle);
+                                continue;
+                            }
+                            if (matcher.group(2) != null && matcher.group(2).equals(",")) //foreground and background (ex. 5,5this is a message)
+                            {
+                                foreground = matcher.group(1);
+                                background = matcher.group(3);
+                                message = matcher.group(4);
+                                int index = Integer.valueOf(foreground);
+                                if (index > 15) index = 1;
+                                Color f = (Color)CTCPMap.get(index);
+                                Color b = (Color)CTCPMap.get(Integer.valueOf(background));
+                                StyleConstants.setForeground(ctcpStyle, f);
+                                StyleConstants.setBackground(ctcpStyle, b);
+                                doc.insertString(doc.getLength(), message, ctcpStyle);
+                                continue;
+                            }                               
+                        } 
                     }
-                    if (matcher.group(6) != null && matcher.group(6).equals(",")) //foreground color, no bg color (ex. 5,this is a message)
-                    {
-                        foreground = matcher.group(5);
-                        message = matcher.group(7);
-                        int index = Integer.valueOf(foreground);
-                        if (index > 15) index = 1;
-                        Color f = (Color)CTCPMap.get(index);
-                        StyleConstants.setBackground(ctcpStyle, Color.WHITE);
-                        StyleConstants.setForeground(ctcpStyle, f);
-                        doc.insertString(doc.getLength(), message, ctcpStyle);
-                        continue;
-                    }
-                    if (matcher.group(8) != null && matcher.group(8).equals("")) //foregrond color, no bg color (ex. 5this is a message)
-                    {
-                        foreground = matcher.group(9);
-                        message = matcher.group(10);
-                        int index = Integer.valueOf(foreground);
-                        if (index > 15) index = 1;
-                        Color f = (Color)CTCPMap.get(index);
-                        StyleConstants.setBackground(ctcpStyle, Color.WHITE);
-                        StyleConstants.setForeground(ctcpStyle, f);
-                        doc.insertString(doc.getLength(), message, ctcpStyle);
-                        continue;
-                    }
-                    if (matcher.group(2) != null && matcher.group(2).equals(",")) //foreground and background (ex. 5,5this is a message)
-                    {
-                        foreground = matcher.group(1);
-                        background = matcher.group(3);
-                        message = matcher.group(4);
-                        int index = Integer.valueOf(foreground);
-                        if (index > 15) index = 1;
-                        Color f = (Color)CTCPMap.get(index);
-                        Color b = (Color)CTCPMap.get(Integer.valueOf(background));
-                        StyleConstants.setForeground(ctcpStyle, f);
-                        StyleConstants.setBackground(ctcpStyle, b);
-                        doc.insertString(doc.getLength(), message, ctcpStyle);
-                        continue;
-                    }
-                }                
+                }
+                else
+                {
+                    doc.insertString(doc.getLength(), token, ctcpStyle);
+                }
             }
-            doc.insertString(doc.getLength(), "\n", style);
+            doc.insertString(doc.getLength(), "\n", ctcpStyle);
             checkForActiveTab();
+            
+            
+            
         }
         private void checkForActiveTab()
         {

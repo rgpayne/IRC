@@ -11,7 +11,7 @@ import java.util.logging.*;
 public class Connection implements Runnable{
     
     public static final String CTCP_DELIM = "\001", CTCP_BOLD_DELIM = "\002",CTCP_COLOR_DELIM = "\003",
-                               CTCP_UNDERLINE_DELIM = "\031"; //reset -> 0x1F
+                               CTCP_UNDERLINE_DELIM = "\037"; //reset -> 0x1F
     Thread thread;
     Socket socket;
     BufferedReader reader;
