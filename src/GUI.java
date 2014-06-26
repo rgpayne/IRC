@@ -1076,38 +1076,3 @@ public class GUI extends JFrame {
     private JMenuItem joinChannel;
     private JMenuItem quitProgram;
 }
-
-/*class ServerTableModel extends DefaultTableModel {
-    private Vector<SavedConnection> dataList = new Vector<SavedConnection>();
-
-    public ServerTableModel(Object[] columnNames, int rowCount){
-        super(columnNames, rowCount);
-    }
-    
-    @Override
-    public int getRowCount() {
-        System.out.println(dataList);
-        return dataList.size();
-    }
-
-    @Override
-    public int getColumnCount() {
-        return 2;
-    }
-    @Override
-    public Object getValueAt(int rowIndex, int columnIndex) {
-        SavedConnection connection = dataList.get(rowIndex);
-        return connection;
-    }
-    public void addServer(SavedConnection connection)
-    {
-        dataList.add(connection);
-    }
-
-    @Override
-    public void addRow(Object[] rowData) {
-        super.addRow(rowData); //To change body of generated methods, choose Tools | Templates.
-    }
-    
-    
-}*/

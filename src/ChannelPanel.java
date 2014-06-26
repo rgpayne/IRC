@@ -226,6 +226,7 @@ import org.apache.commons.lang3.StringUtils;
         public void insertCTCPColoredString(String[] line) throws BadLocationException
         {
             String timestamp = makeTimestamp();
+            //String replaced = line[1].replaceAll(Connection.CTCP_COLOR_DELIM+"[^0-9]", "");
             doc.insertString(doc.getLength(), "["+timestamp+"] " ,timestampStyle);
             doc.insertString(doc.getLength(), "<"+line[0]+"> ", chatStyle);
             String[] s = line[1].trim().split(Connection.CTCP_COLOR_DELIM);
@@ -238,39 +239,57 @@ import org.apache.commons.lang3.StringUtils;
             for (int i = 0; i < s.length; i++)
             {
                 matcher = pattern.matcher(s[i]);
+                System.out.println("__"+s[i]);
+                if (!StringUtils.isNumeric(s[i].substring(0,1)) && !s[i].startsWith(","))
+                {
+                    doc.insertString(doc.getLength(), s[i], chatStyle);
+                }
                 while (matcher.find())
                 {
                     if (matcher.group(8) != null && matcher.group(8).equals(",")) //invalid (ex. ,5this is a message) prints plain
                     {
+                        System.out.println(matcher.group(9)+"       "+matcher.group(10));
                         message = matcher.group(10);
                         doc.insertString(doc.getLength(), message, chatStyle);
+                        continue;
                     }
                     if (matcher.group(6) != null && matcher.group(6).equals(",")) //foreground color, no bg color (ex. 5,this is a message)
                     {
                         foreground = matcher.group(5);
                         message = matcher.group(7);
-                        Color f = (Color)CTCPMap.get(Integer.valueOf(foreground));
+                        int index = Integer.valueOf(foreground);
+                        if (index > 15) index = 1;
+                        Color f = (Color)CTCPMap.get(index);
+                        StyleConstants.setBackground(ctcpStyle, Color.WHITE);
                         StyleConstants.setForeground(ctcpStyle, f);
                         doc.insertString(doc.getLength(), message, ctcpStyle);
+                        continue;
                     }
-                    if (matcher.group(8) != null && matcher.group(8).equals(" ")) //foregrond color, no bg color (ex. 5this is a message
+                    if (matcher.group(8) != null && matcher.group(8).equals("")) //foregrond color, no bg color (ex. 5this is a message)
                     {
                         foreground = matcher.group(9);
                         message = matcher.group(10);
-                        Color f = (Color)CTCPMap.get(Integer.valueOf(foreground));
+                        int index = Integer.valueOf(foreground);
+                        if (index > 15) index = 1;
+                        Color f = (Color)CTCPMap.get(index);
+                        StyleConstants.setBackground(ctcpStyle, Color.WHITE);
                         StyleConstants.setForeground(ctcpStyle, f);
                         doc.insertString(doc.getLength(), message, ctcpStyle);
+                        continue;
                     }
                     if (matcher.group(2) != null && matcher.group(2).equals(",")) //foreground and background (ex. 5,5this is a message)
                     {
                         foreground = matcher.group(1);
                         background = matcher.group(3);
                         message = matcher.group(4);
-                        Color f = (Color)CTCPMap.get(Integer.valueOf(foreground));
+                        int index = Integer.valueOf(foreground);
+                        if (index > 15) index = 1;
+                        Color f = (Color)CTCPMap.get(index);
                         Color b = (Color)CTCPMap.get(Integer.valueOf(background));
                         StyleConstants.setForeground(ctcpStyle, f);
                         StyleConstants.setBackground(ctcpStyle, b);
                         doc.insertString(doc.getLength(), message, ctcpStyle);
+                        continue;
                     }
                 }                
             }
