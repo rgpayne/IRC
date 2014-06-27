@@ -400,7 +400,8 @@ public class GUI extends JFrame {
                     if (otherChannel.name.equals(channel.server))
                     {
                         try {
-                            otherChannel.insertString("[Info] Disconnected from "+otherChannel.server+" (port "+otherChannel.connection.port+")", ChannelPanel.serverStyle);
+                            String[] msg = {null, "[Info] Disconnected from "+otherChannel.server+" (port "+otherChannel.connection.port+")"};
+                            otherChannel.insertString(msg, ChannelPanel.serverStyle, false);
                             continue;
                         } catch (BadLocationException ex) {
                             Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
@@ -949,7 +950,8 @@ public class GUI extends JFrame {
             if (msg.charAt(0) != '/')
             {          
                 channel.connection.send(output);
-                channel.insertString(("<" + Connection.currentNick + ">:".trim() +" "+ msg.trim()),ChannelPanel.chatStyle);   
+                String[] inp = {Connection.currentNick,msg.trim()};
+                channel.insertString(inp,ChannelPanel.chatStyle, false);   
                 chatInputPane.setText(null);
                 evt.consume();
                 return;
@@ -963,7 +965,8 @@ public class GUI extends JFrame {
                        
             } catch(IOException e){
                 try {   
-                    channel.insertString("[Error] *** You are not connected to the server.",ChannelPanel.errorStyle);
+                    String[] msg = {null, "[Error] *** You are not connected to the server."};
+                    channel.insertString(msg,ChannelPanel.errorStyle, false);
                     chatInputPane.setText(null);
                     evt.consume();
                 } catch (BadLocationException ex) {

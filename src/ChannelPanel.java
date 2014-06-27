@@ -51,7 +51,7 @@ import org.apache.commons.lang3.StringUtils;
         static Style serverStyle;
         static Style connectStyle;
         static Style ctcpStyle;
-        final static String errorColor = "#FF0000", chatColor="#000000", serverColor="#990066", connectColor="#993300", timestampColor="#909090";
+        final static String errorColor = "#FF0000", chatColor="#000000", serverColor="#960096", connectColor="#993300", timestampColor="#909090";
         final static String actionColor = "#0000FF";
         final static String font = "sans serif";
         final static Color CTCP0 = Color.WHITE, CTCP1 = Color.BLACK, CTCP2 = Color.decode("#000080"), CTCP3 = Color.decode("#008000"), CTCP4 = Color.decode("#FF0000"),
@@ -205,13 +205,27 @@ import org.apache.commons.lang3.StringUtils;
                 else tabInfo.setText(name+" - "+population+" nicks ("+ops+text+server+"  ");
             }
         }
-        public void insertString(String line, Style style) throws BadLocationException, IOException
+        public void insertString(String[] line, Style style, boolean isCTCP) throws BadLocationException, IOException
+        { 
+            if (isCTCP == true) //CTCP message
+            {
+                insertCTCPColoredString(line, style);
+                return;
+            }
+            String timestamp = makeTimestamp();
+            doc.insertString(doc.getLength(), "["+timestamp+"] ", timestampStyle);
+            if (line[0] != null) doc.insertString(doc.getLength(), "<"+line[0]+">: ", chatStyle);
+            doc.insertString(doc.getLength(), line[1]+"\n", style);
+            checkForActiveTab();
+        }
+        /*
+        public void insertString(String line, Style style) throws BadLocationException, IOException //OLD METHOD
         { 
             String timestamp = makeTimestamp();
             doc.insertString(doc.getLength(), "["+timestamp+"] ", timestampStyle);
             doc.insertString(doc.getLength(), line+"\n", style);
             checkForActiveTab();
-        }
+        }*/
         public void insertCTCPAction (String[] line) throws BadLocationException
         {
             String nick = line[0];
@@ -223,22 +237,21 @@ import org.apache.commons.lang3.StringUtils;
             doc.insertString(doc.getLength(), msg+"\n", actionStyle);
             checkForActiveTab();
         }
-        public void insertCTCPColoredString(String[] line) throws BadLocationException
+        public void insertCTCPColoredString(String[] line, Style givenStyle) throws BadLocationException
         {
-            ctcpStyle = sc.addStyle("Defaultstyle", style);
+            ctcpStyle = sc.addStyle("Defaultstyle", givenStyle);
             String timestamp = makeTimestamp();
-            doc.insertString(doc.getLength(), "["+timestamp+"] " ,timestampStyle);
-            doc.insertString(doc.getLength(), "<"+line[0]+"> ", chatStyle);
+            if (showTimestamp == true) doc.insertString(doc.getLength(), "["+timestamp+"] " ,timestampStyle);
+            if (line[0] != null) doc.insertString(doc.getLength(), "<"+line[0]+">: ", chatStyle);
             
             
             Pattern pattern;
             Matcher matcher;
             
-            StringTokenizer st = new StringTokenizer(line[1],Connection.CTCP_COLOR_DELIM + Connection.CTCP_UNDERLINE_DELIM + Connection.CTCP_BOLD_DELIM, true);
+            StringTokenizer st = new StringTokenizer(line[1],Connection.CTCP_COLOR_DELIM + Connection.CTCP_UNDERLINE_DELIM + Connection.CTCP_BOLD_DELIM+ Connection.CTCP_RESET_DELIM, true);
             while (st.hasMoreTokens())
             {
                 String token = st.nextToken();
-                System.out.println("___"+token);
                 if (token.equals(Connection.CTCP_BOLD_DELIM))
                 {
                     StyleConstants.setBold(ctcpStyle, !StyleConstants.isBold(ctcpStyle));
@@ -247,6 +260,12 @@ import org.apache.commons.lang3.StringUtils;
                 if (token.equals(Connection.CTCP_UNDERLINE_DELIM))
                 {
                     StyleConstants.setUnderline(ctcpStyle, !StyleConstants.isUnderline(ctcpStyle));
+                    continue;
+                }
+                if (token.equals(Connection.CTCP_RESET_DELIM))
+                {
+                    ctcpStyle = sc.addStyle("Defaultstyle", givenStyle);
+                    System.out.println("########"+StyleConstants.isBold(ctcpStyle));
                     continue;
                 }
                 if (token.equals(Connection.CTCP_COLOR_DELIM))
@@ -270,7 +289,7 @@ import org.apache.commons.lang3.StringUtils;
                             if (matcher.group(8) != null && matcher.group(8).equals(",")) //invalid (ex. ,5this is a message) prints plain
                             {
                                 message = matcher.group(10);
-                                doc.insertString(doc.getLength(), message, chatStyle);
+                                doc.insertString(doc.getLength(), message, ctcpStyle);
                                 continue;
                             }
                             if (matcher.group(6) != null && matcher.group(6).equals(",")) //foreground color, no bg color (ex. 5,this is a message)
