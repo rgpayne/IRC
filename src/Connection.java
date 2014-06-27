@@ -6,6 +6,7 @@ import javax.swing.*;
 import java.util.*;
 import java.io.*;
 import java.util.logging.*;
+import org.apache.commons.lang3.StringUtils;
 
 
 public class Connection implements Runnable{
@@ -357,11 +358,10 @@ public class Connection implements Runnable{
         }
         if (command.equals("PRIVMSG") || command.equals("MSG"))
         {
-            //CTCP ACTION
             boolean ctcp = checkForCTCPDelims(line);
-            if (parser.getTrailing().startsWith(CTCP_DELIM)&& !parser.getTrailing().trim().equals("VERSION"))
+            if (parser.getTrailing().startsWith(CTCP_DELIM))
             {
-                if (parser.getTrailing().substring(1).startsWith("ACTION"))
+                if (parser.getTrailing().substring(1).startsWith("ACTION")) //CTCP action
                 {
                     String channelName = parser.getMiddle();
                     int indexOfChannel = findTab(channelName);
@@ -370,6 +370,34 @@ public class Connection implements Runnable{
                     String[] s = {parser.getNick(), rest};
                     channel.insertCTCPAction(s);
                     return;                    
+                }
+                if (parser.getTrailing().substring(1).startsWith("PING")) //CTCP ping ---> still doesn't seem to work properly
+                {
+                    ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+                    String[] msg = {null, "[CTCP] "+"Recieved CTCP-Ping request from "+parser.getNick()+"."};
+                    channel.insertString(msg, ChannelPanel.connectStyle, false);
+                    this.send("NOTICE "+parser.getNick()+" "+parser.getTrailing());
+                    return;
+                }
+                if (parser.getTrailing().substring(1).startsWith("VERSION")) //CTCP Version
+                {
+                    ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+                    String[] msg = {null, "[CTCP] "+"Received CTCP-Version request from "+parser.getNick()+"."};
+                    channel.insertString(msg, ChannelPanel.connectStyle, false);
+                    this.send("NOTICE "+parser.getNick()+" \001AlphaClient:v0.1:LM17\001");  //placeholder
+                    return;
+                }
+                if (parser.getTrailing().substring(1).startsWith("TIME")) //CTCP Time
+                {
+                    ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+                    String[] msg = {null, "[CTCP] "+"Received CTCP-Time request from "+parser.getNick()+"."};
+                    channel.insertString(msg, ChannelPanel.connectStyle, false);
+                    Date date = new Date();
+                    SimpleDateFormat sdf = new SimpleDateFormat("hh:mm aa");
+                    sdf.setTimeZone(TimeZone.getTimeZone("CST"));
+                    String time = sdf.format(date);  
+                    this.send("NOTICE "+parser.getNick()+" \001"+time+"\001");
+                    return;
                 }
             }
             
@@ -381,11 +409,6 @@ public class Connection implements Runnable{
                 int indexOfChannel = findTab(channelName);
                 if (indexOfChannel == -1)
                 {
-                    if (parser.getTrailing().trim().equals("VERSION"))
-                    {
-                        this.send("NOTICE "+channelName+" "+"\001AlphaClient:v0.1:LM17\001");  //placeholder
-                        return;
-                    }
                     ChannelPanel channel = new ChannelPanel(channelName, channelName, currentNick, this);
                     channel.setRightComponent(null);
                     channel.setDividerSize(0);
