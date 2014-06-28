@@ -75,7 +75,7 @@ public class Connection implements Runnable{
     {
         Parser parser = new Parser(line);
         String command = parser.getCommand();
-        System.out.println(parser.toString());
+        //System.out.println(parser.toString());
         if (command.equals("AWAY"))
         {
             String channelName = parser.getTrailing();
@@ -371,21 +371,37 @@ public class Connection implements Runnable{
                     channel.insertCTCPAction(s);
                     return;                    
                 }
-                if (parser.getTrailing().substring(1).startsWith("PING")) //CTCP ping ---> still doesn't seem to work properly
+                if (parser.getTrailing().substring(1).startsWith("CLIENTINFO")) //CTCP clientinfo
+                {
+                    ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+                    String[] msg = {null, "[CTCP] "+"Received CTCP-ClientInfo request from "+parser.getNick()+"."};
+                    channel.insertString(msg, ChannelPanel.connectStyle, false);
+                    this.send("NOTICE "+parser.getNick()+" :\001CLIENTINFO CTCP commands: ACTION FINGER PING SOURCE TIME USERINFO VERSION\001");
+                    return;  
+                }
+                if (parser.getTrailing().substring(1).startsWith("FINGER")) //CTCP Finger
+                {
+                    ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+                    String[] msg = {null, "[CTCP] "+"Received CTCP-Finger request from "+parser.getNick()+"."};
+                    channel.insertString(msg, ChannelPanel.connectStyle, false);
+                    this.send("NOTICE "+parser.getNick()+" :\001FINGER "+ChannelPanel.CTCPFingerMessage+"\001");
+                    return;
+                }
+                if (parser.getTrailing().substring(1).startsWith("PING")) //CTCP Ping
                 {
                     ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
                     String[] msg = {null, "[CTCP] "+"Recieved CTCP-Ping request from "+parser.getNick()+"."};
                     channel.insertString(msg, ChannelPanel.connectStyle, false);
-                    this.send("NOTICE "+parser.getNick()+" "+parser.getTrailing());
+                    this.send("NOTICE "+parser.getNick()+" :"+parser.getTrailing());
                     return;
                 }
-                if (parser.getTrailing().substring(1).startsWith("VERSION")) //CTCP Version
+                if (parser.getTrailing().substring(1).startsWith("SOURCE")) //CTCP source
                 {
                     ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
-                    String[] msg = {null, "[CTCP] "+"Received CTCP-Version request from "+parser.getNick()+"."};
+                    String[] msg = {null, "[CTCP] "+"Received CTCP-Source request from "+parser.getNick()+"."};
                     channel.insertString(msg, ChannelPanel.connectStyle, false);
-                    this.send("NOTICE "+parser.getNick()+" \001AlphaClient:v0.1:LM17\001");  //placeholder
-                    return;
+                    this.send("NOTICE "+parser.getNick()+" :\001SOURCE Unavailable\001");
+                    return;                    
                 }
                 if (parser.getTrailing().substring(1).startsWith("TIME")) //CTCP Time
                 {
@@ -393,10 +409,33 @@ public class Connection implements Runnable{
                     String[] msg = {null, "[CTCP] "+"Received CTCP-Time request from "+parser.getNick()+"."};
                     channel.insertString(msg, ChannelPanel.connectStyle, false);
                     Date date = new Date();
-                    SimpleDateFormat sdf = new SimpleDateFormat("hh:mm aa");
+                    SimpleDateFormat sdf = new SimpleDateFormat("MM-dd hh:mm aa");
                     sdf.setTimeZone(TimeZone.getTimeZone("CST"));
                     String time = sdf.format(date);  
-                    this.send("NOTICE "+parser.getNick()+" \001"+time+"\001");
+                    this.send("NOTICE "+parser.getNick()+" :\001TIME "+time+"\001");
+                    return;
+                }
+                if (parser.getTrailing().substring(1).startsWith("USERINFO")) //ctcp userinfo
+                {
+                    ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+                    String[] msg = {null, "[CTCP] "+"Received CTCP-UserInfo request from "+parser.getNick()+"."};
+                    channel.insertString(msg, ChannelPanel.connectStyle, false);
+                    this.send("NOTICE "+parser.getNick()+" :\001USERINFO "+ChannelPanel.CTCPUserInfo+"\001");
+                    return;    
+                }
+                if (parser.getTrailing().substring(1).startsWith("VERSION")) //CTCP Version
+                {
+                    ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+                    String[] msg = {null, "[CTCP] "+"Received CTCP-Version request from "+parser.getNick()+"."};
+                    channel.insertString(msg, ChannelPanel.connectStyle, false);
+                    this.send("NOTICE "+parser.getNick()+" :\001VERSION AlphaClient:v0.1:LM17\001");  //placeholder
+                    return;
+                }
+                else
+                {
+                    ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+                    String[] msg = {null, "[CTCP] "+"Received invalid CTCP request from "+parser.getNick()+": "+parser.getTrailing().substring(1)};
+                    channel.insertString(msg, ChannelPanel.connectStyle, false);
                     return;
                 }
             }
