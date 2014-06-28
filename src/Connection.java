@@ -75,7 +75,7 @@ public class Connection implements Runnable{
     {
         Parser parser = new Parser(line);
         String command = parser.getCommand();
-        //System.out.println(parser.toString());
+        System.out.println(parser.toString());
         if (command.equals("AWAY"))
         {
             String channelName = parser.getTrailing();
@@ -126,7 +126,7 @@ public class Connection implements Runnable{
                        ChannelPanel channel = ((ChannelPanel)aComponent);
                        channel.addToUserList(parser.getNick());
                        String[] msg = {null, "--> "+parser.getNick() + " (" + parser.getUser() + "@" + parser.getHost() +  ") has joined the channel."};
-                       channel.insertString(msg, ChannelPanel.serverStyle, false);
+                       channel.insertString(msg, ChannelPanel.joinStyle, false);
                        return;                       
                    }
                }
@@ -160,8 +160,8 @@ public class Connection implements Runnable{
             }
             else //somebody else kicked
             {
-                String[] msg = {null, "*** "+kicked+" was kicked from the channel ("+kickMessage};
-                channel.insertString(msg, ChannelPanel.serverStyle, false);
+                String[] msg = {null, "*** "+kicked+" was kicked from the channel ("+kickMessage+")"};
+                channel.insertString(msg, ChannelPanel.disconnectStyle, false);
                 channel.removeFromUserList(kicked);
                 return;
             }
@@ -346,7 +346,7 @@ public class Connection implements Runnable{
             {
                 Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
                 String[] msg = {null, "<-- "+parser.getNick()+" (" + parser.getUser() + "@" + parser.getHost() + ") has left the channel (" + parser.getTrailing()+ ")" };
-                ((ChannelPanel)aComponent).insertString(msg, ChannelPanel.serverStyle, false);
+                ((ChannelPanel)aComponent).insertString(msg, ChannelPanel.disconnectStyle, false);
                 ((ChannelPanel)aComponent).removeFromUserList(parser.getNick());
                 return;
             }
@@ -485,7 +485,7 @@ public class Connection implements Runnable{
                 ChannelPanel channel = ((ChannelPanel)aComponent);
                 boolean success = channel.removeFromUserList(quitter);
                 String[] msg = {null, "<-- "+quitter+" has left the server ("+quitMessage+")"};
-                if (success) channel.insertString(msg, ChannelPanel.serverStyle, ctcp);
+                if (success) channel.insertString(msg, ChannelPanel.disconnectStyle, ctcp);
             }
             return;            
         }
@@ -528,7 +528,7 @@ public class Connection implements Runnable{
             }
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             ChannelPanel channel = ((ChannelPanel)aComponent);
-            String[] msg = {null, "[Welcome] "+parser.getTrailing()};
+            String[] msg = {null, "[Welcome] "+parser.getParams().trim()};
             channel.insertString(msg, ChannelPanel.connectStyle, ctcp);
             
             if (command.equals("001" ) && this.autoconnect )
@@ -558,6 +558,10 @@ public class Connection implements Runnable{
         }
         if (command.equals("042")) //unique id
         {
+            int index = findTab(parser.getPrefix());
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(index);
+            String[] msg = {null, "[042] "+parser.getParams().trim()+"."};
+            channel.insertString(msg, ChannelPanel.connectStyle, false);
             return;
         }
         if (command.equals("219")) //end of /STATS
@@ -909,13 +913,14 @@ public class Connection implements Runnable{
         }
         if (command.equals("371") || command.equals("372") || command.equals("374") || command.equals("375") || command.equals("376"))
         {
+            boolean ctcp = checkForCTCPDelims(line);
             String host = parser.getPrefix();
             int indexOfChannel = findTab(host);
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             ChannelPanel channel = ((ChannelPanel)aComponent);
             if (command.equals("372")) channel.server = host;
             String[] msg = {null, "[MOTD] "+parser.getTrailing()};
-            channel.insertString(msg, ChannelPanel.connectStyle, false);
+            channel.insertString(msg, ChannelPanel.connectStyle, ctcp);
             return;
         }
         if (command.equals("401")) //no such nick/channel

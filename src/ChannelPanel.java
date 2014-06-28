@@ -45,18 +45,10 @@ import org.apache.commons.lang3.StringUtils;
         
         StyledDocument doc;  
         StyleContext sc = StyleContext.getDefaultStyleContext();
-        static Style style;
-        static Style chatStyle;
-        static Style timestampStyle;
-        static Style actionStyle;
-        static Style errorStyle;
-        static Style serverStyle;
-        static Style connectStyle;
-        static Style ctcpStyle;
-        static Style userNameStyle;
+        static Style style, chatStyle, timestampStyle, actionStyle, errorStyle, serverStyle, connectStyle, ctcpStyle, userNameStyle, disconnectStyle, joinStyle;
         final static String errorColor = "#FF0000", chatColor="#000000", serverColor="#960096", connectColor="#993300", timestampColor="#909090";
-        final static String actionColor = "#0000FF";
-        final static String font = "sans serif";
+        final static String actionColor = "#0000FF", disconnectColor = "#CAA234", joinColor = "#D46942";
+        final static String font = "monospaced";
         final static Color CTCP0 = Color.WHITE, CTCP1 = Color.BLACK, CTCP2 = Color.decode("#000080"), CTCP3 = Color.decode("#008000"), CTCP4 = Color.decode("#FF0000"),
                            CTCP5 = Color.decode("#A52A2A"), CTCP6 = Color.decode("#800080"), CTCP7 = Color.decode("#FF8000"), CTCP8 = Color.decode("#808000"),
                            CTCP9 = Color.decode("#00FF00"), CTCP10 = Color.decode("#008080"), CTCP11 = Color.decode("#00FFFF"), CTCP12 = Color.decode("#0000FF"),
@@ -145,6 +137,8 @@ import org.apache.commons.lang3.StringUtils;
         connectStyle = sc.addStyle("Defaultstyle", style);
         ctcpStyle = sc.addStyle("Defaultstyle", style);
         userNameStyle = sc.addStyle("Defaultstyle", style);
+        disconnectStyle = sc.addStyle("Defaultstyle", style);
+        joinStyle = sc.addStyle("Defaultstyle", style);
         
         StyleConstants.setFontFamily(style, font);
         StyleConstants.setFontSize(style, 12);
@@ -154,7 +148,8 @@ import org.apache.commons.lang3.StringUtils;
         StyleConstants.setForeground(errorStyle, Color.decode(errorColor));
         StyleConstants.setForeground(serverStyle, Color.decode(serverColor));
         StyleConstants.setForeground(connectStyle, Color.decode(connectColor));  
-                
+        StyleConstants.setForeground(disconnectStyle, Color.decode(disconnectColor));
+        StyleConstants.setForeground(joinStyle, Color.decode(joinColor));
         }
         public void makeHashMaps()
         {
@@ -228,11 +223,11 @@ import org.apache.commons.lang3.StringUtils;
                 else tabInfo.setText(name+" - "+population+" nicks ("+ops+text+server+"  ");
             }
         }
-        public void insertString(String[] line, Style style, boolean isCTCP) throws BadLocationException, IOException
+        public void insertString(String[] line, Style givenStyle, boolean isCTCP) throws BadLocationException, IOException
         { 
-            if (isCTCP == true) //CTCP message
+            if (isCTCP == true)
             {
-                insertCTCPColoredString(line, style);
+                insertCTCPColoredString(line, givenStyle);
                 return;
             }
             if (showTimestamp == true)
@@ -249,7 +244,7 @@ import org.apache.commons.lang3.StringUtils;
                 doc.insertString(doc.getLength(), line[0], userNameStyle);
                 doc.insertString(doc.getLength(), ">: ", style);
             }
-            doc.insertString(doc.getLength(), line[1]+"\n", style);
+            doc.insertString(doc.getLength(), line[1]+"\n", givenStyle);
             checkForActiveTab();
         }
         public void insertCTCPAction (String[] line) throws BadLocationException
@@ -257,9 +252,15 @@ import org.apache.commons.lang3.StringUtils;
             String nick = line[0];
             String msg = line[1].trim();
             String timestamp = makeTimestamp();
-            doc.insertString(doc.getLength(), "["+timestamp+"] " ,timestampStyle);
+            if (showTimestamp == true) doc.insertString(doc.getLength(), "["+timestamp+"] " ,timestampStyle);
             doc.insertString(doc.getLength(),"* " , actionStyle);
-            doc.insertString(doc.getLength(),nick+" ", style);
+            if (chatNameColors == false) doc.insertString(doc.getLength(),nick+" ", style);
+            else
+            {
+                Color c = getUserColor(nick);
+                StyleConstants.setForeground(userNameStyle, c);
+                doc.insertString(doc.getLength(), nick+" ", userNameStyle);
+            }
             doc.insertString(doc.getLength(), msg+"\n", actionStyle);
             checkForActiveTab();
         }
@@ -282,7 +283,7 @@ import org.apache.commons.lang3.StringUtils;
             Pattern pattern;
             Matcher matcher;
             
-            StringTokenizer st = new StringTokenizer(line[1],Connection.CTCP_COLOR_DELIM + Connection.CTCP_UNDERLINE_DELIM + Connection.CTCP_BOLD_DELIM+ Connection.CTCP_RESET_DELIM, true);
+            StringTokenizer st = new StringTokenizer(line[1],Connection.CTCP_COLOR_DELIM + Connection.CTCP_UNDERLINE_DELIM + Connection.CTCP_BOLD_DELIM + Connection.CTCP_RESET_DELIM, true);
             while (st.hasMoreTokens())
             {
                 String token = st.nextToken();
@@ -329,9 +330,7 @@ import org.apache.commons.lang3.StringUtils;
                             {
                                 foreground = matcher.group(5);
                                 message = matcher.group(7);
-                                int index = Integer.valueOf(foreground);
-                                if (index > 15) index = 1;
-                                Color f = (Color)CTCPMap.get(index);
+                                Color f = (Color)CTCPMap.get(Integer.valueOf(foreground));
                                 StyleConstants.setForeground(ctcpStyle, f);
                                 doc.insertString(doc.getLength(), message, ctcpStyle);
                                 continue;
@@ -340,10 +339,17 @@ import org.apache.commons.lang3.StringUtils;
                             {
                                 foreground = matcher.group(9);
                                 message = matcher.group(10);
-                                int index = Integer.valueOf(foreground);
-                                if (index > 15) index = 1;
-                                Color f = (Color)CTCPMap.get(index);
+                                Color f = (Color)CTCPMap.get(Integer.valueOf(foreground));
                                 StyleConstants.setBackground(ctcpStyle, Color.WHITE);
+                                StyleConstants.setForeground(ctcpStyle, f);
+                                doc.insertString(doc.getLength(), message, ctcpStyle);
+                                continue;
+                            }
+                            if (matcher.group(2) != null && matcher.group(2).equals("")) //foreground color, no bg color, but followed by a number, ie 53 blind mice
+                            {
+                                foreground = matcher.group(1);
+                                message = matcher.group(3)+matcher.group(4);
+                                Color f = (Color)CTCPMap.get(Integer.valueOf(foreground));
                                 StyleConstants.setForeground(ctcpStyle, f);
                                 doc.insertString(doc.getLength(), message, ctcpStyle);
                                 continue;
@@ -353,9 +359,7 @@ import org.apache.commons.lang3.StringUtils;
                                 foreground = matcher.group(1);
                                 background = matcher.group(3);
                                 message = matcher.group(4);
-                                int index = Integer.valueOf(foreground);
-                                if (index > 15) index = 1;
-                                Color f = (Color)CTCPMap.get(index);
+                                Color f = (Color)CTCPMap.get(Integer.valueOf(foreground));
                                 Color b = (Color)CTCPMap.get(Integer.valueOf(background));
                                 StyleConstants.setForeground(ctcpStyle, f);
                                 StyleConstants.setBackground(ctcpStyle, b);
@@ -372,9 +376,6 @@ import org.apache.commons.lang3.StringUtils;
             }
             doc.insertString(doc.getLength(), "\n", ctcpStyle);
             checkForActiveTab();
-            
-            
-            
         }
         private void checkForActiveTab()
         {
@@ -566,7 +567,7 @@ import org.apache.commons.lang3.StringUtils;
         {
             super(nick.substring(1));
             mode = nick.charAt(0);
-            setFont(new Font("sans serif", Font.PLAIN, 12));
+            setFont(new Font(ChannelPanel.font, Font.PLAIN, 12));
 
         }
         @Override
