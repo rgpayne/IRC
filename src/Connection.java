@@ -76,8 +76,8 @@ public class Connection implements Runnable{
     {
         Parser parser = new Parser(line);
         String command = parser.getCommand();
-        //System.out.println(line);
-        //System.out.println(parser.toString());
+        System.out.println(line);
+        System.out.println(parser.toString());
         if (command.equals("AWAY"))
         {
             String channelName = parser.getTrailing();

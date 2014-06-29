@@ -48,7 +48,6 @@ public class GUI extends JFrame {
         Connection.tabbedPane = tabbedPane;
         ChannelPanel.tabInfo = tabInfo;
         Connection.tabInfo = tabInfo;
-        
         autoConnect();
     }
 
@@ -749,8 +748,6 @@ public class GUI extends JFrame {
 
         chatPane.setEditable(false);
         jScrollPane2.setViewportView(chatPane);
-        DefaultCaret caret = (DefaultCaret)chatPane.getCaret(); //caret necessary?
-        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 
         jSplitPane1.setLeftComponent(jScrollPane2);
 

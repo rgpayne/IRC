@@ -35,7 +35,7 @@ import org.apache.commons.lang3.StringUtils;
         final JTextPane chatPane = new JTextPane();
         final JList<User> userListPane;
         
-        
+        DefaultCaret caret;
         final JScrollPane userListScrollPane = new JScrollPane(), chatScrollPane = new JScrollPane();
         static JTabbedPane tabbedPane;
         static JLabel tabInfo;
@@ -122,7 +122,8 @@ import org.apache.commons.lang3.StringUtils;
         };
         tabbedPane.addChangeListener(changeListener);   
         
-        
+        caret = (DefaultCaret)chatPane.getCaret(); //caret necessary?
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
         }
      
         
@@ -224,7 +225,7 @@ import org.apache.commons.lang3.StringUtils;
             }
         }
         public void insertString(String[] line, Style givenStyle, boolean isCTCP) throws BadLocationException, IOException
-        { 
+        {
             if (isCTCP == true)
             {
                 insertCTCPColoredString(line, givenStyle);
@@ -550,11 +551,6 @@ import org.apache.commons.lang3.StringUtils;
             if (user.mode == '&') icon = iconPurple;
             if (user.mode == '~') icon = iconRed;
             if (user.mode == '+') icon = iconBlue;
-
-
-            //label.setBackground(isSelected?Color.red: Color.blue);
-            //label.setForeground(isSelected?Color.orange:Color.green);
-            //label.setText(label.getText().substring(1));
             user.setIcon(icon);
             return user;
         }
