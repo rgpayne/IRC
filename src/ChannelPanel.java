@@ -395,7 +395,13 @@ import org.apache.commons.lang3.StringUtils;
                         break;
                     }
                 }
-            tabbedPane.setForegroundAt(indexOfTab, Color.blue);
+                final int ind = indexOfTab;
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        tabbedPane.setForegroundAt(ind, Color.blue);
+                    }
+                });
             }
             return;
         }

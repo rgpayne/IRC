@@ -59,7 +59,7 @@ public class GUI extends JFrame {
         tabbedPane = new JTabbedPane();
         jSplitPane1 = new JSplitPane();
         jScrollPane2 = new JScrollPane();
-        chatPane = new JTextPane();
+        dchatPane = new JTextPane();
         jScrollPane1 = new JScrollPane();
         userListPane = new JTextPane();
         tabInfo = new JLabel();
@@ -283,7 +283,7 @@ public class GUI extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
                 try {
-                    channel.doc.remove(0, channel.doc.getLength());
+                    channel.chatPane.getDocument().remove(0, channel.chatPane.getDocument().getLength());
                 } catch (BadLocationException ex) {
                     Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -296,7 +296,7 @@ public class GUI extends JFrame {
                 {
                     ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
                     try {
-                       channel.doc.remove(0, channel.doc.getLength());
+                       channel.chatPane.getDocument().remove(0, channel.chatPane.getDocument().getLength());
                     } catch (BadLocationException ex) {
                        Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -416,7 +416,7 @@ public class GUI extends JFrame {
 
                 }
                 System.out.println("4");
-                channel.updateTabInfo();
+                //channel.updateTabInfo();
                 System.out.println("5");
                 return;
             }
@@ -746,11 +746,10 @@ public class GUI extends JFrame {
         jSplitPane1.setResizeWeight(1.0);
         jSplitPane1.setVerifyInputWhenFocusTarget(false);
 
-        chatPane.setEditable(false);
-        jScrollPane2.setViewportView(chatPane);
-
+        dchatPane.setEditable(false);
+        jScrollPane2.setViewportView(dchatPane);
+        
         jSplitPane1.setLeftComponent(jScrollPane2);
-
         userListPane.setEditable(false);
         userListPane.setAutoscrolls(false);
         userListPane.setFocusable(false);
@@ -1043,7 +1042,7 @@ public class GUI extends JFrame {
     }
 
     private JTextField chatInputPane;
-    private JTextPane chatPane;
+    private JTextPane dchatPane;
     private JMenu fileMenu;
     private JMenu editMenu;
     private JMenu settingsMenu;

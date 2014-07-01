@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat;
 import javax.swing.*;
 import java.util.*;
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
 import java.util.logging.*;
 import org.apache.commons.lang3.StringUtils;
 
@@ -74,10 +75,10 @@ public class Connection implements Runnable{
 
     public void parseFromServer(String line) throws IOException, BadLocationException
     {
-        Parser parser = new Parser(line);
+        final Parser parser = new Parser(line);
         String command = parser.getCommand();
-        System.out.println(line);
-        System.out.println(parser.toString());
+        //System.out.println(line);
+        //System.out.println(parser.toString());
         if (command.equals("AWAY"))
         {
             String channelName = parser.getTrailing();
@@ -92,18 +93,46 @@ public class Connection implements Runnable{
            if (currentNick.equals(parser.getNick())) //if joined is me
            {
                String channelName = parser.getTrailing();
-               if (channelName.equals("")) channelName = parser.getParams().trim();
+               if (channelName.equals("")){
+                   channelName = parser.getParams().trim();
+               }
                if (channelName.startsWith("#"))
                {
                    int indexOfChannel = findTab(channelName, this);
                    if (indexOfChannel == -1)
                    {
-                       ChannelPanel channel = new ChannelPanel(channelName, channelName, currentNick, this);
-                       String[] msg = {null, "You ("+parser.getPrefix()+") have joined "+parser.getParams().trim().substring(1)+"."};
-                       channel.insertString(msg, ChannelPanel.connectStyle, false);
-                       int newTabIndex = findTab(channel.name, this);
-                       tabbedPane.setSelectedIndex(newTabIndex);                     
-                       return;
+                       
+                       
+                     final String channelName2 = channelName;
+
+                       try {
+                           SwingUtilities.invokeAndWait(new Runnable() {
+                               
+                               @Override
+                               public void run() {
+                                   
+                                   try {
+                                       ChannelPanel channel = new ChannelPanel(channelName2, channelName2, currentNick, Connection.this);
+                                       String[] msg = {null, "You ("+parser.getPrefix()+") have joined "+parser.getParams().trim().substring(1)+"."};
+                                       channel.insertString(msg, ChannelPanel.connectStyle, false);
+                                       int newTabIndex = findTab(channel.name, Connection.this);
+                                       tabbedPane.setSelectedIndex(newTabIndex);
+                                   } catch (BadLocationException | IOException ex) {
+                                       Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
+                                   }
+                                   
+                               }
+                           });
+                           
+                           
+                           
+                           
+                           return;
+                       } catch (InterruptedException ex) {
+                           Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
+                       } catch (InvocationTargetException ex) {
+                           Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
+                       }
                    }
                    else{ //joining a room for which you already have a tab (i.e. you were kicked or lost connection or something)
                        
@@ -358,7 +387,7 @@ public class Connection implements Runnable{
         }
         if (command.equals("PRIVMSG") || command.equals("MSG"))
         {
-            boolean ctcp = checkForCTCPDelims(line);
+            final boolean ctcp = checkForCTCPDelims(line);
             if (parser.getTrailing().startsWith(CTCP_DELIM))
             {
                 if (parser.getTrailing().substring(1).startsWith("ACTION")) //CTCP action
@@ -445,15 +474,43 @@ public class Connection implements Runnable{
             if (channelName.equals(currentNick))
             {
                 channelName = parser.getNick();
+                final String channelName2 = channelName;
                 int indexOfChannel = findTab(channelName, this);
                 if (indexOfChannel == -1)
                 {
-                    ChannelPanel channel = new ChannelPanel(channelName, channelName, currentNick, this);
-                    channel.setRightComponent(null);
-                    channel.setDividerSize(0);
-                    String[] msg = {channelName, parser.getTrailing()};
-                    channel.insertString(msg, ChannelPanel.chatStyle, ctcp);
-                    return;
+                    
+                    
+                    try {
+                        SwingUtilities.invokeAndWait(new Runnable() {
+                            
+                            @Override
+                            public void run() {
+                                
+                                ChannelPanel channel = null;
+                                try {
+                                    channel = new ChannelPanel(channelName2, channelName2, currentNick, Connection.this);
+                                } catch (BadLocationException | IOException ex) {
+                                    Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                                channel.setRightComponent(null);
+                                channel.setDividerSize(0);
+                                String[] msg = {channelName2, parser.getTrailing()};
+                                try {
+                                    channel.insertString(msg, ChannelPanel.chatStyle, ctcp);
+                                } catch (BadLocationException | IOException ex) {
+                                    Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                            }
+                        });
+                        
+                        
+                        
+                        return;
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (InvocationTargetException ex) {
+                        Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
                 Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
                 String[] msg = {parser.getNick(), parser.getTrailing().trim()};
@@ -463,9 +520,32 @@ public class Connection implements Runnable{
             int indexOfChannel = findTab(channelName, this);
             if (indexOfChannel == -1)
             {
-                ChannelPanel channel = new ChannelPanel(channelName, channelName, currentNick, this);
-                String[] msg = {channelName, parser.getTrailing()};
-                channel.insertString(msg, ChannelPanel.chatStyle, ctcp);
+                final String channelName2 = channelName;
+                try {
+                    SwingUtilities.invokeAndWait(new Runnable() {
+                        
+                        @Override
+                        public void run() {
+                            
+                            try {
+                                ChannelPanel channel = new ChannelPanel(channelName2, channelName2, currentNick, Connection.this);
+                                                                        String[] msg = {channelName2, parser.getTrailing()};
+                channel.insertString(msg, ChannelPanel.chatStyle, ctcp);  
+                            } catch (BadLocationException ex) {
+                                Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
+                            } catch (IOException ex) {
+                                Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                            
+                        }
+
+                    });
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (InvocationTargetException ex) {
+                    Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                              
                 return;
             }
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
@@ -477,7 +557,7 @@ public class Connection implements Runnable{
         {   
             boolean ctcp = checkForCTCPDelims(line);
             String quitter = parser.getNick().trim();
-            String quitMessage = parser.getParams().substring(2);
+            String quitMessage = parser.getParams().substring(2); //fix so it only quits on connection user quit on?
             for (int i = 0; i < tabbedPane.getTabCount(); i++){
                 Component aComponent = tabbedPane.getComponentAt(i);
                 ChannelPanel channel = ((ChannelPanel)aComponent);
@@ -516,14 +596,34 @@ public class Connection implements Runnable{
         if (command.equals("001") || command.equals("002") || command.equals("003") || command.equals("004") || command.equals("005"))
         {
             boolean ctcp = checkForCTCPDelims(line);
-            String host = parser.getPrefix();
+            final String host = parser.getPrefix();
             int indexOfChannel = findTab(host, this);
             if (indexOfChannel == -1)
             {
-                ChannelPanel c = new ChannelPanel(this.title, host, currentNick, this);
-                indexOfChannel = findTab(host, this);
-                c.server = parser.getPrefix();
+                
+                try {
+                    SwingUtilities.invokeAndWait(new Runnable() {
+                        
+                        @Override
+                        public void run() {
+                            
+                            try {
+                                ChannelPanel c = new ChannelPanel(Connection.this.title, host, currentNick, Connection.this);
+                                c.server = parser.getPrefix();
+                            } catch (BadLocationException ex) {
+                                Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
+                            } catch (IOException ex) {
+                                Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+                    });
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (InvocationTargetException ex) {
+                    Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
+             indexOfChannel = findTab(host, this);
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             ChannelPanel channel = ((ChannelPanel)aComponent);
             String text = parser.getTrailing();
@@ -1024,8 +1124,29 @@ public class Connection implements Runnable{
             int indexOfChannel = tabbedPane.getSelectedIndex();
             if (indexOfChannel == -1)
             {
-                new ChannelPanel(title, parser.getPrefix(), this.currentNick, this);
-                indexOfChannel = findTab(parser.getPrefix(), this);
+                
+                
+                try {
+                    SwingUtilities.invokeAndWait(new Runnable() {
+                        
+                        @Override
+                        public void run() {
+                            
+                            try {
+                                new ChannelPanel(title, parser.getPrefix(), Connection.this.currentNick, Connection.this);
+                            } catch (BadLocationException | IOException ex) {
+                                Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                            
+                        }
+                    });
+                    indexOfChannel = findTab(parser.getPrefix(), this);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (InvocationTargetException ex) {
+                    Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
                 
             }
             ChannelPanel channel = ((ChannelPanel)tabbedPane.getComponentAt(indexOfChannel));
