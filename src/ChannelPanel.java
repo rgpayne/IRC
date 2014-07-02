@@ -27,7 +27,8 @@ import org.apache.commons.lang3.StringUtils;
         static boolean awayStatus = false;
         static String awayMessage = "Reason";
         static String CTCPFingerMessage = "this is the finger message", CTCPUserInfo = "user info string";
-        
+        int listSelectedIndex = -1;
+        User selectedUser = null;
         
         Connection connection;
         
@@ -92,7 +93,26 @@ import org.apache.commons.lang3.StringUtils;
         userListPane.setAutoscrolls(false);
         userListPane.setFocusable(false);
         userListPane.setMaximumSize(new Dimension(25, 25));
+        userListPane.addListSelectionListener(new ListSelectionListener() {
 
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                
+                boolean adjust = e.getValueIsAdjusting();
+                if (!adjust)
+                {
+                    JList list = (JList)e.getSource();
+                    int min = list.getMinSelectionIndex();
+                    if (min < 0 || min > list.getModel().getSize()-1){
+                        list.clearSelection();
+                        return;
+                    }
+                    if (listSelectedIndex == -1) listSelectedIndex = min;
+                    //selectedUser = (User)list.getModel().getElementAt(listSelectedIndex);
+                    //list.setSelectedValue(selectedUser, false);
+                }
+            }
+        });
         
         setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
         setDividerLocation(540);
@@ -112,8 +132,9 @@ import org.apache.commons.lang3.StringUtils;
             setRightComponent(null);
             setDividerSize(0);
         }
-                ChangeListener changeListener = new ChangeListener(){
-            public void stateChanged(ChangeEvent changeEvent){
+        ChangeListener changeListener = new ChangeListener(){
+            public void stateChanged(ChangeEvent changeEvent)
+            {
                 JTabbedPane pane = (JTabbedPane)changeEvent.getSource();
                 int index = pane.getSelectedIndex();
                 pane.setForegroundAt(index, Color.BLACK);
@@ -122,7 +143,7 @@ import org.apache.commons.lang3.StringUtils;
         };
         tabbedPane.addChangeListener(changeListener);   
         
-        caret = (DefaultCaret)chatPane.getCaret(); //caret necessary?
+        caret = (DefaultCaret)chatPane.getCaret();
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
         }
      
@@ -414,11 +435,13 @@ import org.apache.commons.lang3.StringUtils;
             if (first == '+' || first == '@' || first == '&' || first == '%' || first == '~')
             {
                 if (first != '+') ops++;
-                model.addElement(new User(first+nick.substring(1)));
+                User u = new User(first+nick.substring(1));
+                model.addElement(u);
             }
             else model.addElement(new User(" "+nick));
             
             population = model.getSize();
+            userListPane.setSelectedValue(selectedUser, showTimestamp);
             updateTabInfo();
             return;
         }
@@ -457,13 +480,16 @@ import org.apache.commons.lang3.StringUtils;
             
             for (int i = 0; i < prefix.length; i++)
             {
-                success = model.removeElement(new User(prefix[i]+nick));
-                if (success == true){
+                User u = new User(prefix[i]+nick);
+                success = model.removeElement(u);
+                if (success == true)
+                {
                     if (!prefix[i].equals(" ") && prefix[i].equals("+")) ops--;
                     break;
                 }
             }
-            
+            if (selectedUser == null || selectedUser.getText().equals(nick)) userListPane.clearSelection();
+            userListPane.setSelectedValue(selectedUser, showTimestamp);
             population = model.getSize();
             updateTabInfo();
             return !(oldPop == population);
@@ -518,8 +544,9 @@ import org.apache.commons.lang3.StringUtils;
                 fireIntervalAdded(this, 0,0);
             }
             public synchronized boolean removeElement(User x)
-            {  
+            { 
                 boolean success = set.remove(x);
+                if (success)
                 fireIntervalRemoved(this, 0, 0);
                 return success;
             }
@@ -557,6 +584,18 @@ import org.apache.commons.lang3.StringUtils;
             if (user.mode == '&') icon = iconPurple;
             if (user.mode == '~') icon = iconRed;
             if (user.mode == '+') icon = iconBlue;
+
+            if (isSelected)
+            {
+                Color color = (Color)ChannelPanel.chatColorMap.get(3);
+                user.setBackground(color);
+                user.setForeground(Color.WHITE);
+            }
+            else
+            {
+                user.setBackground(Color.WHITE);
+                user.setForeground(Color.BLACK);
+            }
             user.setIcon(icon);
             return user;
         }
@@ -568,9 +607,9 @@ import org.apache.commons.lang3.StringUtils;
         public User(String nick)
         {
             super(nick.substring(1));
+            setOpaque(true);
             mode = nick.charAt(0);
-            setFont(new Font(ChannelPanel.font, Font.PLAIN, 12));
-
+            setFont(new Font("sans serif", Font.PLAIN, 12));
         }
         @Override
         public int compareTo(Object o)

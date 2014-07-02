@@ -563,7 +563,10 @@ public class Connection implements Runnable{
                 ChannelPanel channel = ((ChannelPanel)aComponent);
                 boolean success = channel.removeFromUserList(quitter);
                 String[] msg = {null, "<-- "+quitter+" has left the server ("+quitMessage+")"};
-                if (success) channel.insertString(msg, ChannelPanel.disconnectStyle, ctcp);
+                if (success){
+                    channel.insertString(msg, ChannelPanel.disconnectStyle, ctcp);
+                    
+                }
             }
             return;            
         }
