@@ -28,7 +28,8 @@ import org.apache.commons.lang3.StringUtils;
         static String awayMessage = "Reason";
         static String CTCPFingerMessage = "this is the finger message", CTCPUserInfo = "user info string";
         int listSelectedIndex = -1;
-        User selectedUser = null;
+        boolean rem = false;
+        boolean add = false;
         
         Connection connection;
         
@@ -97,19 +98,29 @@ import org.apache.commons.lang3.StringUtils;
 
             @Override
             public void valueChanged(ListSelectionEvent e) {
-                
                 boolean adjust = e.getValueIsAdjusting();
                 if (!adjust)
                 {
                     JList list = (JList)e.getSource();
                     int min = list.getMinSelectionIndex();
-                    if (min < 0 || min > list.getModel().getSize()-1){
-                        list.clearSelection();
-                        return;
+                    System.out.println(min+" "+add+" "+rem);
+                    if (min > -1 && min < list.getModel().getSize()-1)
+                    {
+                        if (listSelectedIndex == -1)
+                        {
+                            listSelectedIndex = min;
+                        }
                     }
-                    if (listSelectedIndex == -1) listSelectedIndex = min;
-                    //selectedUser = (User)list.getModel().getElementAt(listSelectedIndex);
-                    //list.setSelectedValue(selectedUser, false);
+                    if (add == true) list.setSelectedIndex(listSelectedIndex);
+                    if (rem == true)
+                    {
+                        rem = false;
+                        //listSelectedIndex++;
+                        list.setSelectedIndex(listSelectedIndex);
+                    }
+                    
+                    add = false;
+                    rem = false;
                 }
             }
         });
@@ -440,8 +451,9 @@ import org.apache.commons.lang3.StringUtils;
             }
             else model.addElement(new User(" "+nick));
             
+            add = true;
             population = model.getSize();
-            userListPane.setSelectedValue(selectedUser, showTimestamp);
+            if (listSelectedIndex >= 0 && listSelectedIndex < model.getSize()-1) userListPane.setSelectedIndex(listSelectedIndex);
             updateTabInfo();
             return;
         }
@@ -482,15 +494,15 @@ import org.apache.commons.lang3.StringUtils;
             {
                 User u = new User(prefix[i]+nick);
                 success = model.removeElement(u);
+                rem = true;
                 if (success == true)
                 {
                     if (!prefix[i].equals(" ") && prefix[i].equals("+")) ops--;
                     break;
                 }
             }
-            if (selectedUser == null || selectedUser.getText().equals(nick)) userListPane.clearSelection();
-            userListPane.setSelectedValue(selectedUser, showTimestamp);
             population = model.getSize();
+            
             updateTabInfo();
             return !(oldPop == population);
         }     
