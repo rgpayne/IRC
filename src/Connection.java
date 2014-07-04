@@ -637,7 +637,7 @@ public class Connection implements Runnable{
             if (command.equals("001" ) && this.autoconnect )
             {
                 try {
-                    Thread.sleep(4000);
+                    Thread.sleep(2000);
                 } catch (InterruptedException ex) {
                     Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
                 }

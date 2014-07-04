@@ -2,6 +2,9 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -30,6 +33,7 @@ import org.apache.commons.lang3.StringUtils;
         int listSelectedIndex = -1;
         boolean rem = false;
         boolean add = false;
+        User selectedUser = null;
         
         Connection connection;
         
@@ -94,7 +98,7 @@ import org.apache.commons.lang3.StringUtils;
         userListPane.setAutoscrolls(false);
         userListPane.setFocusable(false);
         userListPane.setMaximumSize(new Dimension(25, 25));
-        userListPane.addListSelectionListener(new ListSelectionListener() {
+        /*userListPane.addListSelectionListener(new ListSelectionListener() {
 
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -103,28 +107,42 @@ import org.apache.commons.lang3.StringUtils;
                 {
                     JList list = (JList)e.getSource();
                     int min = list.getMinSelectionIndex();
-                    System.out.println(min+" "+add+" "+rem);
+                    if (selectedUser != null) System.out.println("L:"+selectedUser.getText());
                     if (min > -1 && min < list.getModel().getSize()-1)
                     {
-                        if (listSelectedIndex == -1)
+                        if (add == false && rem == false)
                         {
-                            listSelectedIndex = min;
+                            selectedUser = (User)list.getModel().getElementAt(min);
                         }
                     }
-                    if (add == true) list.setSelectedIndex(listSelectedIndex);
+                    if (add == true) list.setSelectedValue(selectedUser, false);
                     if (rem == true)
                     {
-                        rem = false;
                         //listSelectedIndex++;
-                        list.setSelectedIndex(listSelectedIndex);
+                        list.setSelectedValue(selectedUser,  false);
+                        rem = false;
                     }
-                    
+                   list.setSelectedValue(selectedUser,  false); 
+                   System.out.println("Le:"+selectedUser.getText());
                     add = false;
                     rem = false;
                 }
             }
-        });
-        
+        });*/
+        JPopupMenu popup = new JPopupMenu();
+        JMenuItem popOpenQuery = new JMenuItem("Open Query");
+        JMenuItem popWhois = new JMenuItem("Whois");
+        JMenuItem popVersion = new JMenuItem("Version");
+        JMenuItem popPing = new JMenuItem("Ping");
+        JMenuItem popIgnore = new JMenuItem("Ignore");
+        popup.add(popOpenQuery);
+        popup.add(popWhois);
+        popup.add(popVersion);
+        popup.add(popPing);
+        popup.add(popIgnore);
+        MouseListener popupListener = new PopupListener(popup);
+        userListPane.addMouseListener(popupListener);
+        //open whois version ping ignore
         setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
         setDividerLocation(540);
         setResizeWeight(1.0);
@@ -439,6 +457,8 @@ import org.apache.commons.lang3.StringUtils;
         }
         public void addToUserList(String nick) throws BadLocationException, IOException
         {
+            listSelectedIndex = userListPane.getSelectedIndex();
+            String s2;
             nick = nick.trim();
             char first = nick.charAt(0);
             SortedListModel<User> model = (SortedListModel<User>) this.userListPane.getModel();
@@ -446,14 +466,33 @@ import org.apache.commons.lang3.StringUtils;
             if (first == '+' || first == '@' || first == '&' || first == '%' || first == '~')
             {
                 if (first != '+') ops++;
+                s2 = nick.substring(1);
                 User u = new User(first+nick.substring(1));
                 model.addElement(u);
             }
-            else model.addElement(new User(" "+nick));
+            else{
+                s2 = nick;
+                model.addElement(new User(" "+nick));
+            }
             
-            add = true;
+          
             population = model.getSize();
-            if (listSelectedIndex >= 0 && listSelectedIndex < model.getSize()-1) userListPane.setSelectedIndex(listSelectedIndex);
+            
+            if (listSelectedIndex > -1 && listSelectedIndex < model.getSize())
+            {
+                User u1 = (User)userListPane.getModel().getElementAt(listSelectedIndex);
+                String s1 = u1.getText();
+                int result = ChannelPanel.compareNicks(s1, s2);
+                System.out.println(nick+" "+result);
+                if (result == 0) userListPane.clearSelection();
+                if (result > 0)
+                {
+                    listSelectedIndex++;
+                    userListPane.setSelectedIndex(listSelectedIndex);
+                }
+                else userListPane.setSelectedIndex(listSelectedIndex);
+                
+            }
             updateTabInfo();
             return;
         }
@@ -485,6 +524,8 @@ import org.apache.commons.lang3.StringUtils;
         
         public boolean removeFromUserList(String nick) throws BadLocationException, IOException
         {
+            listSelectedIndex = userListPane.getSelectedIndex();
+            
             String[] prefix = new String[] {" ","+","@","~","&"};
             SortedListModel<User>  model = (SortedListModel<User>) this.userListPane.getModel();
             int oldPop = model.getSize();
@@ -494,7 +535,6 @@ import org.apache.commons.lang3.StringUtils;
             {
                 User u = new User(prefix[i]+nick);
                 success = model.removeElement(u);
-                rem = true;
                 if (success == true)
                 {
                     if (!prefix[i].equals(" ") && prefix[i].equals("+")) ops--;
@@ -502,8 +542,23 @@ import org.apache.commons.lang3.StringUtils;
                 }
             }
             population = model.getSize();
-            
+            if (listSelectedIndex > -1 && listSelectedIndex < model.getSize())
+            {
+                User u1 = (User)userListPane.getModel().getElementAt(listSelectedIndex);
+                String s1 = u1.getText();
+                String s2 = nick;
+                int result = ChannelPanel.compareNicks(s1, s2);
+                System.out.println(nick+" "+result);
+                if (result == 0) userListPane.clearSelection();
+                if (result > 0)
+                {
+                    userListPane.setSelectedIndex(--listSelectedIndex);
+                }
+                else userListPane.setSelectedIndex(listSelectedIndex);
+                
+            }
             updateTabInfo();
+
             return !(oldPop == population);
         }     
         
@@ -514,6 +569,12 @@ import org.apache.commons.lang3.StringUtils;
             population = 0;
             model.removeAll();
             return;
+        }
+        public static int compareNicks(String u1, String u2)
+        {
+            String user1 = u1.toLowerCase();
+            String user2 = u2.toLowerCase();
+            return user1.compareTo(user2);
         }
         
         public class SortedListModel<User> extends AbstractListModel
@@ -631,3 +692,22 @@ import org.apache.commons.lang3.StringUtils;
         }
 
     }
+class PopupListener extends MouseAdapter {
+    private JPopupMenu popup;
+    
+    public PopupListener(JPopupMenu popup)
+    {
+        this.popup = popup;
+    }
+    public void mousePressed(MouseEvent e){
+        maybeShowPopup(e);
+    }
+    public void mouseReleased(MouseEvent e){
+        maybeShowPopup(e);
+    }
+    private void maybeShowPopup(MouseEvent e){
+        if (e.isPopupTrigger()){
+            popup.show(e.getComponent(), e.getX(), e.getY());
+        }
+    }
+}
