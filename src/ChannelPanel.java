@@ -2,6 +2,8 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -15,6 +17,8 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.*;
@@ -98,37 +102,7 @@ import org.apache.commons.lang3.StringUtils;
         userListPane.setAutoscrolls(false);
         userListPane.setFocusable(false);
         userListPane.setMaximumSize(new Dimension(25, 25));
-        /*userListPane.addListSelectionListener(new ListSelectionListener() {
 
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                boolean adjust = e.getValueIsAdjusting();
-                if (!adjust)
-                {
-                    JList list = (JList)e.getSource();
-                    int min = list.getMinSelectionIndex();
-                    if (selectedUser != null) System.out.println("L:"+selectedUser.getText());
-                    if (min > -1 && min < list.getModel().getSize()-1)
-                    {
-                        if (add == false && rem == false)
-                        {
-                            selectedUser = (User)list.getModel().getElementAt(min);
-                        }
-                    }
-                    if (add == true) list.setSelectedValue(selectedUser, false);
-                    if (rem == true)
-                    {
-                        //listSelectedIndex++;
-                        list.setSelectedValue(selectedUser,  false);
-                        rem = false;
-                    }
-                   list.setSelectedValue(selectedUser,  false); 
-                   System.out.println("Le:"+selectedUser.getText());
-                    add = false;
-                    rem = false;
-                }
-            }
-        });*/
         JPopupMenu popup = new JPopupMenu();
         JMenuItem popOpenQuery = new JMenuItem("Open Query");
         JMenuItem popWhois = new JMenuItem("Whois");
@@ -140,8 +114,92 @@ import org.apache.commons.lang3.StringUtils;
         popup.add(popVersion);
         popup.add(popPing);
         popup.add(popIgnore);
+        
         MouseListener popupListener = new PopupListener(popup);
         userListPane.addMouseListener(popupListener);
+        
+        popOpenQuery.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                User nick = ((User)userListPane.getSelectedValue());
+                if (nick == null) return;
+                String nickname = nick.getText();
+                if (nickname.equals(Connection.currentNick)) return;
+                try {
+                    ChannelPanel channel = new ChannelPanel(nickname, nickname, Connection.currentNick, ChannelPanel.this.connection);
+                    channel.setRightComponent(null);
+                    channel.setDividerSize(0);
+                    tabbedPane.setSelectedComponent(channel);
+                    
+                } catch (BadLocationException ex) {
+                    Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (IOException ex) {
+                    Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        });
+        popWhois.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                User nick = ((User)userListPane.getSelectedValue());
+                if (nick == null) return;
+                String nickname = nick.getText();
+                if (nickname.equals(Connection.currentNick)) return;
+                try {
+                    ChannelPanel.this.connection.send("WHOIS "+nick);
+                } catch (IOException ex) {
+                    Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (BadLocationException ex) {
+                    Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        });
+        popVersion.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                User nick = ((User)userListPane.getSelectedValue());
+                if (nick == null) return;
+                String nickname = nick.getText();
+                if (nickname.equals(Connection.currentNick)) return;
+                try {
+                    ChannelPanel.this.connection.send("PRIVMSG "+nick+" \001VERSION");
+                } catch (IOException ex) {
+                    Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (BadLocationException ex) {
+                    Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        });
+        popPing.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                User nick = ((User)userListPane.getSelectedValue());
+                if (nick == null) return;
+                String nickname = nick.getText();
+                if (nickname.equals(Connection.currentNick)) return;
+                try {
+                    ChannelPanel.this.connection.send("PRIVMSG "+nick+" \001PING");
+                } catch (IOException ex) {
+                    Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (BadLocationException ex) {
+                    Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        });
+        popIgnore.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                User nick = ((User)userListPane.getSelectedValue());
+                if (nick == null) return;
+                String nickname = nick.getText();
+                if (nickname.equals(Connection.currentNick)) return;
+                //make map of ignored people
+                //cross out name
+                //serialize?
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+        });
+        
         //open whois version ping ignore
         setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
         setDividerLocation(540);
@@ -317,6 +375,7 @@ import org.apache.commons.lang3.StringUtils;
         }
         public void insertCTCPColoredString(String[] line, Style givenStyle) throws BadLocationException
         {
+            System.out.println(line[1]);
             ctcpStyle = sc.addStyle("Defaultstyle", givenStyle);
             String timestamp = makeTimestamp();
             if (showTimestamp == true) doc.insertString(doc.getLength(), "["+timestamp+"] " ,timestampStyle);
@@ -363,7 +422,7 @@ import org.apache.commons.lang3.StringUtils;
                         String foreground;
                         String background;
                         String message;                      
-
+                        if (!matcher.find()) System.out.println("###"+token);
                         if (!StringUtils.isNumeric(token.substring(0,1)) && !token.startsWith(","))
                         {
                             doc.insertString(doc.getLength(), token, chatStyle);
@@ -483,7 +542,6 @@ import org.apache.commons.lang3.StringUtils;
                 User u1 = (User)userListPane.getModel().getElementAt(listSelectedIndex);
                 String s1 = u1.getText();
                 int result = ChannelPanel.compareNicks(s1, s2);
-                System.out.println(nick+" "+result);
                 if (result == 0) userListPane.clearSelection();
                 if (result > 0)
                 {
@@ -548,7 +606,6 @@ import org.apache.commons.lang3.StringUtils;
                 String s1 = u1.getText();
                 String s2 = nick;
                 int result = ChannelPanel.compareNicks(s1, s2);
-                System.out.println(nick+" "+result);
                 if (result == 0) userListPane.clearSelection();
                 if (result > 0)
                 {
