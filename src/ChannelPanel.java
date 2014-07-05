@@ -52,6 +52,7 @@ import org.apache.commons.lang3.StringUtils;
         
         SortedListModel<User> model = new SortedListModel<User>();
         ArrayList<String> list = new ArrayList<String>();
+        ArrayList<User> ignoreList = new ArrayList<User>();
         
         StyledDocument doc;  
         StyleContext sc = StyleContext.getDefaultStyleContext();
@@ -146,7 +147,7 @@ import org.apache.commons.lang3.StringUtils;
                 String nickname = nick.getText();
                 if (nickname.equals(Connection.currentNick)) return;
                 try {
-                    ChannelPanel.this.connection.send("WHOIS "+nick);
+                    ChannelPanel.this.connection.send("WHOIS "+nickname);
                 } catch (IOException ex) {
                     Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (BadLocationException ex) {
@@ -162,7 +163,7 @@ import org.apache.commons.lang3.StringUtils;
                 String nickname = nick.getText();
                 if (nickname.equals(Connection.currentNick)) return;
                 try {
-                    ChannelPanel.this.connection.send("PRIVMSG "+nick+" \001VERSION");
+                    ChannelPanel.this.connection.send("PRIVMSG "+nickname+" \001VERSION");
                 } catch (IOException ex) {
                     Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (BadLocationException ex) {
@@ -178,7 +179,7 @@ import org.apache.commons.lang3.StringUtils;
                 String nickname = nick.getText();
                 if (nickname.equals(Connection.currentNick)) return;
                 try {
-                    ChannelPanel.this.connection.send("PRIVMSG "+nick+" \001PING");
+                    ChannelPanel.this.connection.send("PRIVMSG "+nickname+" \001PING");
                 } catch (IOException ex) {
                     Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (BadLocationException ex) {
@@ -193,14 +194,34 @@ import org.apache.commons.lang3.StringUtils;
                 if (nick == null) return;
                 String nickname = nick.getText();
                 if (nickname.equals(Connection.currentNick)) return;
-                //make map of ignored people
-                //cross out name
-                //serialize?
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                if (ignoreList.contains(nick)){
+                    String[] msg = {null, "*** Removed "+nickname+" from ignore list."};
+                    try {
+                        insertString(msg, serverStyle, false);
+                    } catch (BadLocationException ex) {
+                        Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (IOException ex) {
+                        Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    nick.foreground = Color.black;
+                    nick.setForeground(nick.foreground);
+                }
+                else{
+                    ignoreList.add(nick);
+                    String[] msg = {null, "*** "+nickname+" added to ignore list."};
+                    try {
+                        insertString(msg, serverStyle, false);
+                    } catch (BadLocationException ex) {
+                        Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (IOException ex) {
+                        Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    nick.foreground = Color.LIGHT_GRAY;
+                    nick.setForeground(nick.foreground);
+                }
             }
         });
         
-        //open whois version ping ignore
         setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
         setDividerLocation(540);
         setResizeWeight(1.0);
@@ -334,6 +355,7 @@ import org.apache.commons.lang3.StringUtils;
         }
         public void insertString(String[] line, Style givenStyle, boolean isCTCP) throws BadLocationException, IOException
         {
+            if (ignoreList.contains(line[0])) //change ignorelist to just hold strings and not users?
             if (isCTCP == true)
             {
                 insertCTCPColoredString(line, givenStyle);
@@ -375,7 +397,6 @@ import org.apache.commons.lang3.StringUtils;
         }
         public void insertCTCPColoredString(String[] line, Style givenStyle) throws BadLocationException
         {
-            System.out.println(line[1]);
             ctcpStyle = sc.addStyle("Defaultstyle", givenStyle);
             String timestamp = makeTimestamp();
             if (showTimestamp == true) doc.insertString(doc.getLength(), "["+timestamp+"] " ,timestampStyle);
@@ -393,10 +414,14 @@ import org.apache.commons.lang3.StringUtils;
             Pattern pattern;
             Matcher matcher;
             
-            StringTokenizer st = new StringTokenizer(line[1],Connection.CTCP_COLOR_DELIM + Connection.CTCP_UNDERLINE_DELIM + Connection.CTCP_BOLD_DELIM + Connection.CTCP_RESET_DELIM, true);
+            StringTokenizer st = new StringTokenizer(line[1],Connection.CTCP_DELIM + Connection.CTCP_COLOR_DELIM + Connection.CTCP_UNDERLINE_DELIM + Connection.CTCP_BOLD_DELIM + Connection.CTCP_RESET_DELIM, true);
             while (st.hasMoreTokens())
             {
                 String token = st.nextToken();
+                if (token.equals(Connection.CTCP_DELIM))
+                {
+                    continue;
+                }
                 if (token.equals(Connection.CTCP_BOLD_DELIM))
                 {
                     StyleConstants.setBold(ctcpStyle, !StyleConstants.isBold(ctcpStyle));
@@ -422,7 +447,7 @@ import org.apache.commons.lang3.StringUtils;
                         String foreground;
                         String background;
                         String message;                      
-                        if (!matcher.find()) System.out.println("###"+token);
+
                         if (!StringUtils.isNumeric(token.substring(0,1)) && !token.startsWith(","))
                         {
                             doc.insertString(doc.getLength(), token, chatStyle);
@@ -724,7 +749,7 @@ import org.apache.commons.lang3.StringUtils;
             else
             {
                 user.setBackground(Color.WHITE);
-                user.setForeground(Color.BLACK);
+                user.setForeground(user.foreground);
             }
             user.setIcon(icon);
             return user;
@@ -734,12 +759,14 @@ import org.apache.commons.lang3.StringUtils;
     {
 
         final char mode;
+        Color foreground = Color.black;
         public User(String nick)
         {
             super(nick.substring(1));
             setOpaque(true);
             mode = nick.charAt(0);
             setFont(new Font("sans serif", Font.PLAIN, 12));
+            setForeground(foreground);
         }
         @Override
         public int compareTo(Object o)

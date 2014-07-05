@@ -78,7 +78,7 @@ public class Connection implements Runnable{
         final Parser parser = new Parser(line);
         String command = parser.getCommand();
         //System.out.println(line);
-        System.out.println(parser.toString());
+        //System.out.println(parser.toString());
         if (command.equals("AWAY"))
         {
             String channelName = parser.getTrailing();
@@ -394,7 +394,7 @@ public class Connection implements Runnable{
                 {
                     String channelName = parser.getMiddle();
                     int indexOfChannel = findTab(channelName, this);
-                    ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfChannel); // TODO: these should only work if channel is a username 
+                    ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfChannel);
                     String rest = parser.getTrailing().substring(7);
                     String[] s = {parser.getNick(), rest};
                     channel.insertCTCPAction(s);
@@ -513,7 +513,7 @@ public class Connection implements Runnable{
                     }
                 }
                 Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-                String[] msg = {parser.getNick(), parser.getTrailing().trim()};
+                String[] msg = {parser.getNick(), parser.getTrailing()};
                 ((ChannelPanel)aComponent).insertString(msg, ChannelPanel.chatStyle, ctcp);
                 return;
             }
@@ -529,8 +529,8 @@ public class Connection implements Runnable{
                             
                             try {
                                 ChannelPanel channel = new ChannelPanel(channelName2, channelName2, currentNick, Connection.this);
-                                    String[] msg = {channelName2, parser.getTrailing()};
-                                    channel.insertString(msg, ChannelPanel.chatStyle, ctcp);  
+                                                                        String[] msg = {channelName2, parser.getTrailing()};
+                channel.insertString(msg, ChannelPanel.chatStyle, ctcp);  
                             } catch (BadLocationException ex) {
                                 Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
                             } catch (IOException ex) {
@@ -549,7 +549,7 @@ public class Connection implements Runnable{
                 return;
             }
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            String[] msg = {parser.getNick().trim(), parser.getTrailing().trim()};
+            String[] msg = {parser.getNick().trim(), parser.getTrailing()};
             ((ChannelPanel)aComponent).insertString(msg, ChannelPanel.chatStyle, ctcp);   
             return;
         }
