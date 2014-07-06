@@ -29,6 +29,11 @@ public class GUI extends JFrame {
     final static ImageIcon joinChannelIcon = new ImageIcon("src/icons/irc-join-channel.png");
     final static ImageIcon quitProgramIcon = new ImageIcon("src/icons/document-close.png");
     final static ImageIcon showNicklistIcon = new ImageIcon("src/icons/preferences-system-windows-move.png");
+    final static ImageIcon popupIgnoreIcon = new ImageIcon("src/icons/gg_ignored.png");
+    final static ImageIcon popupQueryIcon = new ImageIcon("src/icons/window-new.png");
+    final static ImageIcon popupWhoisIcon = new ImageIcon("src/icons/xwhois.png");
+    final static ImageIcon popupPingIcon = new ImageIcon("src/icons/network-transmit-2.png");
+    final static ImageIcon popupVersionIcon = new ImageIcon("src/icons/help-about.png");
 
 
     
@@ -394,7 +399,6 @@ public class GUI extends JFrame {
                 for (int i = 0; i < tabbedPane.getTabCount(); i++)
                 {
                     ChannelPanel otherChannel = (ChannelPanel)tabbedPane.getComponentAt(i);
-                    System.out.println("+++"+otherChannel.server);
 
                     if (otherChannel.name.equals(channel.server))
                     {
@@ -415,9 +419,7 @@ public class GUI extends JFrame {
                     }
 
                 }
-                System.out.println("4");
-                //channel.updateTabInfo();
-                System.out.println("5");
+                channel.updateTabInfo();
                 return;
             }
         });
@@ -430,7 +432,6 @@ public class GUI extends JFrame {
                 {
                     String title = tabbedPane.getTitleAt(j);
                     if (title.equals(selected.server)){
-                        System.out.println("uuuuuguuuuuu");
                         selected.connection.thread = new Thread(selected.connection);
                         selected.connection.thread.start();
                         break;

@@ -52,7 +52,7 @@ import org.apache.commons.lang3.StringUtils;
         
         SortedListModel<User> model = new SortedListModel<User>();
         ArrayList<String> list = new ArrayList<String>();
-        ArrayList<User> ignoreList = new ArrayList<User>();
+        public ArrayList<String> ignoreList = new ArrayList<String>();
         
         StyledDocument doc;  
         StyleContext sc = StyleContext.getDefaultStyleContext();
@@ -105,15 +105,17 @@ import org.apache.commons.lang3.StringUtils;
         userListPane.setMaximumSize(new Dimension(25, 25));
 
         JPopupMenu popup = new JPopupMenu();
-        JMenuItem popOpenQuery = new JMenuItem("Open Query");
-        JMenuItem popWhois = new JMenuItem("Whois");
-        JMenuItem popVersion = new JMenuItem("Version");
-        JMenuItem popPing = new JMenuItem("Ping");
-        JMenuItem popIgnore = new JMenuItem("Ignore");
+        JMenuItem popOpenQuery = new JMenuItem("Open Query", GUI.popupQueryIcon);
+        JMenuItem popWhois = new JMenuItem("Whois", GUI.popupWhoisIcon);
+        JMenuItem popVersion = new JMenuItem("Version", GUI.popupVersionIcon);
+        JMenuItem popPing = new JMenuItem("Ping", GUI.popupPingIcon);
+        JMenuItem popIgnore = new JMenuItem("Ignore", GUI.popupIgnoreIcon);
         popup.add(popOpenQuery);
+        popup.add(new JSeparator());
         popup.add(popWhois);
         popup.add(popVersion);
         popup.add(popPing);
+        popup.add(new JSeparator());
         popup.add(popIgnore);
         
         MouseListener popupListener = new PopupListener(popup);
@@ -174,12 +176,13 @@ import org.apache.commons.lang3.StringUtils;
         popPing.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                Long longTime = System.currentTimeMillis() / 1000L;
                 User nick = ((User)userListPane.getSelectedValue());
                 if (nick == null) return;
                 String nickname = nick.getText();
                 if (nickname.equals(Connection.currentNick)) return;
                 try {
-                    ChannelPanel.this.connection.send("PRIVMSG "+nickname+" \001PING");
+                    ChannelPanel.this.connection.send("PRIVMSG "+nickname+" :\001PING "+longTime+"\001");
                 } catch (IOException ex) {
                     Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (BadLocationException ex) {
@@ -194,7 +197,7 @@ import org.apache.commons.lang3.StringUtils;
                 if (nick == null) return;
                 String nickname = nick.getText();
                 if (nickname.equals(Connection.currentNick)) return;
-                if (ignoreList.contains(nick)){
+                if (ignoreList.contains(nick.getText())){
                     String[] msg = {null, "*** Removed "+nickname+" from ignore list."};
                     try {
                         insertString(msg, serverStyle, false);
@@ -207,7 +210,7 @@ import org.apache.commons.lang3.StringUtils;
                     nick.setForeground(nick.foreground);
                 }
                 else{
-                    ignoreList.add(nick);
+                    ignoreList.add(nick.getText());
                     String[] msg = {null, "*** "+nickname+" added to ignore list."};
                     try {
                         insertString(msg, serverStyle, false);
@@ -355,7 +358,7 @@ import org.apache.commons.lang3.StringUtils;
         }
         public void insertString(String[] line, Style givenStyle, boolean isCTCP) throws BadLocationException, IOException
         {
-            if (ignoreList.contains(line[0])) //change ignorelist to just hold strings and not users?
+            if (ignoreList.contains(line[0])) return; //change ignorelist to just hold strings and not users?
             if (isCTCP == true)
             {
                 insertCTCPColoredString(line, givenStyle);

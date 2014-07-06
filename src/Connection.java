@@ -346,6 +346,19 @@ public class Connection implements Runnable{
             
             if (!nick.equals("")){
                 String[] msg = {null, "[Notice] -"+nick+"- "+parser.getTrailing()};
+                
+                if (msg[1].contains("PING")){
+                    String ping = parser.getTrailing().substring(6).trim();
+                    long ping1;
+                    Long longTime = System.currentTimeMillis() / 1000L;
+                    if (StringUtils.isNumeric(ping)){
+                        ping1 = Long.valueOf(ping);
+                        long ping2 = longTime-ping1;
+                        msg[1] = "Received CTCP-Ping reply from "+nick+": "+ping2+ " seconds."; //ms or s?
+
+                    }
+                    else System.out.println("NOTICE PING ERROR");                    
+                }
                 channel.insertString(msg, ChannelPanel.connectStyle, ctcp);
             }
             else{
@@ -776,7 +789,8 @@ public class Connection implements Runnable{
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             ChannelPanel channel = ((ChannelPanel)aComponent);
             String[] msg = {null, "[Whois] "+target+" "+info};
-            channel.insertString(msg, ChannelPanel.serverStyle, false); 
+            channel.insertString(msg, ChannelPanel.serverStyle, false);
+            return;
         }
         if (command.equals("310"))
         {
