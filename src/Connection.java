@@ -88,6 +88,15 @@ public class Connection implements Runnable{
             channel.insertString(msg, ChannelPanel.serverStyle, false);
             return;
         }
+        if (command.equals("ERROR"))
+        {
+            System.out.println(line);
+            System.out.println(parser.toString());
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+            String[] msg = {null, parser.getTrailing()};
+            channel.insertString(msg, ChannelPanel.errorStyle, false);
+            return;            
+        }
         if (command.equals("JOIN"))
         {
            if (currentNick.equals(parser.getNick())) //if joined is me
@@ -904,7 +913,12 @@ public class Connection implements Runnable{
         }
         if (command.equals("331")) //no topic
         {
-            //channel.server = parser.getPrefix();
+            String[] m = parser.getMiddle().split(" ");
+            String channelName = m[1];
+            String[] msg = {null, parser.getTrailing()};
+            int channelIndex = findTab(channelName, this);
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(channelIndex);
+            channel.insertString(msg, ChannelPanel.serverStyle, false);
             return;
         }
         if (command.equals("332")) //topic
@@ -927,29 +941,20 @@ public class Connection implements Runnable{
         }
         if (command.equals("333")) //time of topic change and who set it
         {
-            String[] tokens = new String[5];
-            int i = 0;
-            StringTokenizer st = new StringTokenizer(parser.getParams()," #!");
-            while (st.hasMoreTokens())
-            {
-                String str = st.nextToken();
-                tokens[i] = str;
-                i++;
+            String[] s = parser.getParams().trim().split(" ");
+            String setter = s[2], channelName = s[1], rawTime = s[3].trim();
+            long time = -1;
+            if (StringUtils.isNumeric(s[3])){
+                time = Long.parseLong(rawTime);
             }
-            
-            String channelName = "#"+tokens[1];           
-            int indexOfChannel = findTab(channelName, this);
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ChannelPanel channel = ((ChannelPanel)aComponent);
-            channel.topicAuthor = tokens[tokens.length-3];
-            //channel.signOnTime = tokens[tokens.length-2];
-            
-            //System.out.println(channel.topicAuthor+"___"+channel.time);
-            
-            //Date date = new Date(Integer.valueOf(channel.time) * 1000L);
-            //SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy hh:mm aa z");
-            //sdf.setTimeZone(TimeZone.getTimeZone("CST"));
-            //channel.signOnTime = sdf.format(date);
+            Date date = new Date(time*1000L);
+            SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy 'at' hh:mm a");
+            sdf.setTimeZone(TimeZone.getTimeZone("CST"));
+            String formattedDate = sdf.format(date);
+            String[] msg = {null, "The topic was set by "+setter+" on "+formattedDate+"."};
+            int indexOfChannel = findTab(channelName,this);
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfChannel);
+            channel.insertString(msg, ChannelPanel.serverStyle, false);      
             return;
         }
         if (command.equals("338")) //whois actually
@@ -1141,20 +1146,15 @@ public class Connection implements Runnable{
             int indexOfChannel = tabbedPane.getSelectedIndex();
             if (indexOfChannel == -1)
             {
-                
-                
                 try {
                     SwingUtilities.invokeAndWait(new Runnable() {
-                        
                         @Override
                         public void run() {
-                            
                             try {
                                 new ChannelPanel(title, parser.getPrefix(), Connection.this.currentNick, Connection.this);
                             } catch (BadLocationException | IOException ex) {
                                 Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
                             }
-                            
                         }
                     });
                     indexOfChannel = findTab(parser.getPrefix(), this);
@@ -1163,8 +1163,6 @@ public class Connection implements Runnable{
                 } catch (InvocationTargetException ex) {
                     Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
                 }
-
-                
             }
             ChannelPanel channel = ((ChannelPanel)tabbedPane.getComponentAt(indexOfChannel));
             channel.server = parser.getPrefix();
@@ -1174,10 +1172,18 @@ public class Connection implements Runnable{
         }
         if (command.equals("443")) //user already in channel invited to
         {
+            String[] p = parser.getParams().trim().split(" ");
+            String invited = p[1], channelName = p[2];
+            String[] msg = {null, "*** "+invited+" is already in channel "+channelName+"."};
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+            channel.insertString(msg, ChannelPanel.errorStyle, false);
             return;
         }
         if (command.equals("451")) //you have not registered
         {
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+            String[] msg = {null, parser.getTrailing()};
+            channel.insertString(msg, ChannelPanel.errorStyle, false);
             return;
         }
         if (command.equals("461")) //not enough parameters  (/stats rieux)
@@ -1185,11 +1191,14 @@ public class Connection implements Runnable{
             String[] s = parser.getParams().split(" ");
             ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
             String[] msg = {null, s[1]+": "+parser.getTrailing()};
-            channel.insertString(msg, ChannelPanel.serverStyle, false);
+            channel.insertString(msg, ChannelPanel.errorStyle, false);
             return;
         }
         if (command.equals("481")) //permission denied (/stats rieux)
         {
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+            String[] msg = {null, parser.getTrailing()};
+            channel.insertString(msg, ChannelPanel.errorStyle, false);
             return;
         }
         if (command.equals("671")) //whois: using secure connection
@@ -1207,8 +1216,6 @@ public class Connection implements Runnable{
         else
         {
             System.out.println(line);
-            //Component aComponent = tabbedPane.getComponentAt(0);
-            //((ChannelPanel)aComponent).insertString(parser.getCommand(), ChannelPanel.serverStyle);
         }        
     }
     public void disconnect()
