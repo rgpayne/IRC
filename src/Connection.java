@@ -953,7 +953,6 @@ public class Connection implements Runnable{
                 String[] p = parser.getParams().trim().split(" ");
                 channelName = p[1];
                 if (StringUtils.isNumeric(p[2])) pop = Integer.valueOf(p[2]);
-                System.out.println(parser.toString());
             }
             String channelInfo = parser.getTrailing();
             

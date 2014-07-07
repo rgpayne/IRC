@@ -1,30 +1,37 @@
-public class ListChannel {
-    private String name;
-    private String info;
-    private int pop;
+
+import java.io.Serializable;
+
+public class ListChannel implements Serializable{
+    private String Name;
+    private String Topic;
+    private int Users;
     
+    public ListChannel()
+    {
+        
+    }
     public ListChannel(String name, String info, int pop )
     {
-        this.name = name;
-        this.info = info;
-        this.pop = pop;
+        this.Name = name;
+        this.Topic = info;
+        this.Users = pop;
     }
     public String getName() 
     {
-        return name;
+        return Name;
     }
     public String getInfo()
     {
-        return info;
+        return Topic;
     }
     public int getPop()
     {
-        return pop;
+        return Users;
     }
     @Override
     public String toString()
     {
-        return name+" "+pop+" "+info;
+        return Name+" "+Topic+" "+Users;
     }
             
 }

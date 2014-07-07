@@ -241,10 +241,12 @@ import org.apache.commons.lang3.StringUtils;
             setDividerSize(0);
         }
         ChangeListener changeListener = new ChangeListener(){
+            @Override
             public void stateChanged(ChangeEvent changeEvent)
             {
                 JTabbedPane pane = (JTabbedPane)changeEvent.getSource();
                 int index = pane.getSelectedIndex();
+                if (pane == null || index == -1) return;
                 pane.setForegroundAt(index, Color.BLACK);
                 updateTabInfo();
             }          

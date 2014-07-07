@@ -8,6 +8,7 @@ import javax.swing.text.*;
 import java.util.*;
 import java.util.logging.*;
 import java.io.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import org.apache.commons.lang3.StringUtils;
 
 public class GUI extends JFrame {
@@ -359,13 +360,15 @@ public class GUI extends JFrame {
                 int index = tabbedPane.getSelectedIndex();
                 if (index == -1) return;
                 ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+                if (channel == null) return;
                 String title = tabbedPane.getTitleAt(index);            
  
                 if (!title.startsWith("#") && !title.equals(channel.server)){ //closing IM
                     tabbedPane.remove(channel);
                 }
                 
-                if (title.startsWith("#")) try { //closing channel
+                if (title.startsWith("#")) 
+                try { //closing channel
                     channel.connection.send("PART "+title);
                     return;
                 } catch (IOException ex) {
@@ -391,10 +394,58 @@ public class GUI extends JFrame {
                 }
             }
         });
-        joinChannel.addActionListener(new ActionListener() {
+        channelList.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                JDialog dialog = new JDialog(GUI.this, "Channel List");
+                SpringLayout layout = new SpringLayout();
+                JPanel panel = new JPanel(layout);
                 
+                dialog.add(panel);
+                dialog.setPreferredSize(new Dimension(500,400));
+                dialog.pack();
+                dialog.setLocationRelativeTo(tabbedPane);
+                dialog.setVisible(true);
+                
+                Container contentpane = dialog.getContentPane();
+                contentpane.setLayout(layout);
+                final BeanTableModel model = new BeanTableModel(ListChannel.class);
+                model.sortColumnNames();
+                ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+                for (int i = 0; i < channel.connection.channelList.size(); i++) model.addRow(channel.connection.channelList.get(i));
+                
+                
+                final JTable table = new JTable(model){
+                    public boolean isCellEditable(int row, int column){  
+                        return false;  
+                    }  
+                };
+
+                //DefaultTableCellRenderer renderer = (DefaultTableCellRenderer)table.getDefaultRenderer(Object.class);     
+                //renderer.setHorizontalAlignment(JLabel.LEFT);
+                
+                table.setShowGrid(false);
+
+
+               // table.setAutoResizeMode( JTable.AUTO_RESIZE_OFF );    //################################################
+
+                table.getColumnModel().getColumn(0).setPreferredWidth(60);
+                table.getColumnModel().getColumn(0).setResizable(false);
+                table.getColumnModel().getColumn(1).setPreferredWidth(130);
+                table.getColumnModel().getColumn(2).setPreferredWidth(300);
+
+                JScrollPane scrollPane = new JScrollPane(table);
+                scrollPane.setViewportView(table);
+                //model.sortColumnNames();
+                contentpane.add(scrollPane);
+                scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+                scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+                scrollPane.getViewport().setBackground(Color.white);               
+                layout.putConstraint(SpringLayout.WEST, scrollPane , 5, SpringLayout.WEST, contentpane);
+                layout.putConstraint(SpringLayout.EAST, scrollPane, -5, SpringLayout.EAST, contentpane);
+                layout.putConstraint(SpringLayout.NORTH, scrollPane, 5, SpringLayout.NORTH, contentpane);
+                layout.putConstraint(SpringLayout.SOUTH, scrollPane, -50, SpringLayout.SOUTH, contentpane);
+
             }
         });
         disconnect.addActionListener(new ActionListener() {
@@ -927,7 +978,7 @@ public class GUI extends JFrame {
         else
         {
             dialog.dispose();
-            c.nicks[0] = n;
+            Connection.nicks[0] = n;
 
             for (int i = 0; i < tabbedPane.getTabCount(); i++)
             {
@@ -938,9 +989,7 @@ public class GUI extends JFrame {
                     String[] msg = {null, "You are already connected to "+name+"."};
                     try {
                         channel.insertString(msg, ChannelPanel.errorStyle, false);
-                    } catch (BadLocationException ex) {
-                        Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (IOException ex) {
+                    } catch (BadLocationException | IOException ex) {
                         Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
                     }
                     return;
@@ -949,7 +998,6 @@ public class GUI extends JFrame {
 
             new Connection(name, chan, Integer.valueOf(p), false);
             if (!pass.isEmpty()) c.password = pass;
-            return;
         }
     }
     private void identityButtonFunctionality(JTextField[] panes, JDialog dialog)
