@@ -28,7 +28,8 @@ import org.apache.commons.lang3.StringUtils;
 
     public class ChannelPanel extends JSplitPane{
            
-        final String name, title;
+        final String title;
+        String name;
         String topic="", signOnTime, topicAuthor, server;
         int population, ops = 0;
         static boolean awayStatus = false;
@@ -88,14 +89,10 @@ import org.apache.commons.lang3.StringUtils;
             makePanel();
             makeHashMaps();
                        
-            tabbedPane.add(this, this.title);
-            
-                
+            tabbedPane.add(this, this.title);       
         }
-
         private void makePanel() throws BadLocationException, IOException
         {      
-            
         userListPane.setModel(model);
         userListPane.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         userListPane.setLayoutOrientation(JList.VERTICAL);
@@ -121,7 +118,7 @@ import org.apache.commons.lang3.StringUtils;
         MouseListener popupListener = new PopupListener(popup);
         userListPane.addMouseListener(popupListener);
         
-        popOpenQuery.addActionListener(new ActionListener() {
+        popOpenQuery.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
                 User nick = ((User)userListPane.getSelectedValue());
@@ -257,7 +254,6 @@ import org.apache.commons.lang3.StringUtils;
         caret = (DefaultCaret)chatPane.getCaret();
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
         }
-     
         
         public void setStyles() //TODO: static styles so we dont have to decode on every insertString
         {

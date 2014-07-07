@@ -102,6 +102,9 @@ public class GUI extends JFrame {
         windowMenu.add(moveTabRight);
         closeTab = new JMenuItem("Close Tab", closeTabIcon);
         windowMenu.add(closeTab);
+        windowMenu.add(new JSeparator());
+        channelList = new JMenuItem("Channel List");
+        windowMenu.add(channelList);
         serverList = new JMenuItem("Server List", serverListIcon);
         fileMenu.add(serverList);
         quickConnect = new JMenuItem("Quick Connect", quickConnectIcon);
@@ -386,6 +389,12 @@ public class GUI extends JFrame {
                     channel.connection.disconnect();
                     return;
                 }
+            }
+        });
+        joinChannel.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                
             }
         });
         disconnect.addActionListener(new ActionListener() {
@@ -716,7 +725,28 @@ public class GUI extends JFrame {
                         int rowIndex = table.getSelectedRow();
                         if (rowIndex == -1) return;
                         SavedConnection conn = (SavedConnection)model.modelData.get(table.convertRowIndexToModel(rowIndex));
-                        new Connection(conn.getNetwork(), conn.getServer(), conn.retrievePort());
+                        
+                        String network = conn.getNetwork(), server = conn.getServer();
+                        int port = conn.retrievePort();
+                        for (int i = 0; i < tabbedPane.getTabCount(); i++)
+                        {
+                            ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
+                            if (network.equals(channel.title))
+                            {
+                                tabbedPane.setSelectedComponent(channel);
+                                String[] msg = {null, "You are already connected to "+network+"."};
+                                try {
+                                    channel.insertString(msg, ChannelPanel.errorStyle, false);
+                                } catch (BadLocationException ex) {
+                                    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                                } catch (IOException ex) {
+                                    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                                dialog.dispose();
+                                return;
+                            }
+                        }
+                        new Connection(network, server, port);
                         dialog.dispose();
                         return;
                     }
@@ -898,7 +928,26 @@ public class GUI extends JFrame {
         {
             dialog.dispose();
             c.nicks[0] = n;
-            new Connection(name, chan, Integer.valueOf(p), false); //FIXFIXFIX
+
+            for (int i = 0; i < tabbedPane.getTabCount(); i++)
+            {
+                ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
+                if (name.equals(channel.title))
+                {
+                    tabbedPane.setSelectedComponent(channel);
+                    String[] msg = {null, "You are already connected to "+name+"."};
+                    try {
+                        channel.insertString(msg, ChannelPanel.errorStyle, false);
+                    } catch (BadLocationException ex) {
+                        Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (IOException ex) {
+                        Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    return;
+                }
+            }
+
+            new Connection(name, chan, Integer.valueOf(p), false);
             if (!pass.isEmpty()) c.password = pass;
             return;
         }
@@ -1070,6 +1119,7 @@ public class GUI extends JFrame {
     private JMenuItem moveTabLeft;
     private JMenuItem moveTabRight;
     private JMenuItem closeTab;
+    private JMenuItem channelList;
     private JMenuItem disconnect;
     private JMenuItem reconnect;
     private JMenuItem globalAway;

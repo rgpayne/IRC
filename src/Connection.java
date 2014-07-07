@@ -25,6 +25,7 @@ public class Connection implements Runnable{
     int port;
     static JTabbedPane tabbedPane;
     static JLabel tabInfo;
+    ArrayList<ListChannel> channelList = new ArrayList<ListChannel>();
     
 
     public Connection(String title, String server, int port)
@@ -64,6 +65,7 @@ public class Connection implements Runnable{
             String channelName = channel.name;
             Connection c = channel.connection;
             if (channelName.equalsIgnoreCase(title) && conn == c) return i;
+            if (conn == c && channelName.equalsIgnoreCase("")) return i;
         }
         return -1;
     }
@@ -77,8 +79,17 @@ public class Connection implements Runnable{
     {
         final Parser parser = new Parser(line);
         String command = parser.getCommand();
-        //System.out.println(line);
-        //System.out.println(parser.toString());
+        
+        
+        
+        if (!command.equals("PRIVMSG"))
+        {
+        //    System.out.println(line);
+          //  System.out.println(parser.toString());
+        }
+        
+        
+        
         if (command.equals("AWAY"))
         {
             String channelName = parser.getTrailing();
@@ -90,8 +101,6 @@ public class Connection implements Runnable{
         }
         if (command.equals("ERROR"))
         {
-            System.out.println(line);
-            System.out.println(parser.toString());
             ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
             String[] msg = {null, parser.getTrailing()};
             channel.insertString(msg, ChannelPanel.errorStyle, false);
@@ -209,8 +218,12 @@ public class Connection implements Runnable{
             if (parser.getServer().equals(currentNick) || parser.getPrefix().equals(currentNick)) //setting personal mode
             {
                 Component aComponent = tabbedPane.getSelectedComponent();
+                String[] s = parser.getParams().trim().split(" ");
+                String modes;
+                if (s.length ==2) modes = s[1];
+                else modes = parser.getTrailing();
                 ChannelPanel channel = ((ChannelPanel)aComponent);
-                String[] msg = {null, "You have set personal modes: "+parser.getTrailing()};
+                String[] msg = {null, "You have set personal modes: "+modes};
                 channel.insertString(msg, ChannelPanel.serverStyle, false);
                 return;
             }    
@@ -347,34 +360,40 @@ public class Connection implements Runnable{
             if (indexOfChannel == -1) channel = (ChannelPanel)tabbedPane.getSelectedComponent();
             else channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfChannel);
             
-            if (channel == null){
-                return; //this is shit
+            if (channel == null)
+            {
+                ChannelPanel cp = new ChannelPanel(Connection.this.title,"",currentNick, Connection.this);
+                String[] msg = {null, parser.getTrailing()};
+                cp.insertString(msg, ChannelPanel.connectStyle, false);
+                return;
             }
             
             String nick = parser.getNick();
             
-            if (!nick.equals("")){
+            if (!nick.equals(""))
+            {
                 String[] msg = {null, "-"+nick+"- "+parser.getTrailing()};
                 
-                if (msg[1].contains("PING")){
+                if (msg[1].contains("PING"))
+                {
                     String ping = parser.getTrailing().substring(6).trim();
                     long ping1;
                     Long longTime = System.currentTimeMillis() / 1000L;
-                    if (StringUtils.isNumeric(ping)){
+                    if (StringUtils.isNumeric(ping))
+                    {
                         ping1 = Long.valueOf(ping);
                         long ping2 = longTime-ping1;
                         msg[1] = "Received CTCP-Ping reply from "+nick+": "+ping2+ " seconds."; //ms or s?
-
                     }
                     else System.out.println("NOTICE PING ERROR");                    
                 }
                 channel.insertString(msg, ChannelPanel.connectStyle, ctcp);
             }
-            else{
+            else
+            {
                 String[] msg = {null, parser.getTrailing()};
                 channel.insertString(msg, ChannelPanel.connectStyle, ctcp);
                 if (!h.equals("")) channel.server = parser.getPrefix();
-
             }
 
             return;
@@ -625,10 +644,8 @@ public class Connection implements Runnable{
             int indexOfChannel = findTab(host, this);
             if (indexOfChannel == -1)
             {
-                
                 try {
                     SwingUtilities.invokeAndWait(new Runnable() {
-                        
                         @Override
                         public void run() {
                             
@@ -648,9 +665,10 @@ public class Connection implements Runnable{
                     Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-             indexOfChannel = findTab(host, this);
+            indexOfChannel = findTab(host, this);
             Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
             ChannelPanel channel = ((ChannelPanel)aComponent);
+            if (channel.name.equals("")) channel.name = host;
             String text = parser.getTrailing();
             if (text.equals("")) text = parser.getParams().trim().substring(currentNick.length()).trim();
             String[] msg = {null,text};
@@ -659,7 +677,7 @@ public class Connection implements Runnable{
             if (command.equals("001" ) && this.autoconnect )
             {
                 try {
-                    Thread.sleep(2000);
+                    Thread.sleep(1000);
                 } catch (InterruptedException ex) {
                     Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -669,16 +687,16 @@ public class Connection implements Runnable{
                     if (conn.getServer().equals(channel.connection.server))
                     {
                         ArrayList<String> c = conn.retrieveChannels();
+                        if (c.isEmpty()) return;
                         for(int j = 0; j < c.size(); j++)
                         {
-                            send("JOIN "+c.get(j));
+                            String chan = c.get(j);
+                            if (chan.isEmpty()) return;
+                            send("JOIN "+chan);
                         }
                     }
                 }  
             }  
-            
-            
-            
             return;
         }
         if (command.equals("042")) //unique id
@@ -700,8 +718,6 @@ public class Connection implements Runnable{
             String modes = s[1];
             String[] msg = {null, "Your personal modes are: "+modes+"."};
             channel.insertString(msg, ChannelPanel.serverStyle, false);
-            System.out.println(line);
-            System.out.println(parser.toString());
             return;
         }
         if (command.equals("242")) //uptime
@@ -915,8 +931,40 @@ public class Connection implements Runnable{
             ChannelPanel channel = ((ChannelPanel)aComponent);
             String[] msg = {null, target+" is a user on channels: "+chans};
             channel.insertString(msg, ChannelPanel.serverStyle, false); 
+            return;   
+        }
+        if (command.equals("321")) // /list start
+        {
+            //nothing?
             return;
+        }
+        if (command.equals("322")) //list
+        {
+            String[] s = parser.getMiddle().split(" ");            
+            String channelName;
+            int pop = 0;
             
+            if (s.length > 2 && StringUtils.isNumeric(s[2]))
+            {
+                channelName = s[1];
+                pop = Integer.valueOf(s[2]);
+            }
+            else{
+                String[] p = parser.getParams().trim().split(" ");
+                channelName = p[1];
+                if (StringUtils.isNumeric(p[2])) pop = Integer.valueOf(p[2]);
+                System.out.println(parser.toString());
+            }
+            String channelInfo = parser.getTrailing();
+            
+            ListChannel chan = new ListChannel(channelName, channelInfo, pop);
+            channelList.add(chan);
+            return;
+        }
+        if (command.equals("323"))
+        {
+            //nothing?
+            return;
         }
         if (command.equals("331")) //no topic
         {
@@ -1065,8 +1113,6 @@ public class Connection implements Runnable{
             ChannelPanel channel = ((ChannelPanel)tabbedPane.getSelectedComponent());
             String[] msg = {null, "No such server."};
             channel.insertString(msg, ChannelPanel.errorStyle, false);
-            System.out.println(parser.toString());
-            System.out.println(line);
             return;
         }
         if (command.equals("403")) //no such channel 
@@ -1241,7 +1287,6 @@ public class Connection implements Runnable{
             //do nothing
         }
     }
-    
     public void run()
     {
         try 
