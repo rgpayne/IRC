@@ -540,6 +540,17 @@ import org.apache.commons.lang3.StringUtils;
                     }
                 });
             }
+            else
+            {
+                ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+                final int index = Connection.findTab(channel.name, connection);
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        tabbedPane.setForegroundAt(index, Color.BLACK);
+                    }
+                });
+            }
             return;
         }
         public void addToUserList(String nick) throws BadLocationException, IOException
