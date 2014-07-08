@@ -19,6 +19,7 @@ public class Connection implements Runnable{
     BufferedReader reader;
     BufferedWriter writer;
     String server, password, title;
+    boolean doneUpdating = false, currentlyUpdating = false;
     boolean autoconnect = true;
     static String[] nicks = {"", "", ""};
     static String currentNick = "", real = "", awayMessage="";
@@ -935,7 +936,8 @@ public class Connection implements Runnable{
         }
         if (command.equals("321")) // /list start
         {
-            //nothing?
+            currentlyUpdating = true;
+            if (!channelList.isEmpty()) channelList.clear();
             return;
         }
         if (command.equals("322")) //list
@@ -960,9 +962,10 @@ public class Connection implements Runnable{
             channelList.add(chan);
             return;
         }
-        if (command.equals("323"))
+        if (command.equals("323")) //end of list
         {
-            //nothing?
+            doneUpdating = true;
+            currentlyUpdating = false;
             return;
         }
         if (command.equals("331")) //no topic
@@ -1252,6 +1255,13 @@ public class Connection implements Runnable{
             String[] msg = {null, s[1]+": "+parser.getTrailing()};
             channel.insertString(msg, ChannelPanel.errorStyle, false);
             return;
+        }
+        if (command.equals("475")) //cannot join channel
+        {
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+            String[] msg = {null, parser.getTrailing()};
+            channel.insertString(msg, ChannelPanel.errorStyle, false);
+            return;            
         }
         if (command.equals("481")) //permission denied (/stats rieux)
         {

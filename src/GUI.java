@@ -65,7 +65,6 @@ public class GUI extends JFrame {
         tabbedPane = new JTabbedPane();
         jSplitPane1 = new JSplitPane();
         jScrollPane2 = new JScrollPane();
-        dchatPane = new JTextPane();
         jScrollPane1 = new JScrollPane();
         userListPane = new JTextPane();
         tabInfo = new JLabel();
@@ -397,12 +396,15 @@ public class GUI extends JFrame {
         channelList.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                
+                final ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+                
                 JDialog dialog = new JDialog(GUI.this, "Channel List");
                 SpringLayout layout = new SpringLayout();
                 JPanel panel = new JPanel(layout);
                 
                 dialog.add(panel);
-                dialog.setPreferredSize(new Dimension(500,400));
+                dialog.setPreferredSize(new Dimension(600,400));
                 dialog.pack();
                 dialog.setLocationRelativeTo(tabbedPane);
                 dialog.setVisible(true);
@@ -411,40 +413,113 @@ public class GUI extends JFrame {
                 contentpane.setLayout(layout);
                 final BeanTableModel model = new BeanTableModel(ListChannel.class);
                 model.sortColumnNames();
-                ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
                 for (int i = 0; i < channel.connection.channelList.size(); i++) model.addRow(channel.connection.channelList.get(i));
                 
+                JButton joinButton = new JButton("Join Channel");
+                JButton refreshList = new JButton("Refresh List");
+                JTextArea filterArea = new JTextArea();
                 
                 final JTable table = new JTable(model){
                     public boolean isCellEditable(int row, int column){  
                         return false;  
                     }  
                 };
-
-                //DefaultTableCellRenderer renderer = (DefaultTableCellRenderer)table.getDefaultRenderer(Object.class);     
-                //renderer.setHorizontalAlignment(JLabel.LEFT);
                 
                 table.setShowGrid(false);
+                table.setAutoCreateRowSorter(true);
+                table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
+                table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 
-               // table.setAutoResizeMode( JTable.AUTO_RESIZE_OFF );    //################################################
-
-                table.getColumnModel().getColumn(0).setPreferredWidth(60);
+                table.getColumnModel().getColumn(0).setPreferredWidth(50);
+                table.getColumnModel().getColumn(0).setMinWidth(50);
+                table.getColumnModel().getColumn(0).setMaxWidth(50);
                 table.getColumnModel().getColumn(0).setResizable(false);
+                
+                DefaultTableCellRenderer left = new DefaultTableCellRenderer();
+                left.setHorizontalAlignment(SwingConstants.LEFT);
+                table.getColumnModel().getColumn(0).setCellRenderer(left);
+                
                 table.getColumnModel().getColumn(1).setPreferredWidth(130);
+                table.getColumnModel().getColumn(1).setMaxWidth(160);
+                table.getColumnModel().getColumn(1).setMinWidth(130);
+                
                 table.getColumnModel().getColumn(2).setPreferredWidth(300);
 
                 JScrollPane scrollPane = new JScrollPane(table);
                 scrollPane.setViewportView(table);
-                //model.sortColumnNames();
+
                 contentpane.add(scrollPane);
+                contentpane.add(joinButton);
+                contentpane.add(refreshList);
+                contentpane.add(filterArea);
+                filterArea.setBorder(BorderFactory.createLineBorder(Color.gray));
+                
                 scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
                 scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-                scrollPane.getViewport().setBackground(Color.white);               
+                scrollPane.getViewport().setBackground(Color.white);     
+                
                 layout.putConstraint(SpringLayout.WEST, scrollPane , 5, SpringLayout.WEST, contentpane);
                 layout.putConstraint(SpringLayout.EAST, scrollPane, -5, SpringLayout.EAST, contentpane);
                 layout.putConstraint(SpringLayout.NORTH, scrollPane, 5, SpringLayout.NORTH, contentpane);
-                layout.putConstraint(SpringLayout.SOUTH, scrollPane, -50, SpringLayout.SOUTH, contentpane);
+                layout.putConstraint(SpringLayout.SOUTH, scrollPane, -40, SpringLayout.SOUTH, contentpane);
+                layout.putConstraint(SpringLayout.EAST, joinButton, -7, SpringLayout.EAST, contentpane);
+                layout.putConstraint(SpringLayout.SOUTH, joinButton , -8, SpringLayout.SOUTH, contentpane);
+                layout.putConstraint(SpringLayout.SOUTH, refreshList , -8, SpringLayout.SOUTH, contentpane);
+                layout.putConstraint(SpringLayout.EAST, refreshList, -7, SpringLayout.WEST, joinButton);
+                layout.putConstraint(SpringLayout.SOUTH, filterArea , -10, SpringLayout.SOUTH, contentpane);
+                layout.putConstraint(SpringLayout.WEST, filterArea, 7, SpringLayout.WEST, contentpane);
+                layout.putConstraint(SpringLayout.EAST, filterArea, -10, SpringLayout.WEST, refreshList);
+                layout.putConstraint(SpringLayout.NORTH, filterArea, 10, SpringLayout.SOUTH, scrollPane);
+                
+                refreshList.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                         try {
+                            channel.connection.send("LIST");
+                            Thread.sleep(100);
+                            while (channel.connection.currentlyUpdating)
+                            {
+                                Thread.sleep(100);
+                            }
+                            
+                            if (channel.connection.doneUpdating)
+                            {
+                                for (ListChannel channelList1 : channel.connection.channelList) {
+                                    model.addRow(channelList1);
+                                }
+                                channel.connection.doneUpdating = false;
+                            }
+                        } catch (IOException | BadLocationException | InterruptedException ex) {
+                            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                });
+                joinButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        int r = table.getSelectedRow();
+                        if (r == -1) return;
+                        int row = table.convertRowIndexToModel(table.getSelectedRow());
+                        String chan = (String)model.getValueAt(row, 1);
+                        
+                        int index = Connection.findTab(chan, channel.connection); //if already in channel
+                        if (index != -1)
+                        {
+                            tabbedPane.setSelectedIndex(index);
+                            return;
+                        }
+                        
+                        try {
+                            channel.connection.send("JOIN "+chan);
+                        } catch (IOException ex) {
+                            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                        } catch (BadLocationException ex) {
+                            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                });
+                
 
             }
         });
@@ -828,8 +903,6 @@ public class GUI extends JFrame {
         jSplitPane1.setResizeWeight(1.0);
         jSplitPane1.setVerifyInputWhenFocusTarget(false);
 
-        dchatPane.setEditable(false);
-        jScrollPane2.setViewportView(dchatPane);
         
         jSplitPane1.setLeftComponent(jScrollPane2);
         userListPane.setEditable(false);
@@ -1140,7 +1213,6 @@ public class GUI extends JFrame {
     }
 
     private JTextField chatInputPane;
-    private JTextPane dchatPane;
     private JMenu fileMenu;
     private JMenu editMenu;
     private JMenu settingsMenu;
