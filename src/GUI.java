@@ -9,6 +9,8 @@ import java.util.*;
 import java.util.logging.*;
 import java.io.*;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
 import org.apache.commons.lang3.StringUtils;
 
 public class GUI extends JFrame {
@@ -417,8 +419,8 @@ public class GUI extends JFrame {
                 
                 JButton joinButton = new JButton("Join Channel");
                 JButton refreshList = new JButton("Refresh List");
-                JTextArea filterArea = new JTextArea();
-                
+                final JTextArea filterArea = new JTextArea();
+                filterArea.getDocument().putProperty("filterNewlines", Boolean.TRUE);
                 final JTable table = new JTable(model){
                     public boolean isCellEditable(int row, int column){  
                         return false;  
@@ -472,6 +474,21 @@ public class GUI extends JFrame {
                 layout.putConstraint(SpringLayout.EAST, filterArea, -10, SpringLayout.WEST, refreshList);
                 layout.putConstraint(SpringLayout.NORTH, filterArea, 10, SpringLayout.SOUTH, scrollPane);
                 
+                
+                
+                final RowFilter<Object, Object> filter = new RowFilter<Object, Object>(){
+                    public boolean include(Entry entry){
+                        String filter = filterArea.getText();
+                        for (int i = entry.getValueCount() - 1; i >= 0; i--){
+                            if (entry.getStringValue(i).contains(filter)){
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+                };
+                
+                
                 refreshList.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
@@ -517,6 +534,15 @@ public class GUI extends JFrame {
                         } catch (BadLocationException ex) {
                             Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
                         }
+                    }
+                });
+                filterArea.addKeyListener(new KeyAdapter() {
+                    @Override
+                    public void keyPressed(KeyEvent e)
+                    {
+                        TableRowSorter<TableModel> sorter = new TableRowSorter<TableModel>(model);
+                        sorter.setRowFilter(filter);
+                        table.setRowSorter(sorter);
                     }
                 });
                 
