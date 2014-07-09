@@ -13,7 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 public class Connection implements Runnable{
     
     public static final String CTCP_DELIM = "\001", CTCP_BOLD_DELIM = "\002",CTCP_COLOR_DELIM = "\003",
-                               CTCP_UNDERLINE_DELIM = "\037", CTCP_RESET_DELIM = "\017"; //reset -> 0x1F
+                               CTCP_UNDERLINE_DELIM = "\037", CTCP_RESET_DELIM = "\017";
     Thread thread;
     Socket socket;
     BufferedReader reader;
@@ -164,8 +164,7 @@ public class Connection implements Runnable{
                    }
                    else{ //joining a room for which you already have a tab (i.e. you were kicked or lost connection or something)
                        
-                       Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-                       ChannelPanel channel = ((ChannelPanel)aComponent);
+                       ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfChannel);
                        String[] msg = {null, "Joined "+channelName};
                        channel.insertString(msg ,ChannelPanel.serverStyle, false);
                    }
@@ -179,8 +178,7 @@ public class Connection implements Runnable{
                    int indexOfChannel = findTab(channelName, this);
                    if (indexOfChannel != -1)
                    {
-                       Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-                       ChannelPanel channel = ((ChannelPanel)aComponent);
+                       ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfChannel);
                        channel.addToUserList(parser.getNick());
                        String[] msg = {null, "--> "+parser.getNick() + " (" + parser.getUser() + "@" + parser.getHost() +  ") has joined the channel."};
                        channel.insertString(msg, ChannelPanel.joinStyle, false);
@@ -198,8 +196,8 @@ public class Connection implements Runnable{
             String kickMessage = parser.getTrailing();
             
             int indexOfChannel = findTab(channelName, this);
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ChannelPanel channel = (ChannelPanel)aComponent;
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfChannel);
+
                         
             if (kicked.equals(currentNick)) //i am kicked
             {
@@ -227,12 +225,11 @@ public class Connection implements Runnable{
         {
             if (parser.getServer().equals(currentNick) || parser.getPrefix().equals(currentNick)) //setting personal mode
             {
-                Component aComponent = tabbedPane.getSelectedComponent();
+                ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
                 String[] s = parser.getParams().trim().split(" ");
                 String modes;
                 if (s.length ==2) modes = s[1];
                 else modes = parser.getTrailing();
-                ChannelPanel channel = ((ChannelPanel)aComponent);
                 String[] msg = {null, "You have set personal modes: "+modes};
                 channel.insertString(msg, ChannelPanel.serverStyle, false);
                 return;
@@ -248,8 +245,8 @@ public class Connection implements Runnable{
                 if (s.length >= 3) receiver = s[2];
 
                 int indexOfChannel = findTab(chan, this);
-                Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-                ChannelPanel channel = ((ChannelPanel)aComponent);
+                ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfChannel);
+
 
                 if (!receiver.equals(""))
                 {
@@ -291,9 +288,7 @@ public class Connection implements Runnable{
             {
                 for (int i = 0; i < tabbedPane.getTabCount(); i++)
                 {
-                    Component aComponent = tabbedPane.getComponentAt(i);
-                    ChannelPanel channel = ((ChannelPanel)aComponent);
-                    
+                    ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
                     if (channel.contains(" "+oldNick))
                     {
                         channel.removeFromUserList(oldNick);
@@ -350,8 +345,7 @@ public class Connection implements Runnable{
                 for (int i = 0; i < tabbedPane.getTabCount(); i++)
                 {
                     String[] msg = {null, "*** You are now known as "+newNick};
-                    Component aComponent = tabbedPane.getComponentAt(i);
-                    ChannelPanel channel = ((ChannelPanel)aComponent);
+                    ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
                     channel.removeFromUserList(oldNick);
                     this.currentNick = prefix+newNick.substring(1);
                     channel.addToUserList(this.currentNick);
@@ -424,10 +418,10 @@ public class Connection implements Runnable{
             }
             else
             {
-                Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+                ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfChannel);
                 String[] msg = {null, "<-- "+parser.getNick()+" (" + parser.getUser() + "@" + parser.getHost() + ") has left the channel (" + parser.getTrailing()+ ")" };
-                ((ChannelPanel)aComponent).insertString(msg, ChannelPanel.disconnectStyle, false);
-                ((ChannelPanel)aComponent).removeFromUserList(parser.getNick());
+                channel.insertString(msg, ChannelPanel.disconnectStyle, false);
+                channel.removeFromUserList(parser.getNick());
                 return;
             }
         }
@@ -563,9 +557,9 @@ public class Connection implements Runnable{
                         Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
-                Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+                ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfChannel);
                 String[] msg = {parser.getNick(), parser.getTrailing()};
-                ((ChannelPanel)aComponent).insertString(msg, ChannelPanel.chatStyle, ctcp);
+                channel.insertString(msg, ChannelPanel.chatStyle, ctcp);
                 return;
             }
             int indexOfChannel = findTab(channelName, this);
@@ -581,7 +575,7 @@ public class Connection implements Runnable{
                             try {
                                 ChannelPanel channel = new ChannelPanel(channelName2, channelName2, currentNick, Connection.this);
                                                                         String[] msg = {channelName2, parser.getTrailing()};
-                channel.insertString(msg, ChannelPanel.chatStyle, ctcp);  
+                                channel.insertString(msg, ChannelPanel.chatStyle, ctcp);  
                             } catch (BadLocationException ex) {
                                 Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
                             } catch (IOException ex) {
@@ -599,9 +593,9 @@ public class Connection implements Runnable{
                               
                 return;
             }
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfChannel);
             String[] msg = {parser.getNick().trim(), parser.getTrailing()};
-            ((ChannelPanel)aComponent).insertString(msg, ChannelPanel.chatStyle, ctcp);   
+            channel.insertString(msg, ChannelPanel.chatStyle, ctcp);   
             return;
         }
         if (command.equals("QUIT"))
@@ -610,8 +604,7 @@ public class Connection implements Runnable{
             String quitter = parser.getNick().trim();
             String quitMessage = parser.getParams().substring(2); //fix so it only quits on connection user quit on?
             for (int i = 0; i < tabbedPane.getTabCount(); i++){
-                Component aComponent = tabbedPane.getComponentAt(i);
-                ChannelPanel channel = ((ChannelPanel)aComponent);
+                ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
                 boolean success = channel.removeFromUserList(quitter);
                 String[] msg = {null, "<-- "+quitter+" has left the server ("+quitMessage+")"};
                 if (success){
@@ -626,8 +619,7 @@ public class Connection implements Runnable{
             boolean ctcp = checkForCTCPDelims(line);
             String channelName = parser.getMiddle();
             int indexOfChannel = findTab(channelName, this);
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ChannelPanel channel = ((ChannelPanel)aComponent);
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfChannel);
             channel.topic = parser.getTrailing();
             
             if (currentNick.equals(parser.getNick()))
@@ -676,8 +668,7 @@ public class Connection implements Runnable{
                 }
             }
             indexOfChannel = findTab(host, this);
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ChannelPanel channel = ((ChannelPanel)aComponent);
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfChannel);
             if (channel.name.equals("")) channel.name = host;
             String text = parser.getTrailing();
             if (text.equals("")) text = parser.getParams().trim().substring(currentNick.length()).trim();
@@ -756,8 +747,7 @@ public class Connection implements Runnable{
             
             String host = parser.getPrefix();
             int indexOfChannel = findTab(host, this);
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ChannelPanel channel = ((ChannelPanel)aComponent);
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfChannel);
             String[] msg = {null, message+"."};
             channel.insertString(msg, ChannelPanel.connectStyle, ctcp);
             return;
@@ -771,8 +761,7 @@ public class Connection implements Runnable{
             
             String host = parser.getPrefix();
             int indexOfChannel = findTab(host, this);
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ChannelPanel channel = ((ChannelPanel)aComponent);
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfChannel);
             String[] input = {null, digit+" "+msg+"."};
             channel.insertString(input, ChannelPanel.connectStyle, ctcp);
             return;
@@ -782,8 +771,7 @@ public class Connection implements Runnable{
             boolean ctcp = checkForCTCPDelims(line);
             String host = parser.getPrefix();
             int indexOfChannel = findTab(host, this);
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ChannelPanel channel = ((ChannelPanel)aComponent);
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfChannel);
             String[] msg = {null, parser.getTrailing()};
             channel.insertString(msg, ChannelPanel.connectStyle, ctcp);
             return;
@@ -805,8 +793,7 @@ public class Connection implements Runnable{
             boolean ctcp = checkForCTCPDelims(line);
             String host = parser.getPrefix();
             int indexOfChannel = findTab(host, this);
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ChannelPanel channel = ((ChannelPanel)aComponent);
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfChannel);
             String[] msg = {null, parser.getTrailing()};
             channel.insertString(msg, ChannelPanel.connectStyle, ctcp);
             return;
@@ -816,9 +803,7 @@ public class Connection implements Runnable{
             String[] s = parser.getMiddle().split(" ");
             String target = s[1];
             String info = parser.getTrailing();
-            int indexOfChannel = tabbedPane.getSelectedIndex();
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ChannelPanel channel = ((ChannelPanel)aComponent);
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
             String[] msg = {null, target+" is away: "+info};
             channel.insertString(msg, ChannelPanel.serverStyle, false);             
         }
@@ -859,9 +844,7 @@ public class Connection implements Runnable{
             String[] s = parser.getMiddle().split(" ");
             String target = s[1];
             String info = parser.getTrailing();
-            int indexOfChannel = tabbedPane.getSelectedIndex();
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ChannelPanel channel = ((ChannelPanel)aComponent);
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
             String[] msg = {null, target+" "+info};
             channel.insertString(msg, ChannelPanel.serverStyle, false);
             return;
@@ -871,9 +854,7 @@ public class Connection implements Runnable{
             String[] s = parser.getMiddle().split(" ");
             String target = s[1];
             String modes = parser.getTrailing();
-            int indexOfChannel = tabbedPane.getSelectedIndex();
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ChannelPanel channel = ((ChannelPanel)aComponent);
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
             String[] msg = {null, target+" "+modes};
             channel.insertString(msg, ChannelPanel.serverStyle, false);
             return;
@@ -883,10 +864,7 @@ public class Connection implements Runnable{
             String[] s = parser.getMiddle().split(" ");
             String target = s[1];
             String fulladd = s[2]+"@"+s[3]+" ("+parser.getTrailing().trim()+")";
-            
-            int indexOfChannel = tabbedPane.getSelectedIndex();
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ChannelPanel channel = ((ChannelPanel)aComponent);
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
             String[] msg = {null, target+" is "+fulladd};
             channel.insertString(msg, ChannelPanel.serverStyle, false);
             return;
@@ -897,11 +875,8 @@ public class Connection implements Runnable{
             String[] s = parser.getMiddle().split(" ");
             String target = s[1];
             String info = parser.getTrailing();
-            String srv = parser.getPrefix();
-            
-            int indexOfChannel = tabbedPane.getSelectedIndex();
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ChannelPanel channel = ((ChannelPanel)aComponent);
+            String srv = parser.getPrefix();           
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
             String[] msg = {null, target+" is online via "+srv+" ("+info+")"};
             channel.insertString(msg, ChannelPanel.serverStyle, false);        
             return;
@@ -911,9 +886,7 @@ public class Connection implements Runnable{
         {
             String[] s = parser.getMiddle().split(" ");
             String target = s[1];
-            int indexOfChannel = tabbedPane.getSelectedIndex();
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ChannelPanel channel = ((ChannelPanel)aComponent);
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
             String[] msg = {null, target+" is an IRC Operator"};
             channel.insertString(msg, ChannelPanel.serverStyle, false);        
             return;
@@ -940,9 +913,7 @@ public class Connection implements Runnable{
             String idleTime = s[2];
             String time = s[3];
 
-            int indexOfChannel = tabbedPane.getSelectedIndex();
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ChannelPanel channel = ((ChannelPanel)aComponent);
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
             
             Date date = new Date(Integer.valueOf(time) * 1000L);
             SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy hh:mm aa z");
@@ -956,9 +927,7 @@ public class Connection implements Runnable{
         }
         if (command.equals("318")) //end of whois
         {
-            int indexOfChannel = tabbedPane.getSelectedIndex();
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ChannelPanel channel = ((ChannelPanel)aComponent);
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
             String[] msg = {null, parser.getTrailing()};
             channel.insertString(msg, ChannelPanel.serverStyle, false);
             return;
@@ -968,9 +937,7 @@ public class Connection implements Runnable{
             String[] s = parser.getParams().split(" ");  
             String target = s[2];
             String chans = parser.getTrailing();
-            int indexOfChannel = tabbedPane.getSelectedIndex();
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ChannelPanel channel = ((ChannelPanel)aComponent);
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
             String[] msg = {null, target+" is a user on channels: "+chans};
             channel.insertString(msg, ChannelPanel.serverStyle, false); 
             return;   
@@ -1050,8 +1017,7 @@ public class Connection implements Runnable{
             else channelName = channelName.substring(index);
 
             int indexOfChannel = findTab(channelName, this);
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ChannelPanel channel = ((ChannelPanel)aComponent);
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfChannel);
             channel.topic = parser.getTrailing();
             channel.server = parser.getPrefix();
             String[] msg = {null, "Current Topic: "+channel.topic};
@@ -1081,9 +1047,7 @@ public class Connection implements Runnable{
             String[] s = parser.getMiddle().split(" ");
             String target = s[1];
             String info = parser.getTrailing();
-            int indexOfChannel = tabbedPane.getSelectedIndex();
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ChannelPanel channel = ((ChannelPanel)aComponent);
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
             String[] msg = {null, target+" "+info};
             channel.insertString(msg, ChannelPanel.serverStyle, false);    
             return;                    
@@ -1127,7 +1091,7 @@ public class Connection implements Runnable{
             if (index2 != -1) channelName = channelName.substring(index, index2 - 1);
             else channelName = channelName.substring(index);
             int indexOfChannel = findTab(channelName, this);
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfChannel);
             String[] nn = parser.getTrailing().split(" ");
             for (int i = 0; i < nn.length; i++)
             {
@@ -1136,7 +1100,7 @@ public class Connection implements Runnable{
                 if (first == '@' || first == '+' || first == '%' || first == '~' || first == '&') continue;
                 else nn[i] = " "+name;
             }
-            ((ChannelPanel)aComponent).list.addAll(Arrays.asList(nn));
+            channel.list.addAll(Arrays.asList(nn));
             return;
         }
         if (command.equals("364"))
@@ -1161,8 +1125,7 @@ public class Connection implements Runnable{
             if (index2 != -1) channelName = channelName.substring(index, index2 - 1);
             else channelName = channelName.substring(index);
             int indexOfChannel = findTab(channelName, this);
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel); 
-            ChannelPanel channel = ((ChannelPanel)aComponent);
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfChannel); 
             
             Iterator<String> iterator = channel.list.iterator();
             while (iterator.hasNext())
@@ -1208,8 +1171,7 @@ public class Connection implements Runnable{
             boolean ctcp = checkForCTCPDelims(line);
             String host = parser.getPrefix();
             int indexOfChannel = findTab(host, this);
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ChannelPanel channel = ((ChannelPanel)aComponent);
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfChannel);
             if (command.equals("372")) channel.server = host;
             String[] msg = {null, parser.getTrailing()};
             channel.insertString(msg, ChannelPanel.connectStyle, ctcp);
@@ -1438,9 +1400,7 @@ public class Connection implements Runnable{
             String[] s = parser.getMiddle().split(" ");
             String target = s[1];
             String info = parser.getTrailing();
-            int indexOfChannel = tabbedPane.getSelectedIndex();
-            Component aComponent = tabbedPane.getComponentAt(indexOfChannel);
-            ChannelPanel channel = ((ChannelPanel)aComponent);
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
             String[] msg = {null, target+" "+info};
             channel.insertString(msg, ChannelPanel.serverStyle, false);    
             return;

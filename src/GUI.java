@@ -1126,8 +1126,8 @@ public class GUI extends JFrame {
     }
     private void chatInputPaneKeyPressed(KeyEvent evt)
     {
-        Component aComponent = tabbedPane.getComponentAt(tabbedPane.getSelectedIndex());
-        ChannelPanel channel = (ChannelPanel)aComponent;
+        ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+        if (channel == null) return;
         
         if (evt.getKeyCode() == KeyEvent.VK_ENTER)
         {
