@@ -37,6 +37,7 @@ public class GUI extends JFrame {
     final static ImageIcon popupWhoisIcon = new ImageIcon("src/icons/xwhois.png");
     final static ImageIcon popupPingIcon = new ImageIcon("src/icons/network-transmit-2.png");
     final static ImageIcon popupVersionIcon = new ImageIcon("src/icons/help-about.png");
+    final static ImageIcon channelListIcon = new ImageIcon("src/icons/view-list-details-5.png");
 
 
     
@@ -105,7 +106,7 @@ public class GUI extends JFrame {
         closeTab = new JMenuItem("Close Tab", closeTabIcon);
         windowMenu.add(closeTab);
         windowMenu.add(new JSeparator());
-        channelList = new JMenuItem("Channel List");
+        channelList = new JMenuItem("Channel List", channelListIcon);
         windowMenu.add(channelList);
         serverList = new JMenuItem("Server List", serverListIcon);
         fileMenu.add(serverList);
