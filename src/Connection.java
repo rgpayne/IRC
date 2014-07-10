@@ -250,19 +250,23 @@ public class Connection implements Runnable{
 
                 if (!receiver.equals(""))
                 {
-                String[] msg = {null, "*** "+giver+" "+power+" "+receiver};
-                channel.insertString(msg, ChannelPanel.serverStyle, false);
-                channel.removeFromUserList(receiver);
+                    String[] msg = {null, "*** "+parser.getParams().trim()};
+                    channel.insertString(msg, ChannelPanel.serverStyle, false);
+                    channel.removeFromUserList(receiver);
 
-                String newNick = receiver;
-                if (power.equals("+o")) newNick = "@"+receiver; //operator
-                if (power.equals("+v")) newNick = "+"+receiver; //voice
-                if (power.equals("+a")) newNick = "&"+receiver; //admin
-                if (power.equals("+h")) newNick = "%"+receiver; //half-op
-                if (power.equals("+q")) newNick = "~"+receiver; //owner
-                if (newNick.equals(receiver)) newNick = " "+receiver;
-                channel.addToUserList(newNick);
-                return;
+                    if (power.equals("+o") || power.equals("+v") || power.equals("+a") || power.equals("+h") || power.equals("+q") ||
+                            power.equals("-o") || power.equals("-v") || power.equals("-a") || power.equals("-h") || power.equals("-q"))
+                    {
+                        String newNick = receiver;
+                        if (power.equals("+o")) newNick = "@"+receiver; //operator
+                        if (power.equals("+v")) newNick = "+"+receiver; //voice
+                        if (power.equals("+a")) newNick = "&"+receiver; //admin
+                        if (power.equals("+h")) newNick = "%"+receiver; //half-op
+                        if (power.equals("+q")) newNick = "~"+receiver; //owner
+                        if (newNick.equals(receiver)) newNick = " "+receiver;
+                        channel.addToUserList(newNick);
+                    }
+                    return;
                 }
                 if (giver.equals(""))
                 {
@@ -1232,6 +1236,20 @@ public class Connection implements Runnable{
             channel.insertString(msg, ChannelPanel.serverStyle, false);
             return;
         }
+        if (command.equals("407") || command.equals("408")) // No such server / too many targets 
+        {                                                   //PLACEHOLDERS
+            ChannelPanel channel = ((ChannelPanel)tabbedPane.getSelectedComponent());
+            String[] msg = {null, "*** "+parser.getMiddle().trim()+": "+parser.getTrailing()};
+            channel.insertString(msg, ChannelPanel.errorStyle, false);
+            return;            
+        }
+        if (command.equals("409") || command.equals("411")) //there was no such nickname (whowas)
+        {
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+            String[] msg = {null, parser.getTrailing()};
+            channel.insertString(msg, ChannelPanel.serverStyle, false);
+            return;
+        }
         if (command.equals("412")) //no text to send
         {
             String[] s = parser.getParams().trim().split(" ");
@@ -1239,6 +1257,13 @@ public class Connection implements Runnable{
             String[] msg = {null, s[0]+" no text to send."}; 
             channel.insertString(msg, ChannelPanel.errorStyle, false);
             return;
+        }
+        if (command.equals("413") || command.equals("414") || command.equals("415")) // No top level / wild top level / bad mask
+        {                                                   //PLACEHOLDERS
+            ChannelPanel channel = ((ChannelPanel)tabbedPane.getSelectedComponent());
+            String[] msg = {null, "*** "+parser.getTrailing()};
+            channel.insertString(msg, ChannelPanel.errorStyle, false);
+            return;            
         }
         if (command.equals("421")) //unknown command
         {
@@ -1336,6 +1361,22 @@ public class Connection implements Runnable{
             channel.insertString(msg, ChannelPanel.connectStyle, false);
             return;            
         }
+        if (command.equals("441")) //error user not in channel
+        {
+            ChannelPanel channel = ((ChannelPanel)tabbedPane.getSelectedComponent());
+            String[] s = parser.getMiddle().split(" ");
+            String[] msg = {null, "*** "+s[1] + " "+s[2]+": "+parser.getTrailing()};
+            channel.insertString(msg, ChannelPanel.errorStyle, false);
+            return;
+        }
+        if (command.equals("442"))
+        {
+            ChannelPanel channel = ((ChannelPanel)tabbedPane.getSelectedComponent());
+            String[] s = parser.getMiddle().trim().split(" ");
+            String[] msg = {null, "*** You are not on "+s[1]};
+            channel.insertString(msg, ChannelPanel.errorStyle, false);
+            return;
+        }
         if (command.equals("443")) //user already in channel invited to
         {
             String[] p = parser.getParams().trim().split(" ");
@@ -1374,11 +1415,32 @@ public class Connection implements Runnable{
             channel.insertString(msg, ChannelPanel.serverStyle, false);
             return; 
         }
+        if (command.equals("467") || command.equals("468")) // No such server / too many targets 
+        {                                                   //PLACEHOLDERS
+            ChannelPanel channel = ((ChannelPanel)tabbedPane.getSelectedComponent());
+            String[] msg = {null, "*** "+parser.getMiddle().trim()+": "+parser.getTrailing()};
+            channel.insertString(msg, ChannelPanel.errorStyle, false);
+            return;            
+        }
+        if (command.equals("471") || command.equals("472")) // channel is full / unknown mode
+        {                                                   // PLACEHOLDER
+            ChannelPanel channel = ((ChannelPanel)tabbedPane.getSelectedComponent());
+            String[] msg = {null, "*** "+parser.getMiddle().trim()+": "+parser.getTrailing()};
+            channel.insertString(msg, ChannelPanel.errorStyle, false);
+            return;            
+        }
         if (command.equals("473") || command.equals("474") || command.equals("475")) //cannot join channel
         {
             ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
             String[] msg = {null, parser.getTrailing()};
             if (channel != null) channel.insertString(msg, ChannelPanel.errorStyle, false);
+            return;            
+        }
+        if (command.equals("478")) // ban list full
+        {                          // PLACEHOLDER
+            ChannelPanel channel = ((ChannelPanel)tabbedPane.getSelectedComponent());
+            String[] msg = {null, "*** "+parser.getMiddle().trim()+": "+parser.getTrailing()};
+            channel.insertString(msg, ChannelPanel.errorStyle, false);
             return;            
         }
         if (command.equals("481")) //permission denied (/stats rieux)
@@ -1388,7 +1450,35 @@ public class Connection implements Runnable{
             channel.insertString(msg, ChannelPanel.errorStyle, false);
             return;
         }
-        if (command.equals("491"))
+        if (command.equals("482")) //chan ops required
+        {                           //PLACEHOLDER
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+            String[] msg = {null, parser.getMiddle()+": "+parser.getTrailing()};
+            channel.insertString(msg, ChannelPanel.errorStyle, false);
+            return;
+        }
+        if (command.equals("483")) //can't kill server
+        {                           //placeholder
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+            String[] msg = {null, parser.getTrailing()};
+            channel.insertString(msg, ChannelPanel.errorStyle, false);
+            return;
+        }
+        if (command.equals("484")) //Cannot kill, kick or deop channel service 
+        {                           //PLACEHOLDER
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+            String[] msg = {null, parser.getMiddle()+": "+parser.getTrailing()};
+            channel.insertString(msg, ChannelPanel.errorStyle, false);
+            return;
+        }
+        if (command.equals("491")) //No O-lines for your host
+        {                           //PLACEHOLDER
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+            String[] msg = {null, parser.getTrailing()};
+            channel.insertString(msg, ChannelPanel.errorStyle, false);
+            return;
+        }
+        if (command.equals("501") || command.equals("502") || command.equals("510"))
         {
             ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
             String[] msg = {null, parser.getTrailing()};

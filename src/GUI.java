@@ -363,29 +363,31 @@ public class GUI extends JFrame {
                 if (index == -1) return;
                 ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
                 if (channel == null) return;
-                String title = tabbedPane.getTitleAt(index);            
+                String name = channel.name;         
  
-                if (!title.startsWith("#") && !title.equals(channel.server)){ //closing IM
+                if (!name.startsWith("#") && !name.equals(channel.server)) //closing IM
+                {
                     tabbedPane.remove(channel);
                 }
                 
-                if (title.startsWith("#")) 
-                try { //closing channel
-                    channel.connection.send("PART "+title);
-                    return;
-                } catch (IOException ex) {
-                    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (BadLocationException ex) {
-                    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                if (name.startsWith("#")) //closing channel
+                {
+                    try { 
+                        channel.connection.send("PART "+name);
+                        return;
+                    } catch (IOException | BadLocationException ex) {
+                        Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
-                
-                if (title.equals(channel.server)){ //closing server
+                if (name.equals(channel.server)) //closing server
+                { 
                     int warning = JOptionPane.showConfirmDialog(null, "Do you wish to disconnect from "+channel.server+"? All tabs will be closed.", "Are you sure?", JOptionPane.WARNING_MESSAGE);
                     if (warning == JOptionPane.CANCEL_OPTION || warning == JOptionPane.CLOSED_OPTION) return;
                     for (int i = 0; i < tabbedPane.getTabCount(); i++)
                     {
                         ChannelPanel c = (ChannelPanel)tabbedPane.getComponentAt(i);
-                        if (c.server.equals(channel.server)){
+                        if (c.server.equals(channel.server))
+                        {
                             tabbedPane.remove(i);
                             i--;
                         }
