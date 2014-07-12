@@ -68,7 +68,7 @@ public class GUI extends JFrame {
         
         
         chatInputPane = new JTextField();
-        tabbedPane = new JTabbedPane();
+        tabbedPane = new IRCTabbedPane();
         jSplitPane1 = new JSplitPane();
         jScrollPane2 = new JScrollPane();
         jScrollPane1 = new JScrollPane();
@@ -885,38 +885,12 @@ public class GUI extends JFrame {
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 chatInputPaneKeyPressed(evt);
             }
-        });
-        
-        
-        tabbedPane.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                JTabbedPane tabs = (JTabbedPane)e.getSource();
-                int indexOfTab = tabs.indexAtLocation(e.getX(), e.getY());
-                if (indexOfTab == -1) return;
-                final ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfTab);
-                
-                if (SwingUtilities.isRightMouseButton(e))
-                {
-                    JPopupMenu popupMenu = new JPopupMenu();
-                    JMenuItem closeButton = new JMenuItem("Close");                   
-                    closeButton.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            channel.closeTab();
-                        }
-                    });
-                popupMenu.add(closeButton);
-                popupMenu.show(e.getComponent(), e.getX(), e.getY()-20); 
-                }    
-            }  
-        });
-        
+        });        
         
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         tabbedPane.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
-        tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+        tabbedPane.setTabLayoutPolicy(JTabbedPane.WRAP_TAB_LAYOUT);
         tabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
         tabbedPane.setToolTipText("");
         tabbedPane.setCursor(new java.awt.Cursor(Cursor.DEFAULT_CURSOR)); //cursor necessary?
@@ -1247,7 +1221,7 @@ public class GUI extends JFrame {
     private JScrollPane jScrollPane2;
     private JSplitPane jSplitPane1;
     private static JLabel tabInfo;
-    private static JTabbedPane tabbedPane;
+    private static IRCTabbedPane tabbedPane;
     private JTextPane userListPane;
     
     private JMenuItem copyAction;
