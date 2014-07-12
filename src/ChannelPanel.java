@@ -36,8 +36,7 @@ import org.apache.commons.lang3.StringUtils;
         static String awayMessage = "Reason";
         static String CTCPFingerMessage = "this is the finger message", CTCPUserInfo = "user info string";
         int listSelectedIndex = -1;
-        boolean rem = false;
-        boolean add = false;
+        boolean enableNotifications = true;
         User selectedUser = null;
         
         Connection connection;
@@ -549,7 +548,7 @@ import org.apache.commons.lang3.StringUtils;
         }
         private void checkForActiveTab()
         {
-            if (!this.isShowing()) //check for foreground color?
+            if (!this.isShowing() && enableNotifications) //check for foreground color?
             { 
                 int totalTabs = tabbedPane.getTabCount();
                 int indexOfTab = -1;

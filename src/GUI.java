@@ -3,9 +3,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import javax.swing.*;
 import javax.swing.text.*;
 import java.util.*;
@@ -41,6 +38,7 @@ public class GUI extends JFrame {
     final static ImageIcon popupPingIcon = new ImageIcon("src/icons/network-transmit-2.png");
     final static ImageIcon popupVersionIcon = new ImageIcon("src/icons/help-about.png");
     final static ImageIcon channelListIcon = new ImageIcon("src/icons/view-list-details-5.png");
+    final static ImageIcon checkedBoxIcon = new ImageIcon("src/icons/checkbox-2.png");
 
 
     
@@ -890,7 +888,7 @@ public class GUI extends JFrame {
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         tabbedPane.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
-        tabbedPane.setTabLayoutPolicy(JTabbedPane.WRAP_TAB_LAYOUT);
+        tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
         tabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
         tabbedPane.setToolTipText("");
         tabbedPane.setCursor(new java.awt.Cursor(Cursor.DEFAULT_CURSOR)); //cursor necessary?
