@@ -3,6 +3,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import javax.swing.*;
 import javax.swing.text.*;
 import java.util.*;
@@ -129,6 +132,7 @@ public class GUI extends JFrame {
         fileMenu.add(new JSeparator());
         quitProgram = new JMenuItem("Quit", quitProgramIcon);
         fileMenu.add(quitProgram);
+
         
         showNickList.addActionListener(new ActionListener() {
             @Override
@@ -363,39 +367,7 @@ public class GUI extends JFrame {
                 if (index == -1) return;
                 ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
                 if (channel == null) return;
-                String name = channel.name;         
- 
-                if (!name.startsWith("#") && !name.equals(channel.server)) //closing IM
-                {
-                    tabbedPane.remove(channel);
-                }
-                
-                if (name.startsWith("#")) //closing channel
-                {
-                    try { 
-                        channel.connection.send("PART "+name);
-                        return;
-                    } catch (IOException | BadLocationException ex) {
-                        Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-                if (name.equals(channel.server)) //closing server
-                { 
-                    int warning = JOptionPane.showConfirmDialog(null, "Do you wish to disconnect from "+channel.server+"? All tabs will be closed.", "Are you sure?", JOptionPane.WARNING_MESSAGE);
-                    if (warning == JOptionPane.CANCEL_OPTION || warning == JOptionPane.CLOSED_OPTION) return;
-                    for (int i = 0; i < tabbedPane.getTabCount(); i++)
-                    {
-                        ChannelPanel c = (ChannelPanel)tabbedPane.getComponentAt(i);
-                        if (c.server.equals(channel.server))
-                        {
-                            tabbedPane.remove(i);
-                            i--;
-                        }
-                    }       
-                    tabbedPane.remove(channel);
-                    channel.connection.disconnect();
-                    return;
-                }
+                channel.closeTab();
             }
         });
         channelList.addActionListener(new ActionListener() {
@@ -916,6 +888,30 @@ public class GUI extends JFrame {
         });
         
         
+        tabbedPane.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                JTabbedPane tabs = (JTabbedPane)e.getSource();
+                int indexOfTab = tabs.indexAtLocation(e.getX(), e.getY());
+                if (indexOfTab == -1) return;
+                final ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfTab);
+                
+                if (SwingUtilities.isRightMouseButton(e))
+                {
+                    JPopupMenu popupMenu = new JPopupMenu();
+                    JMenuItem closeButton = new JMenuItem("Close");                   
+                    closeButton.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            channel.closeTab();
+                        }
+                    });
+                popupMenu.add(closeButton);
+                popupMenu.show(e.getComponent(), e.getX(), e.getY()-20); 
+                }    
+            }  
+        });
+        
         
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
@@ -1228,7 +1224,7 @@ public class GUI extends JFrame {
         serializeSavedConnections();
         return;
     }
-    
+
     
     
     public static void main(String args[]) {

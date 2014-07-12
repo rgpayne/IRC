@@ -256,7 +256,41 @@ import org.apache.commons.lang3.StringUtils;
         caret = (DefaultCaret)chatPane.getCaret();
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
         }
-        
+        public void closeTab()
+        {
+            String name = this.name;         
+
+            if (!name.startsWith("#") && !name.equals(this.server)) //closing IM
+            {
+                tabbedPane.remove(this);
+            }
+
+            if (name.startsWith("#")) //closing channel
+            {
+                try { 
+                    this.connection.send("PART "+name);
+                    return;
+                } catch (IOException | BadLocationException ex) {
+                    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            if (name.equals(this.server)) //closing server
+            { 
+                int warning = JOptionPane.showConfirmDialog(null, "Do you wish to disconnect from "+this.server+"? All tabs will be closed.", "Are you sure?", JOptionPane.WARNING_MESSAGE);
+                if (warning == JOptionPane.CANCEL_OPTION || warning == JOptionPane.CLOSED_OPTION) return;
+                for (int i = 0; i < tabbedPane.getTabCount(); i++)
+                {
+                    ChannelPanel c = (ChannelPanel)tabbedPane.getComponentAt(i);
+                    if (c.server.equals(this.server))
+                    {
+                        tabbedPane.remove(i);
+                        i--;
+                    }
+                }       
+                tabbedPane.remove(this);
+                this.connection.disconnect();
+            }
+        }
         public void setStyles() //TODO: static styles so we dont have to decode on every insertString
         {
         style = sc.addStyle("DefaultStyle", null);

@@ -1,4 +1,3 @@
-import java.awt.*;
 import javax.swing.text.BadLocationException;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
