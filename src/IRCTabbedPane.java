@@ -43,6 +43,7 @@ public class IRCTabbedPane extends JTabbedPane{
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     int thisIndex = index;
+                    int selectedIndex = getSelectedIndex();
                     if (thisIndex <= 0) return;
                     ChannelPanel moved = (ChannelPanel)getComponentAt(thisIndex);
                     Color c = getForegroundAt(thisIndex);
@@ -50,9 +51,7 @@ public class IRCTabbedPane extends JTabbedPane{
                     add(moved,thisIndex-1);
                     setTitleAt(thisIndex-1, label);
                     setForegroundAt(thisIndex-1, c);
-                    System.out.println(getSelectedIndex()+" "+thisIndex);
-                    if (getSelectedIndex() == thisIndex) setSelectedIndex(thisIndex-1);
-                    //broken
+                    if (selectedIndex == thisIndex) setSelectedIndex(thisIndex-1);
                     return;             
                 }
             });
@@ -60,6 +59,7 @@ public class IRCTabbedPane extends JTabbedPane{
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     int thisIndex = index+1;
+                    int selectedIndex = getSelectedIndex();
                     if (thisIndex >= getTabCount()) return;
                     ChannelPanel moved = (ChannelPanel)getComponentAt(thisIndex);
                     Color c = getForegroundAt(thisIndex);
@@ -67,9 +67,7 @@ public class IRCTabbedPane extends JTabbedPane{
                     add(moved,thisIndex-1);
                     setTitleAt(thisIndex-1, label);
                     setForegroundAt(thisIndex-1, c);
-                    if (getSelectedIndex() == thisIndex) setSelectedIndex(thisIndex);
-                    if ((getSelectedIndex() - index) == 1)
-                    //broken
+                    if (selectedIndex == thisIndex) setSelectedIndex(thisIndex-1);
                     return;                
                 }
             });

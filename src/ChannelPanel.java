@@ -239,20 +239,7 @@ import org.apache.commons.lang3.StringUtils;
             setRightComponent(null);
             setDividerSize(0);
         }
-        ChangeListener changeListener = new ChangeListener(){
-            @Override
-            public void stateChanged(ChangeEvent changeEvent)
-            {
-                JTabbedPane pane = (JTabbedPane)changeEvent.getSource();
-                int index = pane.getSelectedIndex();
-                if (pane == null || index == -1) return;
-                ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(index);
-                if (!channel.connection.isConnected) pane.setForegroundAt(index, Color.gray);
-                else pane.setForegroundAt(index, Color.BLACK);
-                updateTabInfo();
-            }          
-        };
-        tabbedPane.addChangeListener(changeListener);   
+  
         
         caret = (DefaultCaret)chatPane.getCaret();
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);

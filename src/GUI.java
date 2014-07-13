@@ -8,6 +8,8 @@ import javax.swing.text.*;
 import java.util.*;
 import java.util.logging.*;
 import java.io.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
@@ -595,7 +597,7 @@ public class GUI extends JFrame {
                 }
             }
         });
-        
+
         //QUICK CONNECT
         quickConnect.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e)
@@ -887,7 +889,41 @@ public class GUI extends JFrame {
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 chatInputPaneKeyPressed(evt);
             }
-        });        
+        });    
+        ChangeListener changeListener = new ChangeListener(){
+            @Override
+            public void stateChanged(ChangeEvent changeEvent)
+            {
+                JTabbedPane pane = (JTabbedPane)changeEvent.getSource();
+                int index = pane.getSelectedIndex();
+                if (pane == null || index == -1) return;
+                ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(index);
+                if (!channel.connection.isConnected) pane.setForegroundAt(index, Color.gray);
+                else pane.setForegroundAt(index, Color.BLACK);
+                if (index == 0)
+                {
+                    moveTabLeft.setForeground(Color.gray);
+                    previousTab.setForeground(Color.gray);
+                }
+                else
+                {
+                    moveTabLeft.setForeground(Color.black);
+                    previousTab.setForeground(Color.black);                     
+                }
+                if (index == tabbedPane.getTabCount()-1)
+                {
+                    moveTabRight.setForeground(Color.gray);
+                    nextTab.setForeground(Color.gray);
+                }
+                else 
+                {
+                    moveTabRight.setForeground(Color.black);
+                    nextTab.setForeground(Color.black);
+                }
+                channel.updateTabInfo();
+            }          
+        };
+        tabbedPane.addChangeListener(changeListener);   
         
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
@@ -979,12 +1015,11 @@ public class GUI extends JFrame {
         for (int i = 0; i < savedConnections.size(); i++)
         {
             SavedConnection conn = savedConnections.get(i);
-            if (conn.retrieveAutoConnect() == true){
+            if (conn.retrieveAutoConnect() == true)
+            {
                 new Connection(conn.retrieveName(), conn.retrieveServer(), conn.retrievePort(), true);
             }
-            
         }
-
     }
     public static void serializeSavedConnections()
     {
