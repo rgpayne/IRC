@@ -26,6 +26,7 @@ public class Connection implements Runnable{
     static JTabbedPane tabbedPane;
     static JLabel tabInfo;
     ArrayList<ListChannel> channelList = new ArrayList<ListChannel>();
+    boolean isConnected;
     
 
     public Connection(String title, String server, int port)
@@ -1503,6 +1504,7 @@ public class Connection implements Runnable{
     {
         try {
             this.socket.close();
+            this.isConnected = false;
             Thread.currentThread().interrupt();
         } catch (IOException ex) {
             //do nothing
@@ -1518,6 +1520,7 @@ public class Connection implements Runnable{
             String line;
             while (socket.isConnected())
             {
+                isConnected = true;
                 send("NICK "+nicks[0]);
                 send("USER "+nicks[0]+"123"+" 8 * : "+real);
                 while ((line = reader.readLine()) != null)

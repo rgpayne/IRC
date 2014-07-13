@@ -246,7 +246,9 @@ import org.apache.commons.lang3.StringUtils;
                 JTabbedPane pane = (JTabbedPane)changeEvent.getSource();
                 int index = pane.getSelectedIndex();
                 if (pane == null || index == -1) return;
-                pane.setForegroundAt(index, Color.BLACK);
+                ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(index);
+                if (!channel.connection.isConnected) pane.setForegroundAt(index, Color.gray);
+                else pane.setForegroundAt(index, Color.BLACK);
                 updateTabInfo();
             }          
         };
@@ -546,8 +548,32 @@ import org.apache.commons.lang3.StringUtils;
             doc.insertString(doc.getLength(), "\n", ctcpStyle);
             checkForActiveTab();
         }
-        private void checkForActiveTab()
+        public void checkForActiveTab()
         {
+            if (!this.connection.isConnected)
+            { 
+                int totalTabs = tabbedPane.getTabCount();
+                int indexOfTab = -1;
+                for (int i = 0; i < totalTabs; i++)
+                {
+                    ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
+
+                    String channelName = channel.name;
+                    if (channelName.equalsIgnoreCase(this.name))
+                    {
+                        indexOfTab = i;
+                        break;
+                    }
+                }
+                final int ind = indexOfTab;
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        tabbedPane.setForegroundAt(ind, Color.gray);
+                    }
+                });
+                return;
+            }
             if (!this.isShowing() && enableNotifications) //check for foreground color?
             { 
                 int totalTabs = tabbedPane.getTabCount();

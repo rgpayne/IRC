@@ -1,11 +1,16 @@
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 import javax.swing.JTabbedPane;
+import javax.swing.text.BadLocationException;
 
 public class IRCTabbedPane extends JTabbedPane{
  
@@ -40,9 +45,14 @@ public class IRCTabbedPane extends JTabbedPane{
                     int thisIndex = index;
                     if (thisIndex <= 0) return;
                     ChannelPanel moved = (ChannelPanel)getComponentAt(thisIndex);
+                    Color c = getForegroundAt(thisIndex);
                     String label = getTitleAt(thisIndex);
                     add(moved,thisIndex-1);
                     setTitleAt(thisIndex-1, label);
+                    setForegroundAt(thisIndex-1, c);
+                    System.out.println(getSelectedIndex()+" "+thisIndex);
+                    if (getSelectedIndex() == thisIndex) setSelectedIndex(thisIndex-1);
+                    //broken
                     return;             
                 }
             });
@@ -52,9 +62,14 @@ public class IRCTabbedPane extends JTabbedPane{
                     int thisIndex = index+1;
                     if (thisIndex >= getTabCount()) return;
                     ChannelPanel moved = (ChannelPanel)getComponentAt(thisIndex);
+                    Color c = getForegroundAt(thisIndex);
                     String label = getTitleAt(thisIndex);
                     add(moved,thisIndex-1);
                     setTitleAt(thisIndex-1, label);
+                    setForegroundAt(thisIndex-1, c);
+                    if (getSelectedIndex() == thisIndex) setSelectedIndex(thisIndex);
+                    if ((getSelectedIndex() - index) == 1)
+                    //broken
                     return;                
                 }
             });
@@ -64,11 +79,56 @@ public class IRCTabbedPane extends JTabbedPane{
                     channel.enableNotifications = !channel.enableNotifications;
                 }
             });
-            
         popupMenu.add(enableNotificationsButton);
         if (channel.name.equals(channel.server))
         {
             JMenuItem disconnectButton = new JMenuItem("Disconnect", GUI.disconnectIcon);
+            disconnectButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                channel.model.removeAll();
+                channel.connection.disconnect();
+                for (int i = 0; i < getTabCount(); i++)
+                {
+                    ChannelPanel otherChannel = (ChannelPanel)getComponentAt(i);
+
+                    if (otherChannel.name.equals(channel.server))
+                    {
+                        try {
+                            String[] msg = {null, "[Info] Disconnected from "+otherChannel.server+" (port "+otherChannel.connection.port+")"};
+                            otherChannel.insertString(msg, ChannelPanel.serverStyle, false);
+                            continue;
+                        } catch (BadLocationException ex) {
+                            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                        } catch (IOException ex) {
+                            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                    if (otherChannel.connection == channel.connection)
+                    {
+                        setForegroundAt(i, Color.gray);
+                        otherChannel.model.removeAll();
+                    }
+
+                }
+                channel.updateTabInfo();
+                return;
+                }
+            });
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
             JMenuItem reconnectButton = new JMenuItem("Reconnect", GUI.reconnectIcon);
             JMenuItem joinChannelButton = new JMenuItem("Join Channel", GUI.joinChannelIcon);
             popupMenu.add(disconnectButton);

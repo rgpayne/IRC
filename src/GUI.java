@@ -338,10 +338,12 @@ public class GUI extends JFrame {
                 int index = tabbedPane.getSelectedIndex();
                 if (index <= 0) return;
                 ChannelPanel moved = (ChannelPanel)tabbedPane.getComponentAt(index);
+                Color c = tabbedPane.getForegroundAt(index);
                 String label = tabbedPane.getTitleAt(index);
                 tabbedPane.add(moved,index-1);
                 tabbedPane.setTitleAt(index-1, label);
                 tabbedPane.setSelectedComponent(moved);
+                tabbedPane.setForegroundAt(index-1, c);
                 return;
             }
         });
@@ -351,10 +353,12 @@ public class GUI extends JFrame {
                 int index = tabbedPane.getSelectedIndex()+1;
                 if (index >= tabbedPane.getTabCount()) return;
                 ChannelPanel moved = (ChannelPanel)tabbedPane.getComponentAt(index);
+                Color c = tabbedPane.getForegroundAt(index);
                 String label = tabbedPane.getTitleAt(index);
                 tabbedPane.add(moved,index-1);
                 tabbedPane.setTitleAt(index-1, label);
                 tabbedPane.setSelectedIndex(index);
+                tabbedPane.setForegroundAt(index-1, c);
                 return;               
             }
         });
