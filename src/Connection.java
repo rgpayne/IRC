@@ -143,8 +143,6 @@ public class Connection implements Runnable{
                                        ChannelPanel channel = new ChannelPanel(channelName2, channelName2, currentNick, Connection.this);
                                        String[] msg = {null, "You ("+parser.getPrefix()+") have joined "+parser.getParams().trim().substring(1)+"."};
                                        channel.insertString(msg, ChannelPanel.connectStyle, false);
-                                       int newTabIndex = findTab(channel.name, Connection.this);
-                                       tabbedPane.setSelectedIndex(newTabIndex);
                                    } catch (BadLocationException | IOException ex) {
                                        Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
                                    }

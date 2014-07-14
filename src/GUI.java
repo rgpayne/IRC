@@ -534,6 +534,7 @@ public class GUI extends JFrame {
                 int index = tabbedPane.getSelectedIndex();
                 if (index == -1) return;
                 ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+                if (!channel.connection.isConnected) return;
                 channel.model.removeAll();
                 channel.connection.disconnect();
                 for (int i = 0; i < tabbedPane.getTabCount(); i++)
@@ -566,17 +567,26 @@ public class GUI extends JFrame {
         reconnect.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                
                 ChannelPanel selected = (ChannelPanel)tabbedPane.getSelectedComponent();
+                if (selected.connection.isConnected)
+                {
+                    selected.connection.disconnect();
+                }
+                
                 
                 for (int j = 0; j < tabbedPane.getTabCount(); j++)
                 {
-                    String title = tabbedPane.getTitleAt(j);
-                    if (title.equals(selected.server)){
+                    ChannelPanel otherChannel = (ChannelPanel)tabbedPane.getComponentAt(j);
+                    if (selected.connection == otherChannel.connection)
+                    {
                         selected.connection.thread = new Thread(selected.connection);
                         selected.connection.thread.start();
                         break;
                     }
                 }
+                selected.connection.autoconnect = false;
+
                 for (int i = 0; i < tabbedPane.getTabCount(); i++)
                 {
                     ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);

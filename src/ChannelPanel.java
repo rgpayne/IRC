@@ -264,8 +264,11 @@ import org.apache.commons.lang3.StringUtils;
             }
             if (name.equals(this.server)) //closing server
             { 
-                int warning = JOptionPane.showConfirmDialog(null, "Do you wish to disconnect from "+this.server+"? All tabs will be closed.", "Are you sure?", JOptionPane.WARNING_MESSAGE);
-                if (warning == JOptionPane.CANCEL_OPTION || warning == JOptionPane.CLOSED_OPTION) return;
+                if (this.connection.isConnected)
+                {
+                    int warning = JOptionPane.showConfirmDialog(null, "Do you wish to disconnect from "+this.server+"? All tabs will be closed.", "Are you sure?", JOptionPane.WARNING_MESSAGE);
+                    if (warning == JOptionPane.CANCEL_OPTION || warning == JOptionPane.CLOSED_OPTION) return;
+                }
                 for (int i = 0; i < tabbedPane.getTabCount(); i++)
                 {
                     ChannelPanel c = (ChannelPanel)tabbedPane.getComponentAt(i);
