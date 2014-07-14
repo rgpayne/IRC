@@ -1,6 +1,8 @@
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ContainerEvent;
+import java.awt.event.ContainerListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import javax.swing.*;
@@ -83,56 +85,76 @@ public class GUI extends JFrame {
         copyAction = new JMenuItem(new DefaultEditorKit.CopyAction());
         copyAction.setText("Copy");
         copyAction.setIcon(copyIcon);
+	//copyAction.setMnemonic(KeyEvent.VK_COPY);
         editMenu.add(copyAction);
         cutAction = new JMenuItem((new DefaultEditorKit.CutAction()));
         cutAction.setText("Cut");
         cutAction.setIcon(cutIcon);
+	//cutAction.setMnemonic(KeyEvent.VK_CUT);
         editMenu.add(cutAction);
         pasteAction = new JMenuItem(new DefaultEditorKit.PasteAction());
         pasteAction.setText("Paste");
         pasteAction.setIcon(pasteIcon);
+	//pasteAction.setMnemonic(KeyEvent.VK_PASTE);
         editMenu.add(pasteAction);
         editMenu.add(new JSeparator());
         clearWindow = new JMenuItem("Clear Window");
+	clearWindow.setMnemonic(KeyEvent.VK_C);
         editMenu.add (clearWindow);
         clearAllWindows = new JMenuItem("Clear All Windows");
+	clearAllWindows.setMnemonic(KeyEvent.VK_A);
         editMenu.add(clearAllWindows);      
         previousTab = new JMenuItem("Previous Tab", prevTabIcon);
+	previousTab.setMnemonic(KeyEvent.VK_P);
         windowMenu.add(previousTab);       
         nextTab = new JMenuItem("Next Tab", nextTabIcon);
+	nextTab.setMnemonic(KeyEvent.VK_N);
         windowMenu.add(nextTab);
         windowMenu.add(new JSeparator()); 
         moveTabLeft = new JMenuItem("Move Tab Left", moveTabLeftIcon);
+	moveTabLeft.setMnemonic(KeyEvent.VK_L);
         windowMenu.add(moveTabLeft);    
         moveTabRight = new JMenuItem("Move Tab Right", moveTabRightIcon);
+	moveTabRight.setMnemonic(KeyEvent.VK_R);
         windowMenu.add(moveTabRight);
         closeTab = new JMenuItem("Close Tab", closeTabIcon);
+	closeTab.setMnemonic(KeyEvent.VK_C);
         windowMenu.add(closeTab);
         windowMenu.add(new JSeparator());
         channelList = new JMenuItem("Channel List", channelListIcon);
+	channelList.setMnemonic(KeyEvent.VK_L);
         windowMenu.add(channelList);
         serverList = new JMenuItem("Server List", serverListIcon);
+	serverList.setMnemonic(KeyEvent.VK_L);
         fileMenu.add(serverList);
         quickConnect = new JMenuItem("Quick Connect", quickConnectIcon);
+	quickConnect.setMnemonic(KeyEvent.VK_Q);
         fileMenu.add(quickConnect);
         fileMenu.add(new JSeparator());
         disconnect = new JMenuItem("Disconnect", disconnectIcon);
+	disconnect.setMnemonic(KeyEvent.VK_D);
         fileMenu.add(disconnect);
         identities = new JMenuItem("Identities", identitiesIcon);
+	identities.setMnemonic(KeyEvent.VK_I);
         showNickList = new JMenuItem("Show/Hide Nicklist", showNicklistIcon);
+	showNickList.setMnemonic(KeyEvent.VK_N);
         settingsMenu.add(showNickList);
         settingsMenu.add(identities);        
         reconnect = new JMenuItem("Reconnect", reconnectIcon);
+	reconnect.setMnemonic(KeyEvent.VK_R);
         fileMenu.add(reconnect);
         joinChannel = new JMenuItem("Join Channel", joinChannelIcon);
+	joinChannel.setMnemonic(KeyEvent.VK_J);
         fileMenu.add(joinChannel);
         fileMenu.add(new JSeparator());
         globalAway = new JMenuItem("Global Away", globalAwayIcon);
+	globalAway.setMnemonic(KeyEvent.VK_A);
         fileMenu.add(globalAway);
         fileMenu.add(new JSeparator());
         quitProgram = new JMenuItem("Quit", quitProgramIcon);
+	quitProgram.setMnemonic(KeyEvent.VK_Q);
         fileMenu.add(quitProgram);
-
+	
         
         showNickList.addActionListener(new ActionListener() {
             @Override
@@ -148,16 +170,13 @@ public class GUI extends JFrame {
                             channel.setDividerLocation(0);
                         }
                         else
-                        {
-                            
+                        { 
                             channel.setRightComponent(channel.userListScrollPane);
                             channel.setDividerSize(5);
                             channel.setDividerLocation(540);
                         }
                     }                    
-                }
-                
-                   
+                }       
             }
         });
         globalAway.addActionListener(new ActionListener() {
@@ -193,7 +212,6 @@ public class GUI extends JFrame {
             }
         });
         quitProgram.addActionListener(new ActionListener() {
-
             @Override
             public void actionPerformed(ActionEvent e) {
                 System.exit(0);
@@ -491,6 +509,8 @@ public class GUI extends JFrame {
                         }
                     }
                 });
+		
+		
                 joinButton.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
@@ -515,6 +535,8 @@ public class GUI extends JFrame {
                         }
                     }
                 });
+		
+		
                 filterArea.addKeyListener(new KeyAdapter() {
                     @Override
                     public void keyPressed(KeyEvent e)
@@ -528,6 +550,7 @@ public class GUI extends JFrame {
 
             }
         });
+	
         disconnect.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -564,6 +587,7 @@ public class GUI extends JFrame {
                 return;
             }
         });
+	
         reconnect.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -664,6 +688,7 @@ public class GUI extends JFrame {
                 });
             }
         });
+	
         //IDENTITIES
         identities.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e)
@@ -720,6 +745,7 @@ public class GUI extends JFrame {
                 });
             }
         });
+	
         //SERVER LIST
         serverList.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e)
@@ -858,7 +884,8 @@ public class GUI extends JFrame {
                         serializeSavedConnections();
                         model.removeRowRange(modelIndex, modelIndex);
                     }
-                });                
+                });     
+		
                 connect.addActionListener(new ActionListener()
                 {
                     public void actionPerformed(ActionEvent e) 
@@ -894,12 +921,14 @@ public class GUI extends JFrame {
                 });
             }
         });
+	
         chatInputPane.addKeyListener(new KeyAdapter()
         {
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 chatInputPaneKeyPressed(evt);
             }
-        });    
+        });  
+	
         ChangeListener changeListener = new ChangeListener(){
             @Override
             public void stateChanged(ChangeEvent changeEvent)
@@ -933,7 +962,68 @@ public class GUI extends JFrame {
                 channel.updateTabInfo();
             }          
         };
-        tabbedPane.addChangeListener(changeListener);   
+        tabbedPane.addChangeListener(changeListener);
+	
+	ContainerListener containerListener = new ContainerListener() {
+	    @Override
+	    public void componentAdded(ContainerEvent e) {
+		int index = tabbedPane.getSelectedIndex();
+		if (index == -1) return;
+                ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(index);
+
+                if (index == 0)
+                {
+                    moveTabLeft.setForeground(Color.gray);
+                    previousTab.setForeground(Color.gray);
+                }
+                else
+                {
+                    moveTabLeft.setForeground(Color.black);
+                    previousTab.setForeground(Color.black);                     
+                }
+                if (index == tabbedPane.getTabCount()-1)
+                {
+                    moveTabRight.setForeground(Color.gray);
+                    nextTab.setForeground(Color.gray);
+                }
+                else 
+                {
+                    moveTabRight.setForeground(Color.black);
+                    nextTab.setForeground(Color.black);
+                }
+                channel.updateTabInfo();	    
+	    }
+
+	    @Override
+	    public void componentRemoved(ContainerEvent e) {
+		int index = tabbedPane.getSelectedIndex();
+		if (index == -1) return;
+                ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(index);
+
+                if (index == 0)
+                {
+                    moveTabLeft.setForeground(Color.gray);
+                    previousTab.setForeground(Color.gray);
+                }
+                else
+                {
+                    moveTabLeft.setForeground(Color.black);
+                    previousTab.setForeground(Color.black);                     
+                }
+                if (index == tabbedPane.getTabCount()-1)
+                {
+                    moveTabRight.setForeground(Color.gray);
+                    nextTab.setForeground(Color.gray);
+                }
+                else 
+                {
+                    moveTabRight.setForeground(Color.black);
+                    nextTab.setForeground(Color.black);
+                }
+                channel.updateTabInfo();		
+	    }
+	};
+	tabbedPane.addContainerListener(containerListener);
         
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
