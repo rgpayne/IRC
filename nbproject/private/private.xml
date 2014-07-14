@@ -5,7 +5,7 @@
         <group>
             <file>file:/home/ross/NetBeansProjects/IRC/src/Connection.java</file>
             <file>file:/home/ross/NetBeansProjects/IRC/src/GUI.java</file>
-            <file>file:/home/ross/NetBeansProjects/IRC/src/IRCTabbedPane.java</file>
+            <file>file:/home/ross/NetBeansProjects/IRC/src/DnDTabbedPane.java</file>
             <file>file:/home/ross/NetBeansProjects/IRC/src/ChannelPanel.java</file>
         </group>
     </open-files>

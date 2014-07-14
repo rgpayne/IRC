@@ -68,7 +68,7 @@ public class GUI extends JFrame {
         
         
         chatInputPane = new JTextField();
-        tabbedPane = new IRCTabbedPane();
+        tabbedPane = new DnDTabbedPane();
         jSplitPane1 = new JSplitPane();
         jScrollPane2 = new JScrollPane();
         jScrollPane1 = new JScrollPane();
@@ -1268,7 +1268,7 @@ public class GUI extends JFrame {
     private JScrollPane jScrollPane2;
     private JSplitPane jSplitPane1;
     private static JLabel tabInfo;
-    private static IRCTabbedPane tabbedPane;
+    private static DnDTabbedPane tabbedPane;
     private JTextPane userListPane;
     
     private JMenuItem copyAction;
