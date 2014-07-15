@@ -41,7 +41,6 @@ import org.apache.commons.lang3.StringUtils;
         
         Connection connection;
         
-        final JTextField chatInputPane = new JTextField();       
         final JTextPane chatPane = new JTextPane();
         final JList<User> userListPane;
         
@@ -87,6 +86,7 @@ import org.apache.commons.lang3.StringUtils;
             
             makePanel();
             makeHashMaps();
+	    GUI.loadKeyBinds(chatPane.getActionMap(), chatPane.getInputMap());
                        
             tabbedPane.add(this, this.title);       
         }

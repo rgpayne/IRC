@@ -60,6 +60,7 @@ public class GUI extends JFrame {
         
         loadProperties();
         initComponents();
+	loadKeyBinds(chatInputPane.getActionMap(), chatInputPane.getInputMap());
         ChannelPanel.tabbedPane = tabbedPane;
         Connection.tabbedPane = tabbedPane;
         ChannelPanel.tabInfo = tabInfo;
@@ -73,9 +74,6 @@ public class GUI extends JFrame {
         
         chatInputPane = new JTextField();
         tabbedPane = new DnDTabbedPane();
-        jSplitPane1 = new JSplitPane();
-        jScrollPane2 = new JScrollPane();
-        jScrollPane1 = new JScrollPane();
         userListPane = new JTextPane();
         tabInfo = new JLabel();
         jMenuBar2 = new JMenuBar();
@@ -265,48 +263,6 @@ public class GUI extends JFrame {
                 channel.updateTabInfo();		
 	    }
 	};
-		
-	
-	
-	ActionMap amap = chatInputPane.getActionMap();
-	amap.put("showNickList", showNickList.getAction());
-	amap.put("globalAway", globalAway.getAction());
-	amap.put("quitProgram", quitProgram.getAction());
-	amap.put("joinChannel", joinChannel.getAction());
-	amap.put("clearWindow", clearWindow.getAction());
-	amap.put("clearAllWindows", clearAllWindows.getAction());
-	amap.put("previousTab", previousTab.getAction());
-	amap.put("nextTab", nextTab.getAction());
-	amap.put("moveTabLeft", moveTabLeft.getAction());
-	amap.put("moveTabRight", moveTabRight.getAction());
-	amap.put("closeTab", closeTab.getAction());
-	amap.put("channelList", channelList.getAction());
-	amap.put("disconnect", disconnect.getAction());
-	amap.put("reconnect", reconnect.getAction());
-	amap.put("quickConnect", quickConnect.getAction());
-	amap.put("identities", identities.getAction());
-	amap.put("serverList", serverList.getAction());
-	
-	InputMap imap = chatInputPane.getInputMap();
-	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_H, Event.CTRL_MASK), "showNickList");
-	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK | Event.SHIFT_MASK), "globalAway");
-	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_Q, Event.CTRL_MASK), "quitProgram");
-	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_J, Event.CTRL_MASK), "joinChannel");
-	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_L, Event.CTRL_MASK), "clearWindow");
-	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_L, Event.CTRL_MASK | Event.SHIFT_MASK), "clearAllWindows");
-	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, Event.SHIFT_MASK), "previousTab");
-	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, Event.SHIFT_MASK), "nextTab");
-	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_W, Event.CTRL_MASK), "closeTab");
-	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, Event.CTRL_MASK), "moveTabLeft");
-	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, Event.CTRL_MASK), "moveTabRight");
-	imap.put(KeyStroke.getKeyStroke("F5"), "channelList");
-	imap.put(KeyStroke.getKeyStroke("F7"), "quickConnect");
-	imap.put(KeyStroke.getKeyStroke("F8"), "identities");
-	imap.put(KeyStroke.getKeyStroke("F2"), "serverList");
-
-	tabbedPane.getInputMap().setParent(imap);
-	tabbedPane.getActionMap().setParent(amap);
-	
 	
 	
 	tabbedPane.addContainerListener(containerListener);
@@ -321,20 +277,10 @@ public class GUI extends JFrame {
         tabbedPane.setFocusable(false);
         tabbedPane.setPreferredSize(new Dimension(600, 450));
 
-        jSplitPane1.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
-        jSplitPane1.setDividerLocation(480);
-        jSplitPane1.setResizeWeight(1.0);
-        jSplitPane1.setVerifyInputWhenFocusTarget(false);
-
-        
-        jSplitPane1.setLeftComponent(jScrollPane2);
         userListPane.setEditable(false);
         userListPane.setAutoscrolls(false);
         userListPane.setFocusable(false);
         userListPane.setMaximumSize(new Dimension(25, 25));
-        jScrollPane1.setViewportView(userListPane);
-
-        jSplitPane1.setRightComponent(jScrollPane1);
 
         tabInfo.setHorizontalAlignment(SwingConstants.RIGHT);
 
@@ -368,6 +314,42 @@ public class GUI extends JFrame {
                 .addComponent(tabInfo, javax.swing.GroupLayout.PREFERRED_SIZE, 18, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
         pack();
+    }
+    public static void loadKeyBinds(ActionMap amap, InputMap imap)
+    {
+	amap.put("showNickList", showNickList.getAction());
+	amap.put("globalAway", globalAway.getAction());
+	amap.put("quitProgram", quitProgram.getAction());
+	amap.put("joinChannel", joinChannel.getAction());
+	amap.put("clearWindow", clearWindow.getAction());
+	amap.put("clearAllWindows", clearAllWindows.getAction());
+	amap.put("previousTab", previousTab.getAction());
+	amap.put("nextTab", nextTab.getAction());
+	amap.put("moveTabLeft", moveTabLeft.getAction());
+	amap.put("moveTabRight", moveTabRight.getAction());
+	amap.put("closeTab", closeTab.getAction());
+	amap.put("channelList", channelList.getAction());
+	amap.put("disconnect", disconnect.getAction());
+	amap.put("reconnect", reconnect.getAction());
+	amap.put("quickConnect", quickConnect.getAction());
+	amap.put("identities", identities.getAction());
+	amap.put("serverList", serverList.getAction());
+	
+	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_H, Event.CTRL_MASK), "showNickList");
+	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK | Event.SHIFT_MASK), "globalAway");
+	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_Q, Event.CTRL_MASK), "quitProgram");
+	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_J, Event.CTRL_MASK), "joinChannel");
+	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_L, Event.CTRL_MASK), "clearWindow");
+	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_L, Event.CTRL_MASK | Event.SHIFT_MASK), "clearAllWindows");
+	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, Event.SHIFT_MASK), "previousTab");
+	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, Event.SHIFT_MASK), "nextTab");
+	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_W, Event.CTRL_MASK), "closeTab");
+	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, Event.CTRL_MASK), "moveTabLeft");
+	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, Event.CTRL_MASK), "moveTabRight");
+	imap.put(KeyStroke.getKeyStroke("F5"), "channelList");
+	imap.put(KeyStroke.getKeyStroke("F7"), "quickConnect");
+	imap.put(KeyStroke.getKeyStroke("F8"), "identities");
+	imap.put(KeyStroke.getKeyStroke("F2"), "serverList");		
     }
     private void loadProperties()
     {
@@ -639,33 +621,30 @@ public class GUI extends JFrame {
     private JMenu settingsMenu;
     private JMenu windowMenu;
     private JMenuBar jMenuBar2;
-    private JScrollPane jScrollPane1;
-    private JScrollPane jScrollPane2;
-    private JSplitPane jSplitPane1;
     private static JLabel tabInfo;
     private static DnDTabbedPane tabbedPane;
     private JTextPane userListPane;
     
-    private JMenuItem copyAction;
-    private JMenuItem cutAction;
-    private JMenuItem pasteAction;
-    private JMenuItem quickConnect;
-    private JMenuItem identities;
-    private JMenuItem serverList;
-    private JMenuItem clearWindow;
-    private JMenuItem clearAllWindows;
-    private JMenuItem showNickList;
-    private JMenuItem previousTab;
-    private JMenuItem nextTab;
-    private JMenuItem moveTabLeft;
-    private JMenuItem moveTabRight;
-    private JMenuItem closeTab;
-    private JMenuItem channelList;
-    private JMenuItem disconnect;
-    private JMenuItem reconnect;
-    private JMenuItem globalAway;
-    private JMenuItem joinChannel;
-    private JMenuItem quitProgram;
+    private static JMenuItem copyAction;
+    private static JMenuItem cutAction;
+    private static JMenuItem pasteAction;
+    private static JMenuItem quickConnect;
+    private static JMenuItem identities;
+    private static JMenuItem serverList;
+    private static JMenuItem clearWindow;
+    private static JMenuItem clearAllWindows;
+    private static JMenuItem showNickList;
+    private static JMenuItem previousTab;
+    private static JMenuItem nextTab;
+    private static JMenuItem moveTabLeft;
+    private static JMenuItem moveTabRight;
+    private static JMenuItem closeTab;
+    private static JMenuItem channelList;
+    private static JMenuItem disconnect;
+    private static JMenuItem reconnect;
+    private static JMenuItem globalAway;
+    private static JMenuItem joinChannel;
+    private static JMenuItem quitProgram;
     
     
     
@@ -1142,12 +1121,7 @@ public class GUI extends JFrame {
 	public void actionPerformed(ActionEvent e) {
 	    int index = tabbedPane.getSelectedIndex();
 	    if (index <= 0) return;
-	    ChannelPanel moved;
-	    try{
-	    moved = (ChannelPanel)tabbedPane.getComponentAt(index);
-	    }catch (ClassCastException cce){
-		return;
-	    }
+	    ChannelPanel moved = (ChannelPanel)tabbedPane.getComponentAt(index);
 	    Color c = tabbedPane.getForegroundAt(index);
 	    String label = tabbedPane.getTitleAt(index);
 	    tabbedPane.add(moved,index-1);
@@ -1170,13 +1144,7 @@ public class GUI extends JFrame {
 	public void actionPerformed(ActionEvent e) {
 	    int index = tabbedPane.getSelectedIndex()+1;
 	    if (index >= tabbedPane.getTabCount()) return;
-	    ChannelPanel moved;
-	    try{
-	    moved = (ChannelPanel)tabbedPane.getComponentAt(index);
-	    }catch (ClassCastException cce){
-		return;
-	    }
-	    
+	    ChannelPanel moved = (ChannelPanel)tabbedPane.getComponentAt(index);	    
 	    Color c = tabbedPane.getForegroundAt(index);
 	    String label = tabbedPane.getTitleAt(index);
 	    tabbedPane.add(moved,index-1);
