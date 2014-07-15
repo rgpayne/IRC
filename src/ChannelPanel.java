@@ -99,7 +99,6 @@ import org.apache.commons.lang3.StringUtils;
         userListPane.setAutoscrolls(false);
         userListPane.setFocusable(false);
         userListPane.setMaximumSize(new Dimension(25, 25));
-
         JPopupMenu popup = new JPopupMenu();
         JMenuItem popOpenQuery = new JMenuItem("Open Query", GUI.popupQueryIcon);
         JMenuItem popWhois = new JMenuItem("Whois", GUI.popupWhoisIcon);

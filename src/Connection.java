@@ -103,6 +103,13 @@ public class Connection implements Runnable{
         if (command.equals("ERROR"))
         {
             ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+	    if (channel == null)
+	    {
+                ChannelPanel cp = new ChannelPanel(Connection.this.title,"",currentNick, Connection.this);
+                String[] msg = {null, parser.getTrailing()};
+                cp.insertString(msg, ChannelPanel.connectStyle, false);
+                return;		
+	    }
             String[] msg = {null, parser.getTrailing()};
             channel.insertString(msg, ChannelPanel.errorStyle, false);
             return;            

@@ -58,6 +58,7 @@ class DnDTabbedPane extends JTabbedPane {
 
     public DnDTabbedPane() {
 	super();
+
 	final DragSourceListener dsl = new DragSourceListener() {
 	    @Override
 	    public void dragEnter(DragSourceDragEvent e) {
