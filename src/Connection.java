@@ -23,7 +23,7 @@ public class Connection implements Runnable{
     static String[] nicks = {"", "", ""};
     static String currentNick = "", real = "", awayMessage="";
     int port;
-    static JTabbedPane tabbedPane;
+    static DnDTabbedPane tabbedPane;
     static JLabel tabInfo;
     ArrayList<ListChannel> channelList = new ArrayList<ListChannel>();
     boolean isConnected;

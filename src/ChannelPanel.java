@@ -2,28 +2,14 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.*;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.SortedSet;
-import java.util.StringTokenizer;
-import java.util.TreeSet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.*;
+import java.util.logging.*;
+import java.util.regex.*;
 import javax.swing.*;
 import javax.swing.text.*;
-import javax.swing.event.*;
 import org.apache.commons.lang3.StringUtils;
 
     public class ChannelPanel extends JSplitPane{
@@ -44,9 +30,8 @@ import org.apache.commons.lang3.StringUtils;
         final JTextPane chatPane = new JTextPane();
         final JList<User> userListPane;
         
-        DefaultCaret caret;
         final JScrollPane userListScrollPane = new JScrollPane(), chatScrollPane = new JScrollPane();
-        static JTabbedPane tabbedPane;
+        static DnDTabbedPane tabbedPane;
         static JLabel tabInfo;
         
         SortedListModel<User> model = new SortedListModel<User>();
@@ -63,6 +48,8 @@ import org.apache.commons.lang3.StringUtils;
                            CTCP5 = Color.decode("#A52A2A"), CTCP6 = Color.decode("#800080"), CTCP7 = Color.decode("#FF8000"), CTCP8 = Color.decode("#808000"),
                            CTCP9 = Color.decode("#00FF00"), CTCP10 = Color.decode("#008080"), CTCP11 = Color.decode("#00FFFF"), CTCP12 = Color.decode("#0000FF"),
                            CTCP13 = Color.decode("#FFC0CB"), CTCP14 = Color.decode("#A0A0A0"), CTCP15 = Color.decode("#C0C0C0");
+	
+	
         final static Map CTCPMap = new HashMap(), chatColorMap = new HashMap(), userMap = new HashMap();
         boolean showTimestamp = true, chatNameColors = true;
         
@@ -240,7 +227,7 @@ import org.apache.commons.lang3.StringUtils;
         }
   
         
-        caret = (DefaultCaret)chatPane.getCaret();
+        DefaultCaret caret = (DefaultCaret)chatPane.getCaret();
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
         }
         public void closeTab()
@@ -281,7 +268,7 @@ import org.apache.commons.lang3.StringUtils;
                 this.connection.disconnect();
             }
         }
-        public void setStyles() //TODO: static styles so we dont have to decode on every insertString
+        public void setStyles()
         {
         style = sc.addStyle("DefaultStyle", null);
         chatStyle = sc.addStyle("DefaultStyle", style);

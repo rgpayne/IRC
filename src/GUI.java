@@ -1,24 +1,13 @@
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ContainerEvent;
-import java.awt.event.ContainerListener;
-import static java.awt.event.InputEvent.ALT_DOWN_MASK;
-import static java.awt.event.InputEvent.CTRL_DOWN_MASK;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.text.*;
 import java.util.*;
 import java.util.logging.*;
 import java.io.*;
-import static javax.swing.Action.MNEMONIC_KEY;
-import static javax.swing.Action.SHORT_DESCRIPTION;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.TableModel;
-import javax.swing.table.TableRowSorter;
+import static javax.swing.Action.*;
+import javax.swing.event.*;
+import javax.swing.table.*;
 import org.apache.commons.lang3.StringUtils;
 
 public class GUI extends JFrame {
@@ -48,11 +37,8 @@ public class GUI extends JFrame {
     final static ImageIcon channelListIcon = new ImageIcon("src/icons/view-list-details-5.png");
     final static ImageIcon checkedBoxIcon = new ImageIcon("src/icons/checkbox-2.png"); 
     
-    EditorKit editorKit;
-    Connection c;
     final static Properties prop = new Properties();
     static ArrayList<SavedConnection> savedConnections = new ArrayList<SavedConnection>();
-    OutputStream output = null;
 
     public GUI() {
         super("Alpha IRC 0.1");
@@ -87,14 +73,17 @@ public class GUI extends JFrame {
 	settingsMenu.setMnemonic('S');
         
         copyAction = new JMenuItem(new DefaultEditorKit.CopyAction());
+	copyAction.setAccelerator(KeyStroke.getKeyStroke('C', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
         copyAction.setText("Copy");
         copyAction.setIcon(copyIcon);
         editMenu.add(copyAction);
         cutAction = new JMenuItem((new DefaultEditorKit.CutAction()));
+	cutAction.setAccelerator(KeyStroke.getKeyStroke('X', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
         cutAction.setText("Cut");
         cutAction.setIcon(cutIcon);
         editMenu.add(cutAction);
         pasteAction = new JMenuItem(new DefaultEditorKit.PasteAction());
+	pasteAction.setAccelerator(KeyStroke.getKeyStroke('V', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
         pasteAction.setText("Paste");
         pasteAction.setIcon(pasteIcon);
         editMenu.add(pasteAction);
@@ -141,25 +130,39 @@ public class GUI extends JFrame {
 	
 
 	quitProgram.setAction(new QuitProgramAction("Quit", quitProgramIcon, null, KeyEvent.VK_Q));
+	quitProgram.setAccelerator(KeyStroke.getKeyStroke('Q', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
 	joinChannel.setAction(new JoinChannelAction("Join Channel", joinChannelIcon, null, KeyEvent.VK_J));
+	joinChannel.setAccelerator(KeyStroke.getKeyStroke('J', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
 	clearWindow.setAction(new ClearWindowAction("Clear Window", null, null, KeyEvent.VK_C));
+	clearWindow.setAccelerator(KeyStroke.getKeyStroke('L', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
 	clearAllWindows.setAction(new ClearAllWindowsAction("Clear All Windows", null, null, KeyEvent.VK_A));
 	clearAllWindows.setDisplayedMnemonicIndex(6);	
+	clearAllWindows.setAccelerator(KeyStroke.getKeyStroke('L', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() | Event.SHIFT_MASK, false));
 	previousTab.setAction(new PreviousTabAction("PreviousTab", prevTabIcon, null, KeyEvent.VK_P));
+	previousTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, Event.SHIFT_MASK, false));	
 	nextTab.setAction(new NextTabAction("Next Tab", nextTabIcon, null, KeyEvent.VK_N));
+	nextTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, Event.SHIFT_MASK, false));	
 	moveTabLeft.setAction(new MoveTabLeftAction("Move Tab Left",moveTabLeftIcon, null, KeyEvent.VK_L));
+	moveTabLeft.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
 	moveTabRight.setAction(new MoveTabRightAction("Move Tab Right", moveTabRightIcon, null, KeyEvent.VK_R));
+	moveTabRight.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
 	closeTab.setAction(new CloseTabAction("Close Tab", closeTabIcon, null, KeyEvent.VK_T));
+	closeTab.setAccelerator(KeyStroke.getKeyStroke('W', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
 	globalAway.setAction(new GlobalAwayAction("Global Away", globalAwayIcon, null, KeyEvent.VK_A));
 	globalAway.setDisplayedMnemonicIndex(7);      
-	disconnect.setAction(new DisconnectAction("Disconnect", disconnectIcon, null, KeyEvent.VK_D));
+	disconnect.setAction(new DisconnectAction("Disconnect", disconnectIcon, null, KeyEvent.VK_D));	
 	reconnect.setAction(new ReconnectAction("Reconnect", reconnectIcon, null, KeyEvent.VK_R));
 	quickConnect.setAction(new QuickConnectAction("Quick Connect", quickConnectIcon, null, KeyEvent.VK_Q));
+	quickConnect.setAccelerator(KeyStroke.getKeyStroke("F7"));	
 	showNickList.setAction(new ShowNickListAction("Show/Hide Nicklist", showNicklistIcon, null, KeyEvent.VK_N));
+	showNickList.setAccelerator(KeyStroke.getKeyStroke('H', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
 	identities.setAction(new IdentitiesAction("Identities", identitiesIcon, null, KeyEvent.VK_I));
+	identities.setAccelerator(KeyStroke.getKeyStroke("F2"));	
 	serverList.setAction(new ServerListAction("Server List", serverListIcon, null, KeyEvent.VK_L));
-	channelList.setAction(new ChannelListAction("Channel List", channelListIcon, null, KeyEvent.VK_L));
+	serverList.setAccelerator(KeyStroke.getKeyStroke("F2"));		
+	channelList.setAction(new ChannelListAction("Channel List", channelListIcon, null, KeyEvent.VK_C));
 	channelList.setDisplayedMnemonicIndex(8);
+	channelList.setAccelerator(KeyStroke.getKeyStroke("F5"));	
 
 	
 	chatInputPane.addKeyListener(new KeyAdapter()
@@ -173,7 +176,7 @@ public class GUI extends JFrame {
             @Override
             public void stateChanged(ChangeEvent changeEvent)
             {
-                JTabbedPane pane = (JTabbedPane)changeEvent.getSource();
+                DnDTabbedPane pane = (DnDTabbedPane)changeEvent.getSource();
                 int index = pane.getSelectedIndex();
                 if (pane == null || index == -1) return;
                 ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(index);
@@ -263,15 +266,13 @@ public class GUI extends JFrame {
                 channel.updateTabInfo();		
 	    }
 	};
-	
-	
 	tabbedPane.addContainerListener(containerListener);
         
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         tabbedPane.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
-        tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
-        tabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
+        tabbedPane.setTabLayoutPolicy(DnDTabbedPane.SCROLL_TAB_LAYOUT);
+        tabbedPane.setTabPlacement(DnDTabbedPane.BOTTOM);
         tabbedPane.setToolTipText("");
         tabbedPane.setCursor(new java.awt.Cursor(Cursor.DEFAULT_CURSOR)); //cursor necessary?
         tabbedPane.setFocusable(false);
@@ -335,17 +336,17 @@ public class GUI extends JFrame {
 	amap.put("identities", identities.getAction());
 	amap.put("serverList", serverList.getAction());
 	
-	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_H, Event.CTRL_MASK), "showNickList");
-	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK | Event.SHIFT_MASK), "globalAway");
-	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_Q, Event.CTRL_MASK), "quitProgram");
-	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_J, Event.CTRL_MASK), "joinChannel");
-	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_L, Event.CTRL_MASK), "clearWindow");
-	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_L, Event.CTRL_MASK | Event.SHIFT_MASK), "clearAllWindows");
+	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_H, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "showNickList");
+	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() | Event.SHIFT_MASK), "globalAway");
+	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_Q, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "quitProgram");
+	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_J, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "joinChannel");
+	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_L, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "clearWindow");
+	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_L, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() | Event.SHIFT_MASK), "clearAllWindows");
 	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, Event.SHIFT_MASK), "previousTab");
 	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, Event.SHIFT_MASK), "nextTab");
-	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_W, Event.CTRL_MASK), "closeTab");
-	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, Event.CTRL_MASK), "moveTabLeft");
-	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, Event.CTRL_MASK), "moveTabRight");
+	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_W, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "closeTab");
+	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "moveTabLeft");
+	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "moveTabRight");
 	imap.put(KeyStroke.getKeyStroke("F5"), "channelList");
 	imap.put(KeyStroke.getKeyStroke("F7"), "quickConnect");
 	imap.put(KeyStroke.getKeyStroke("F8"), "identities");
@@ -473,7 +474,7 @@ public class GUI extends JFrame {
                 }
             }
 
-            new Connection(name, chan, Integer.valueOf(p), false);
+            Connection c = new Connection(name, chan, Integer.valueOf(p), false);
             if (!pass.isEmpty()) c.password = pass;
         }
     }
@@ -489,15 +490,7 @@ public class GUI extends JFrame {
 
             } catch (IOException io) {
                 Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, io);
-            } finally {
-                if (output != null) {
-                    try {
-                        output.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
+            } 
         dialog.dispose();
 
     }
