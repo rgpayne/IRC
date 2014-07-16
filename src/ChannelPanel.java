@@ -87,7 +87,7 @@ import org.apache.commons.lang3.StringUtils;
 	    GUI.loadKeyBinds(chatPane.getActionMap(), chatPane.getInputMap());
 	    
 	   
-	    TextClickListener tcl = new TextClickListener(chatPane);
+	    TextClickListener tcl = new TextClickListener(chatPane, this.connection);
 	    TextMotionListener tml = new TextMotionListener(chatPane);
 	   chatPane.addMouseMotionListener(tml);
 	   chatPane.addMouseListener(tcl);
@@ -486,6 +486,37 @@ import org.apache.commons.lang3.StringUtils;
 		    if (token.startsWith(" #"))
 		    {
 			token = token.substring(1);
+		    }
+		    if (token.startsWith("#"))
+		    {
+			int[] ind = {token.indexOf('.'),
+				     token.indexOf(','),
+				     token.indexOf(':'),
+				     token.indexOf(';'),
+				     token.indexOf('<'),
+				     token.indexOf('>'),
+				     token.indexOf('?'),
+				     token.indexOf('/'),
+				     token.indexOf('\''),
+				     token.indexOf('"'),
+				     token.indexOf(' ')	};
+			
+			int min = Integer.MAX_VALUE;
+			for (int i = 0; i < ind.length; i++)
+			{
+			    if (ind[i] == -1) continue;
+			    min = Math.min(ind[i], min);
+			}
+			if (min == Integer.MAX_VALUE)
+			{
+			    doc.insertString(doc.getLength(), token, hyperlinkUnclickedStyle);
+			    continue;  
+			}
+			String channel = token.substring(0, min);
+			doc.insertString(doc.getLength(), channel, hyperlinkUnclickedStyle);
+			String rest = token.substring(min);
+			doc.insertString(doc.getLength(), rest, givenStyle);
+			continue;
 		    }
 		    int indexOfSpace = token.indexOf(" ");
 		    if (indexOfSpace == -1)
@@ -931,15 +962,17 @@ class TextMotionListener extends MouseInputAdapter {
 
  class TextClickListener extends MouseAdapter {
      JTextPane textPane;
-     public TextClickListener(JTextPane textPane)
+     Connection connection;
+     public TextClickListener(JTextPane textPane, Connection connection)
      {
 	 this.textPane = textPane;
+	 this.connection = connection;
      }
 	 public void mouseClicked( MouseEvent e ) {
 	  try{
 	       Element elem = textPane.getStyledDocument().getCharacterElement(textPane.viewToModel(e.getPoint()));	       
 	       boolean contains = elem.getAttributes().containsAttributes(ChannelPanel.hyperlinkUnclickedStyle);
-	        if(contains)
+	       if(contains)
 	        {
 		    StyledDocument document = textPane.getStyledDocument();
 		    Point pt = new Point(e.getX(), e.getY());
@@ -969,7 +1002,7 @@ class TextMotionListener extends MouseInputAdapter {
 			backwardsClickPoint--;
 		    }
 		    System.out.println("URL: "+URLString);
-		    URLLinkAction linkAction = new URLLinkAction(URLString);
+		    URLLinkAction linkAction = new URLLinkAction(URLString, connection);
 		    linkAction.execute();
 	      }
 	  }
@@ -981,16 +1014,25 @@ class TextMotionListener extends MouseInputAdapter {
 
      class URLLinkAction extends AbstractAction{
           private String url;
+	  private Connection connection;
 
-          URLLinkAction(String bac)
+          URLLinkAction(String bac, Connection connection)
           {
                url=bac;
+	       this.connection = connection;
           }
 
              protected void execute()
 	     {
-		 if (url.startsWith("#")) return;
-		 
+		 if (url.startsWith("#")) 
+		   try {
+		       connection.send("JOIN "+url);
+		 } catch (IOException ex) {
+		     Logger.getLogger(URLLinkAction.class.getName()).log(Level.SEVERE, null, ex);
+		 } catch (BadLocationException ex) {
+		     Logger.getLogger(URLLinkAction.class.getName()).log(Level.SEVERE, null, ex);
+		 }
+
 		 
 		 else {
 		    try {
