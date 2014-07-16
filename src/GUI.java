@@ -6,6 +6,7 @@ import java.util.*;
 import java.util.logging.*;
 import java.io.*;
 import static javax.swing.Action.*;
+import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.event.*;
 import javax.swing.table.*;
 import org.apache.commons.lang3.StringUtils;
@@ -43,7 +44,7 @@ public class GUI extends JFrame {
     public GUI() {
         super("Alpha IRC 0.1");
         setIconImage(mainIcon.getImage());
-        
+	
         loadProperties();
         initComponents();
 	loadKeyBinds(chatInputPane.getActionMap(), chatInputPane.getInputMap());
@@ -128,7 +129,6 @@ public class GUI extends JFrame {
         quitProgram = new JMenuItem();
         fileMenu.add(quitProgram);
 	
-
 	quitProgram.setAction(new QuitProgramAction("Quit", quitProgramIcon, null, KeyEvent.VK_Q));
 	quitProgram.setAccelerator(KeyStroke.getKeyStroke('Q', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
 	joinChannel.setAction(new JoinChannelAction("Join Channel", joinChannelIcon, null, KeyEvent.VK_J));

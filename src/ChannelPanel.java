@@ -1,16 +1,25 @@
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Point;
 import java.awt.event.*;
 import java.io.IOException;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.logging.*;
 import java.util.regex.*;
 import javax.swing.*;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
+import javax.swing.event.MouseInputAdapter;
 import javax.swing.text.*;
 import org.apache.commons.lang3.StringUtils;
+
+
+
 
     public class ChannelPanel extends JSplitPane{
            
@@ -40,7 +49,7 @@ import org.apache.commons.lang3.StringUtils;
         
         StyledDocument doc;  
         StyleContext sc = StyleContext.getDefaultStyleContext();
-        static Style style, chatStyle, timestampStyle, actionStyle, errorStyle, serverStyle, connectStyle, ctcpStyle, userNameStyle, disconnectStyle, joinStyle;
+        static Style style, chatStyle, timestampStyle, actionStyle, errorStyle, serverStyle, connectStyle, ctcpStyle, userNameStyle, disconnectStyle, joinStyle, hyperlinkUnclickedStyle;
         final static String errorColor = "#FF0000", chatColor="#000000", serverColor="#960096", connectColor="#993300", timestampColor="#909090";
         final static String actionColor = "#0000FF", disconnectColor = "#CAA234", joinColor = "#D46942";
         final static String font = "courier";
@@ -65,15 +74,24 @@ import org.apache.commons.lang3.StringUtils;
             doc = chatPane.getStyledDocument();
                     
             setStyles();
-            
+	    
+            PlainTextHyperlinkListener hyperlinkListener = new PlainTextHyperlinkListener(chatPane);
+	    chatPane.addHyperlinkListener(hyperlinkListener);
+	    
             chatPane.setDocument(doc);
             userListPane = new JList(model);
             if (showTimestamp == true) history = new ArrayList<String>();
             
-            
             makePanel();
             makeHashMaps();
 	    GUI.loadKeyBinds(chatPane.getActionMap(), chatPane.getInputMap());
+	    
+	   
+	    TextClickListener tcl = new TextClickListener(chatPane);
+	    TextMotionListener tml = new TextMotionListener(chatPane);
+	   chatPane.addMouseMotionListener(tml);
+	   chatPane.addMouseListener(tcl);
+	    
                        
             tabbedPane.add(this, this.title);       
         }
@@ -281,6 +299,7 @@ import org.apache.commons.lang3.StringUtils;
         userNameStyle = sc.addStyle("Defaultstyle", style);
         disconnectStyle = sc.addStyle("Defaultstyle", style);
         joinStyle = sc.addStyle("Defaultstyle", style);
+	hyperlinkUnclickedStyle = sc.addStyle("DefaultStyle", style);
         
         StyleConstants.setFontFamily(style, font);
         StyleConstants.setFontSize(style, 12);
@@ -292,6 +311,8 @@ import org.apache.commons.lang3.StringUtils;
         StyleConstants.setForeground(connectStyle, Color.decode(connectColor));  
         StyleConstants.setForeground(disconnectStyle, Color.decode(disconnectColor));
         StyleConstants.setForeground(joinStyle, Color.decode(joinColor));
+	StyleConstants.setForeground(hyperlinkUnclickedStyle,(Color.blue));
+	StyleConstants.setUnderline(hyperlinkUnclickedStyle, true);
         }
         public void makeHashMaps()
         {
@@ -373,6 +394,11 @@ import org.apache.commons.lang3.StringUtils;
                 insertCTCPColoredString(line, givenStyle);
                 return;
             }
+	    if (line[1].contains("http://") || line[1].contains("https://"))
+	    {
+		insertCTCPColoredString(line, givenStyle);
+		return;
+	    }
             if (showTimestamp == true)
             {
                 String timestamp = makeTimestamp();
@@ -449,6 +475,11 @@ import org.apache.commons.lang3.StringUtils;
                     ctcpStyle = sc.addStyle("Defaultstyle", givenStyle);
                     continue;
                 }
+		if (token.startsWith("https://") || token.startsWith("http://"))
+		{
+		    doc.insertString(doc.getLength(), token, hyperlinkUnclickedStyle);
+		    continue;
+		}
                 if (token.equals(Connection.CTCP_COLOR_DELIM))
                 {
                     if (st.hasMoreTokens())
@@ -842,3 +873,110 @@ class PopupListener extends MouseAdapter {
         }
     }
 }
+
+class PlainTextHyperlinkListener implements HyperlinkListener {
+  JTextPane textPane;
+
+  public PlainTextHyperlinkListener(JTextPane textPane) {
+    this.textPane = textPane;
+  }
+
+  public void hyperlinkUpdate(HyperlinkEvent evt) {
+    HyperlinkEvent.EventType type = evt.getEventType();
+    final URL url = evt.getURL();
+    System.out.println(evt.getURL());
+    if (type == HyperlinkEvent.EventType.ENTERED) {
+      System.out.println("URL: " + url);
+    } else if (type == HyperlinkEvent.EventType.ACTIVATED) {
+      System.out.println("Activated");
+
+    }
+  }
+}
+
+class TextMotionListener extends MouseInputAdapter {
+    JTextPane textPane;
+    public TextMotionListener(JTextPane textPane)
+    {
+	this.textPane = textPane;
+    }
+  public void mouseMoved(MouseEvent e) {
+       Element elem = textPane.getStyledDocument().getCharacterElement(textPane.viewToModel(e.getPoint()));
+       AttributeSet as = elem.getAttributes();
+       if(StyleConstants.isUnderline(as))
+	    textPane.setCursor(new Cursor(Cursor.HAND_CURSOR));
+       else
+	    textPane.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+  }
+}
+
+ class TextClickListener extends MouseAdapter {
+     JTextPane textPane;
+     public TextClickListener(JTextPane textPane)
+     {
+	 this.textPane = textPane;
+     }
+	 public void mouseClicked( MouseEvent e ) {
+	  try{
+	       Element elem = textPane.getStyledDocument().getCharacterElement(textPane.viewToModel(e.getPoint()));
+	       AttributeSet as = elem.getAttributes();
+	       boolean contains = elem.getAttributes().containsAttributes(ChannelPanel.hyperlinkUnclickedStyle);
+       	       
+	      if(contains)
+	      {
+		Point pt = new Point(e.getX(), e.getY());
+		int pos = textPane.viewToModel(pt);
+		int pos2 = textPane.getStyledDocument().getLength() - pos;
+	          String url = textPane.getStyledDocument().getText(pos,pos2);
+	          //URLLinkAction linkAction = new URLLinkAction(action);
+		  System.out.println(url);
+		  //linkAction.execute();
+	      }
+	  }
+	  catch(Exception x) {
+	       x.printStackTrace();
+	  }
+	 }
+    }
+
+     class URLLinkAction extends AbstractAction{
+          private String url;
+
+          URLLinkAction(String bac)
+          {
+               url=bac;
+          }
+
+             protected void execute() {
+                      try {
+                           String osName = System.getProperty("os.name").toLowerCase();
+                          Runtime rt = Runtime.getRuntime();
+                    if (osName.indexOf( "win" ) >= 0) {
+                               rt.exec( "rundll32 url.dll,FileProtocolHandler " + url);
+                          }
+                                else if (osName.indexOf("mac") >= 0) {
+                                  rt.exec( "open " + url);
+                    }
+                  
+                          else if (osName.indexOf("ix") >=0 || osName.indexOf("ux") >=0 || osName.indexOf("sun") >=0) {
+                               String[] browsers = {"epiphany", "firefox", "mozilla", "konqueror",
+                                 "netscape","opera","links","lynx"};
+
+                               // Build a command string which looks like "browser1 "url" || browser2 "url" ||..."
+                               StringBuffer cmd = new StringBuffer();
+                               for (int i = 0 ; i < browsers.length ; i++)
+                                    cmd.append((i == 0  ? "" : " || " ) + browsers[i] +" \"" + url + "\" ");
+
+                               rt.exec(new String[] { "sh", "-c", cmd.toString() });
+                          }
+               }
+               catch (Exception ex)
+               {
+                    ex.printStackTrace();
+               }
+                 }
+
+             public void actionPerformed(ActionEvent e){
+                     execute();
+             }
+     }
