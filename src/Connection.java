@@ -12,7 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 public class Connection implements Runnable{
     
     public static final String CTCP_DELIM = "\001", CTCP_BOLD_DELIM = "\002",CTCP_COLOR_DELIM = "\003",
-                               CTCP_UNDERLINE_DELIM = "\037", CTCP_RESET_DELIM = "\017";
+                               CTCP_UNDERLINE_DELIM = "\037", CTCP_RESET_DELIM = "\017", HTTP_DELIM = "\004";
     Thread thread;
     Socket socket;
     BufferedReader reader;

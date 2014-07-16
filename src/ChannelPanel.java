@@ -396,6 +396,7 @@ import org.apache.commons.lang3.StringUtils;
             }
 	    if (line[1].contains("http://") || line[1].contains("https://"))
 	    {
+		line[1] = line[1].replaceAll("http://",Connection.HTTP_DELIM+"http://");
 		insertCTCPColoredString(line, givenStyle);
 		return;
 	    }
@@ -452,7 +453,7 @@ import org.apache.commons.lang3.StringUtils;
             Pattern pattern;
             Matcher matcher;
             
-            StringTokenizer st = new StringTokenizer(line[1],Connection.CTCP_DELIM + Connection.CTCP_COLOR_DELIM + Connection.CTCP_UNDERLINE_DELIM + Connection.CTCP_BOLD_DELIM + Connection.CTCP_RESET_DELIM, true);
+            StringTokenizer st = new StringTokenizer(line[1],Connection.HTTP_DELIM+Connection.CTCP_DELIM + Connection.CTCP_COLOR_DELIM + Connection.CTCP_UNDERLINE_DELIM + Connection.CTCP_BOLD_DELIM + Connection.CTCP_RESET_DELIM, true);
             while (st.hasMoreTokens())
             {
                 String token = st.nextToken();
@@ -475,9 +476,19 @@ import org.apache.commons.lang3.StringUtils;
                     ctcpStyle = sc.addStyle("Defaultstyle", givenStyle);
                     continue;
                 }
-		if (token.startsWith("https://") || token.startsWith("http://"))
+		if (token.equals(Connection.HTTP_DELIM))
 		{
-		    doc.insertString(doc.getLength(), token, hyperlinkUnclickedStyle);
+		    if (st.hasMoreTokens()) token = st.nextToken();
+		    int indexOfSpace = token.indexOf(" ");
+		    if (indexOfSpace == -1)
+		    {
+			doc.insertString(doc.getLength(), token, hyperlinkUnclickedStyle);
+			continue;
+		    }
+		    String url = token.substring(0,token.indexOf(" "));
+		    doc.insertString(doc.getLength(), url, hyperlinkUnclickedStyle);
+		    String rest = token.substring(indexOfSpace);
+		    doc.insertString(doc.getLength(), rest, givenStyle);
 		    continue;
 		}
                 if (token.equals(Connection.CTCP_COLOR_DELIM))
@@ -924,13 +935,36 @@ class TextMotionListener extends MouseInputAdapter {
        	       
 	      if(contains)
 	      {
+		StyledDocument document = textPane.getStyledDocument();
 		Point pt = new Point(e.getX(), e.getY());
-		int pos = textPane.viewToModel(pt);
-		int pos2 = textPane.getStyledDocument().getLength() - pos;
-	          String url = textPane.getStyledDocument().getText(pos,pos2);
-	          //URLLinkAction linkAction = new URLLinkAction(action);
-		  System.out.println(url);
-		  //linkAction.execute();
+		int originalClickPoint = textPane.viewToModel(pt);
+		boolean isURL = true;
+		String URLString = "";
+		int backwardsClickPoint = originalClickPoint-1;
+		while (isURL)
+		{
+		    elem = document.getCharacterElement(originalClickPoint);
+		    if (elem.getAttributes().containsAttributes(ChannelPanel.hyperlinkUnclickedStyle))
+		    {
+			URLString = URLString+(document.getText(originalClickPoint, 1));
+		    }
+		    else break;
+		    originalClickPoint++;
+		}
+		
+		while (isURL)
+		{
+		    elem = document.getCharacterElement(backwardsClickPoint);
+		    if (elem.getAttributes().containsAttributes(ChannelPanel.hyperlinkUnclickedStyle))
+		    {
+			URLString = document.getText(backwardsClickPoint, 1)+URLString;
+		    }
+		    else isURL = false;    
+		    backwardsClickPoint--;
+		}
+		System.out.println("URL: "+URLString);
+		URLLinkAction linkAction = new URLLinkAction(URLString);
+		linkAction.execute();
 	      }
 	  }
 	  catch(Exception x) {
