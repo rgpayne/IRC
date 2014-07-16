@@ -48,7 +48,7 @@ import org.apache.commons.lang3.StringUtils;
         public ArrayList<String> ignoreList = new ArrayList<String>();
         
         StyledDocument doc;  
-        StyleContext sc = StyleContext.getDefaultStyleContext();
+        static StyleContext sc = StyleContext.getDefaultStyleContext();
         static Style style, chatStyle, timestampStyle, actionStyle, errorStyle, serverStyle, connectStyle, ctcpStyle, userNameStyle, disconnectStyle, joinStyle, hyperlinkUnclickedStyle;
         final static String errorColor = "#FF0000", chatColor="#000000", serverColor="#960096", connectColor="#993300", timestampColor="#909090";
         final static String actionColor = "#0000FF", disconnectColor = "#CAA234", joinColor = "#D46942";
@@ -299,7 +299,7 @@ import org.apache.commons.lang3.StringUtils;
         userNameStyle = sc.addStyle("Defaultstyle", style);
         disconnectStyle = sc.addStyle("Defaultstyle", style);
         joinStyle = sc.addStyle("Defaultstyle", style);
-	hyperlinkUnclickedStyle = sc.addStyle("DefaultStyle", style);
+	hyperlinkUnclickedStyle = sc.addStyle("Hyperlink", null);
         
         StyleConstants.setFontFamily(style, font);
         StyleConstants.setFontSize(style, 12);
@@ -389,17 +389,21 @@ import org.apache.commons.lang3.StringUtils;
         public void insertString(String[] line, Style givenStyle, boolean isCTCP) throws BadLocationException, IOException
         {
             if (ignoreList.contains(line[0])) return; //change ignorelist to just hold strings and not users?
-            if (isCTCP == true)
+	    if (line[1].contains("http://") || line[1].contains("https://") || line[1].contains("www.") || line[1].contains("#"))
+	    {
+		line[1] = line[1].replaceAll("http://",Connection.HTTP_DELIM+"http://");
+		line[1] = line[1].replaceAll("https://",Connection.HTTP_DELIM+"https://");
+		line[1] = line[1].replaceAll("www.",Connection.HTTP_DELIM+"www.");
+		if (line[1].startsWith("#")) line[1] = line[1].replace("#", Connection.HTTP_DELIM+"#");
+		line[1] = line[1].replaceAll(" #", " "+Connection.HTTP_DELIM+"#");
+		insertCTCPColoredString(line, givenStyle);
+		return;
+	    }	    
+	    if (isCTCP == true)
             {
                 insertCTCPColoredString(line, givenStyle);
                 return;
             }
-	    if (line[1].contains("http://") || line[1].contains("https://"))
-	    {
-		line[1] = line[1].replaceAll("http://",Connection.HTTP_DELIM+"http://");
-		insertCTCPColoredString(line, givenStyle);
-		return;
-	    }
             if (showTimestamp == true)
             {
                 String timestamp = makeTimestamp();
@@ -479,13 +483,17 @@ import org.apache.commons.lang3.StringUtils;
 		if (token.equals(Connection.HTTP_DELIM))
 		{
 		    if (st.hasMoreTokens()) token = st.nextToken();
+		    if (token.startsWith(" #"))
+		    {
+			token = token.substring(1);
+		    }
 		    int indexOfSpace = token.indexOf(" ");
 		    if (indexOfSpace == -1)
 		    {
 			doc.insertString(doc.getLength(), token, hyperlinkUnclickedStyle);
 			continue;
 		    }
-		    String url = token.substring(0,token.indexOf(" "));
+		    String url = token.substring(0,indexOfSpace);
 		    doc.insertString(doc.getLength(), url, hyperlinkUnclickedStyle);
 		    String rest = token.substring(indexOfSpace);
 		    doc.insertString(doc.getLength(), rest, givenStyle);
@@ -929,45 +937,43 @@ class TextMotionListener extends MouseInputAdapter {
      }
 	 public void mouseClicked( MouseEvent e ) {
 	  try{
-	       Element elem = textPane.getStyledDocument().getCharacterElement(textPane.viewToModel(e.getPoint()));
-	       AttributeSet as = elem.getAttributes();
+	       Element elem = textPane.getStyledDocument().getCharacterElement(textPane.viewToModel(e.getPoint()));	       
 	       boolean contains = elem.getAttributes().containsAttributes(ChannelPanel.hyperlinkUnclickedStyle);
-       	       
-	      if(contains)
-	      {
-		StyledDocument document = textPane.getStyledDocument();
-		Point pt = new Point(e.getX(), e.getY());
-		int originalClickPoint = textPane.viewToModel(pt);
-		boolean isURL = true;
-		String URLString = "";
-		int backwardsClickPoint = originalClickPoint-1;
-		while (isURL)
-		{
-		    elem = document.getCharacterElement(originalClickPoint);
-		    if (elem.getAttributes().containsAttributes(ChannelPanel.hyperlinkUnclickedStyle))
+	        if(contains)
+	        {
+		    StyledDocument document = textPane.getStyledDocument();
+		    Point pt = new Point(e.getX(), e.getY());
+		    int originalClickPoint = textPane.viewToModel(pt);
+		    boolean isURL = true;
+		    String URLString = "";
+		    int backwardsClickPoint = originalClickPoint-1;
+		    while (isURL)
 		    {
-			URLString = URLString+(document.getText(originalClickPoint, 1));
+			elem = document.getCharacterElement(originalClickPoint);
+			if (elem.getAttributes().containsAttributes(ChannelPanel.hyperlinkUnclickedStyle))
+			{
+			    URLString = URLString+(document.getText(originalClickPoint, 1));
+			}
+			else break;
+			originalClickPoint++;
 		    }
-		    else break;
-		    originalClickPoint++;
-		}
-		
-		while (isURL)
-		{
-		    elem = document.getCharacterElement(backwardsClickPoint);
-		    if (elem.getAttributes().containsAttributes(ChannelPanel.hyperlinkUnclickedStyle))
+
+		    while (isURL)
 		    {
-			URLString = document.getText(backwardsClickPoint, 1)+URLString;
+			elem = document.getCharacterElement(backwardsClickPoint);
+			if (elem.getAttributes().containsAttributes(ChannelPanel.hyperlinkUnclickedStyle))
+			{
+			    URLString = document.getText(backwardsClickPoint, 1)+URLString;
+			}
+			else isURL = false;    
+			backwardsClickPoint--;
 		    }
-		    else isURL = false;    
-		    backwardsClickPoint--;
-		}
-		System.out.println("URL: "+URLString);
-		URLLinkAction linkAction = new URLLinkAction(URLString);
-		linkAction.execute();
+		    System.out.println("URL: "+URLString);
+		    URLLinkAction linkAction = new URLLinkAction(URLString);
+		    linkAction.execute();
 	      }
 	  }
-	  catch(Exception x) {
+	  catch(BadLocationException x) {
 	       x.printStackTrace();
 	  }
 	 }
@@ -981,34 +987,35 @@ class TextMotionListener extends MouseInputAdapter {
                url=bac;
           }
 
-             protected void execute() {
-                      try {
-                           String osName = System.getProperty("os.name").toLowerCase();
-                          Runtime rt = Runtime.getRuntime();
-                    if (osName.indexOf( "win" ) >= 0) {
-                               rt.exec( "rundll32 url.dll,FileProtocolHandler " + url);
-                          }
-                                else if (osName.indexOf("mac") >= 0) {
-                                  rt.exec( "open " + url);
-                    }
-                  
-                          else if (osName.indexOf("ix") >=0 || osName.indexOf("ux") >=0 || osName.indexOf("sun") >=0) {
-                               String[] browsers = {"epiphany", "firefox", "mozilla", "konqueror",
-                                 "netscape","opera","links","lynx"};
+             protected void execute()
+	     {
+		 if (url.startsWith("#")) return;
+		 
+		 
+		 else {
+		    try {
+			String osName = System.getProperty("os.name").toLowerCase();
+			Runtime rt = Runtime.getRuntime();
+			if (osName.indexOf( "win" ) >= 0) rt.exec( "rundll32 url.dll,FileProtocolHandler " + url);
+			else if (osName.indexOf("mac") >= 0) rt.exec( "open " + url);
+			else if (osName.indexOf("ix") >=0 || osName.indexOf("ux") >=0 || osName.indexOf("sun") >=0) 
+			{
+			    String[] browsers = {"epiphany", "firefox", "mozilla", "konqueror", "netscape","opera","links","lynx"};
 
-                               // Build a command string which looks like "browser1 "url" || browser2 "url" ||..."
-                               StringBuffer cmd = new StringBuffer();
-                               for (int i = 0 ; i < browsers.length ; i++)
-                                    cmd.append((i == 0  ? "" : " || " ) + browsers[i] +" \"" + url + "\" ");
+				   // Build a command string which looks like "browser1 "url" || browser2 "url" ||..."
+				   StringBuffer cmd = new StringBuffer();
+				   for (int i = 0 ; i < browsers.length ; i++)
+					cmd.append((i == 0  ? "" : " || " ) + browsers[i] +" \"" + url + "\" ");
 
-                               rt.exec(new String[] { "sh", "-c", cmd.toString() });
-                          }
-               }
-               catch (Exception ex)
-               {
-                    ex.printStackTrace();
-               }
-                 }
+				   rt.exec(new String[] { "sh", "-c", cmd.toString() });
+			}
+		   }
+		   catch (Exception ex)
+		   {
+			ex.printStackTrace();
+		   }
+		}
+            }
 
              public void actionPerformed(ActionEvent e){
                      execute();

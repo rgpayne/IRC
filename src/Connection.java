@@ -156,10 +156,6 @@ public class Connection implements Runnable{
                                    
                                }
                            });
-                           
-                           
-                           
-                           
                            return;
                        } catch (InterruptedException ex) {
                            Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
