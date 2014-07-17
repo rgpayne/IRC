@@ -312,6 +312,8 @@ import org.apache.commons.lang3.StringUtils;
         StyleConstants.setForeground(disconnectStyle, Color.decode(disconnectColor));
         StyleConstants.setForeground(joinStyle, Color.decode(joinColor));
 	StyleConstants.setForeground(hyperlinkUnclickedStyle,(Color.blue));
+	StyleConstants.setFontFamily(hyperlinkUnclickedStyle, font);
+	StyleConstants.setFontSize(hyperlinkUnclickedStyle, 12);
 	StyleConstants.setUnderline(hyperlinkUnclickedStyle, true);
         }
         public void makeHashMaps()
@@ -516,7 +518,7 @@ import org.apache.commons.lang3.StringUtils;
 			String channel = token.substring(0, min);
 			doc.insertString(doc.getLength(), channel, hyperlinkUnclickedStyle);
 			String rest = token.substring(min);
-			doc.insertString(doc.getLength(), rest, givenStyle);
+			doc.insertString(doc.getLength(), rest, ctcpStyle);
 			continue;
 		    }
 		    else //hyperlinking a URL
@@ -551,7 +553,7 @@ import org.apache.commons.lang3.StringUtils;
 			String url = token.substring(0, min);
 			doc.insertString(doc.getLength(), url, hyperlinkUnclickedStyle);
 			String rest = token.substring(min);
-			doc.insertString(doc.getLength(), rest, givenStyle);			
+			doc.insertString(doc.getLength(), rest, ctcpStyle);			
 			continue;
 		    }
 		}
@@ -588,12 +590,12 @@ import org.apache.commons.lang3.StringUtils;
                                 doc.insertString(doc.getLength(), message, ctcpStyle);
                                 continue;
                             }
-                            if (matcher.group(8) != null && matcher.group(8).equals("")) //foregrond color, no bg color (ex. 5this is a message)
+                            if (matcher.group(8) != null && matcher.group(8).equals("")) //foreground color, no bg color (ex. 5this is a message)
                             {
                                 foreground = matcher.group(9);
                                 message = matcher.group(10);
                                 Color f = (Color)CTCPMap.get(Integer.valueOf(foreground));
-                                StyleConstants.setBackground(ctcpStyle, Color.WHITE);
+                                //StyleConstants.setBackground(ctcpStyle, Color.WHITE); ????????
                                 StyleConstants.setForeground(ctcpStyle, f);
                                 doc.insertString(doc.getLength(), message, ctcpStyle);
                                 continue;
