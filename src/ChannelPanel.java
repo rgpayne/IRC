@@ -487,19 +487,20 @@ import org.apache.commons.lang3.StringUtils;
 		    {
 			token = token.substring(1);
 		    }
-		    if (token.startsWith("#"))
+		    if (token.startsWith("#")) //hyperlinking a channel
 		    {
-			int[] ind = {token.indexOf('.'),
-				     token.indexOf(','),
-				     token.indexOf(':'),
-				     token.indexOf(';'),
-				     token.indexOf('<'),
-				     token.indexOf('>'),
-				     token.indexOf('?'),
-				     token.indexOf('/'),
-				     token.indexOf('\''),
-				     token.indexOf('"'),
-				     token.indexOf(' ')	};
+			int[] ind = { token.indexOf('.'), //disallowed irc channel characters
+				      token.indexOf(','),
+				      token.indexOf(':'),
+				      token.indexOf(';'),
+				      token.indexOf('<'),
+				      token.indexOf('>'),
+				      token.indexOf('?'),
+				      token.indexOf('/'),
+				      token.indexOf('\''),
+				      token.indexOf('"'),
+				      token.indexOf(' ')
+				    };
 			
 			int min = Integer.MAX_VALUE;
 			for (int i = 0; i < ind.length; i++)
@@ -518,17 +519,41 @@ import org.apache.commons.lang3.StringUtils;
 			doc.insertString(doc.getLength(), rest, givenStyle);
 			continue;
 		    }
-		    int indexOfSpace = token.indexOf(" ");
-		    if (indexOfSpace == -1)
+		    else //hyperlinking a URL
 		    {
-			doc.insertString(doc.getLength(), token, hyperlinkUnclickedStyle);
+			//a better option may be to have a list of allowed characters?
+			
+			int[] ind = { token.indexOf('"'), //disallowed URL characters
+				      token.indexOf('`'),
+				      token.indexOf(']'),
+				      token.indexOf('['),
+				      token.indexOf('>'),
+				      token.indexOf('<'),
+				      token.indexOf(','),
+				      token.indexOf('('),
+				      token.indexOf(')'),
+				      token.indexOf('{'),
+				      token.indexOf('}'),
+				      token.indexOf(' ') 
+				    };
+			
+			int min = Integer.MAX_VALUE;
+			for (int i = 0; i < ind.length; i++)
+			{
+			    if (ind[i] == -1) continue;
+			    min = Math.min(ind[i], min);
+			}			
+			if (min == Integer.MAX_VALUE)
+			{
+			    doc.insertString(doc.getLength(), token, hyperlinkUnclickedStyle);
+			    continue;  
+			}
+			String url = token.substring(0, min);
+			doc.insertString(doc.getLength(), url, hyperlinkUnclickedStyle);
+			String rest = token.substring(min);
+			doc.insertString(doc.getLength(), rest, givenStyle);			
 			continue;
 		    }
-		    String url = token.substring(0,indexOfSpace);
-		    doc.insertString(doc.getLength(), url, hyperlinkUnclickedStyle);
-		    String rest = token.substring(indexOfSpace);
-		    doc.insertString(doc.getLength(), rest, givenStyle);
-		    continue;
 		}
                 if (token.equals(Connection.CTCP_COLOR_DELIM))
                 {
