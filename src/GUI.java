@@ -5,8 +5,6 @@ import javax.swing.text.*;
 import java.util.*;
 import java.util.logging.*;
 import java.io.*;
-import static javax.swing.Action.*;
-import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.event.*;
 import javax.swing.table.*;
 import org.apache.commons.lang3.StringUtils;
@@ -40,25 +38,27 @@ public class GUI extends JFrame {
     
     final static Properties prop = new Properties();
     static ArrayList<SavedConnection> savedConnections = new ArrayList<SavedConnection>();
-
+	
+    static JFrame frame;
     public GUI() {
         super("Alpha IRC 0.1");
         setIconImage(mainIcon.getImage());
 	
         loadProperties();
         initComponents();
+
 	loadKeyBinds(chatInputPane.getActionMap(), chatInputPane.getInputMap());
         ChannelPanel.tabbedPane = tabbedPane;
         Connection.tabbedPane = tabbedPane;
         ChannelPanel.tabInfo = tabInfo;
         Connection.tabInfo = tabInfo;
         autoConnect();
+	frame = GUI.this;
     }
 
     @SuppressWarnings("unchecked")
     private void initComponents() {
-        
-        
+                
         chatInputPane = new JTextField();
         tabbedPane = new DnDTabbedPane();
         userListPane = new JTextPane();
@@ -163,8 +163,6 @@ public class GUI extends JFrame {
 	channelList.setAction(new ChannelListAction("Channel List", channelListIcon, null, KeyEvent.VK_C));
 	channelList.setDisplayedMnemonicIndex(8);
 	channelList.setAccelerator(KeyStroke.getKeyStroke("F5"));	
-
-	
 	chatInputPane.addKeyListener(new KeyAdapter()
         {
             public void keyPressed(java.awt.event.KeyEvent evt) {
@@ -335,6 +333,7 @@ public class GUI extends JFrame {
 	amap.put("quickConnect", quickConnect.getAction());
 	amap.put("identities", identities.getAction());
 	amap.put("serverList", serverList.getAction());
+	amap.put("findText", new FindTextAction());
 	
 	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_H, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "showNickList");
 	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() | Event.SHIFT_MASK), "globalAway");
@@ -350,7 +349,8 @@ public class GUI extends JFrame {
 	imap.put(KeyStroke.getKeyStroke("F5"), "channelList");
 	imap.put(KeyStroke.getKeyStroke("F7"), "quickConnect");
 	imap.put(KeyStroke.getKeyStroke("F8"), "identities");
-	imap.put(KeyStroke.getKeyStroke("F2"), "serverList");		
+	imap.put(KeyStroke.getKeyStroke("F2"), "serverList");
+	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "findText");
     }
     private void loadProperties()
     {
@@ -410,9 +410,9 @@ public class GUI extends JFrame {
         FileInputStream fis = null;
         ObjectInputStream in = null;
         try{
-        fis = new FileInputStream("servers.ser");
-        in = new ObjectInputStream(fis);
-        savedConnections = (ArrayList<SavedConnection>)in.readObject();
+	    fis = new FileInputStream("servers.ser");
+	    in = new ObjectInputStream(fis);
+	    savedConnections = (ArrayList<SavedConnection>)in.readObject();
         } catch (Exception ex){
             System.out.println("Deserialization exception");
         }
@@ -677,8 +677,39 @@ public class GUI extends JFrame {
 		public boolean isCellEditable(int row, int column){  
 		    return false;  
 		}  
+		public String getToolTipText(MouseEvent e)
+		{
+		    Point p = e.getPoint();
+		    int rowIndex = rowIndex = rowAtPoint(p);
+		    String tip =  (String)getModel().getValueAt(rowIndex, 2);
+		    boolean split = false;
+		    int counter = 0;
+		    for (int i = 0; i < tip.length(); i++)
+		    {
+			if (counter > 80)
+			{
+			    if (tip.charAt(i) == ' ') 
+			    {
+				split = true;
+				counter = 0;
+			    }
+			}
+			if (split == true || counter > 100) 
+			{
+			    String beg = tip.substring(0,i);
+			    String end = tip.substring(i,tip.length());
+			    tip = beg+"<br>"+end;
+			    i = i+4;
+			    counter = 0;
+			    split = false;
+			}
+			counter++;
+		    }
+		    return "<HTML>"+tip+"</HTML>";
+		    
+		}
 	    };
-
+	    ToolTipManager.sharedInstance().setDismissDelay(Integer.MAX_VALUE);
 	    table.setShowGrid(false);
 	    table.setAutoCreateRowSorter(true);
 	    table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -901,8 +932,184 @@ public class GUI extends JFrame {
 	}
 
     }
-    
-    class GlobalAwayAction extends AbstractAction{
+    static class FindTextAction extends AbstractAction{
+	@Override
+	public void actionPerformed(ActionEvent e) {    
+	    
+	    //final ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+	    //final StyledDocument doc = channel.chatPane.getStyledDocument();
+	    
+	    final JDialog dialog = new JDialog(GUI.frame,"Find");
+	    SpringLayout layout = new SpringLayout();
+	    JPanel panel = new JPanel(layout);
+	    
+	    dialog.add(panel);
+	    dialog.setPreferredSize(new Dimension(240,115));
+	    dialog.pack();
+	    dialog.setLocationRelativeTo(frame);
+	    dialog.setVisible(true);
+	    dialog.setResizable(false);
+	    
+	    Container contentPane = dialog.getContentPane();
+	    contentPane.setLayout(layout);
+	    
+	    final JTextField field = new JTextField();    
+	    
+	    final JCheckBox matchCase = new JCheckBox("Match Case");
+	    JCheckBox highlightAll = new JCheckBox("Highlight All");
+	    final JButton findButton = new JButton("Find");
+	    final JButton closeButton = new JButton("Close");
+	    findButton.setPreferredSize(new Dimension(100, 25));
+	    closeButton.setPreferredSize(new Dimension(100, 25));
+	    contentPane.add(field);
+	    contentPane.add(matchCase);
+	    contentPane.add(highlightAll);
+	    contentPane.add(findButton);
+	    contentPane.add(closeButton);
+	    
+	    layout.putConstraint(SpringLayout.NORTH, field, 5, SpringLayout.NORTH, dialog);
+	    layout.putConstraint(SpringLayout.WEST, field, 5, SpringLayout.WEST, dialog);
+	    layout.putConstraint(SpringLayout.EAST, field, -15, SpringLayout.EAST, dialog);	    
+	    layout.putConstraint(SpringLayout.WEST, matchCase, 0, SpringLayout.WEST, field);
+	    layout.putConstraint(SpringLayout.NORTH, matchCase, 5, SpringLayout.SOUTH, field);
+	    layout.putConstraint(SpringLayout.NORTH, highlightAll, 5, SpringLayout.SOUTH, field);
+	    layout.putConstraint(SpringLayout.EAST, highlightAll, -5, SpringLayout.EAST, contentPane);
+	    layout.putConstraint(SpringLayout.SOUTH, findButton, -5, SpringLayout.SOUTH, contentPane);
+	    layout.putConstraint(SpringLayout.WEST, findButton, 5, SpringLayout.WEST, dialog);
+	    layout.putConstraint(SpringLayout.SOUTH, closeButton, -5, SpringLayout.SOUTH, contentPane);
+	    layout.putConstraint(SpringLayout.EAST, closeButton, -15, SpringLayout.EAST, dialog);
+	    
+	    field.getDocument().addDocumentListener(new DocumentListener() {
+		@Override
+		public void insertUpdate(DocumentEvent e) {
+		    clearEverything();
+		    findButton.getActionListeners()[0].actionPerformed(null);
+		}
+		@Override
+		public void removeUpdate(DocumentEvent e) {
+		    clearEverything();
+		    findButton.getActionListeners()[0].actionPerformed(null);
+		}
+		@Override
+		public void changedUpdate(DocumentEvent e) {
+		    clearEverything();
+		    findButton.getActionListeners()[0].actionPerformed(null);
+		}
+		private void clearEverything()
+		{
+		    for (int i = 0; i < tabbedPane.getTabCount(); i++)
+		    {
+			ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
+			if (!channel.savedElements.isEmpty() && channel.lastSearchIndex != 1)
+			{
+			    for (Element savedElement : channel.savedElements) {
+				channel.chatPane.getStyledDocument().setCharacterAttributes(channel.lastSearchIndex, channel.savedElements.size(), savedElement.getAttributes(), enabled);
+			    }
+			}
+			channel.savedElements.clear();
+			channel.lastSearchIndex = -1;
+			DefaultCaret caret = (DefaultCaret) channel.chatPane.getCaret();
+			caret.setDot(channel.doc.getLength());
+		    }
+		}
+	    });	    
+	    field.addKeyListener(new KeyAdapter() {
+		@Override
+		public void keyPressed(KeyEvent e)
+		{
+		    if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
+		    {
+			closeButton.getActionListeners()[0].actionPerformed(null);
+		    }
+		}
+	    });
+	    dialog.addWindowListener(new WindowAdapter() {
+		@Override
+		public void windowClosing(WindowEvent e)
+		{
+		    closeButton.getActionListeners()[0].actionPerformed(null);
+		}
+	    });
+	    
+	    closeButton.addActionListener(new ActionListener() {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+		    for (int i = 0; i < tabbedPane.getTabCount(); i++)
+		    {
+			ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
+			if (!channel.savedElements.isEmpty() && channel.lastSearchIndex != 1)
+			{
+			    for (Element savedElement : channel.savedElements)
+				channel.chatPane.getStyledDocument().setCharacterAttributes(channel.lastSearchIndex, channel.savedElements.size(), savedElement.getAttributes(), enabled);
+			}
+			channel.savedElements.clear();
+			channel.lastSearchIndex = -1;
+			DefaultCaret caret = (DefaultCaret) channel.chatPane.getCaret();
+			caret.setDot(channel.doc.getLength());
+		    }
+		    dialog.dispose();
+		}
+	    });
+	    findButton.addActionListener(new ActionListener() {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+		    ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+		    StyledDocument doc = channel.chatPane.getStyledDocument();
+		    String searchString = field.getText().trim();
+		    if (!matchCase.isSelected()) searchString = searchString.toLowerCase();
+
+		    if (searchString.isEmpty()) return;
+		    String s = "";
+		    try {
+			s = doc.getText(0, doc.getLength());
+		    } catch (BadLocationException ex) {
+			Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+		    }
+		    
+		    int location;
+		    if (channel.lastSearchIndex == -1) location = s.indexOf(searchString);
+		    else location = s.indexOf(searchString, channel.lastSearchIndex+searchString.length());
+		    
+		    if (location != -1)
+		    {
+			if (!channel.savedElements.isEmpty() && channel.lastSearchIndex != 1)
+			{
+			    for (int i = 0; i < channel.savedElements.size(); i++)
+			    {				
+				doc.setCharacterAttributes(channel.lastSearchIndex+i, 1, channel.savedElements.get(i).getAttributes(), enabled);
+			    }
+			}
+			channel.savedElements.clear();
+			for (int i = 0; i < searchString.length(); i++)
+			{
+			    Element ele = doc.getCharacterElement(location+searchString.length());
+			    channel.savedElements.add(ele);
+			}
+			channel.lastSearchIndex = location;
+			doc.setCharacterAttributes(location, searchString.length(), ChannelPanel.highlightStyle, enabled);
+			DefaultCaret caret = (DefaultCaret) channel.chatPane.getCaret();
+			caret.setDot(location);
+		    }
+		}
+	    });
+	    findButton.addKeyListener(new KeyAdapter() {
+		@Override
+		public void keyPressed(KeyEvent e)
+		{
+		    if (e.getKeyCode() == KeyEvent.VK_ENTER)
+		    {
+			findButton.getActionListeners()[0].actionPerformed(null);
+		    }
+		    if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
+		    {
+			closeButton.getActionListeners()[0].actionPerformed(null);
+		    }
+		}
+	    });
+	}
+	
+    }
+    static class GlobalAwayAction extends AbstractAction{
 	public GlobalAwayAction(String text, ImageIcon icon, String desc, Integer mnemonic)
 	{
 	    super(text, icon);
@@ -1511,7 +1718,6 @@ public class GUI extends JFrame {
 	    }
 	}
     }
-    
 }
 
 

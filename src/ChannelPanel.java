@@ -49,7 +49,8 @@ import org.apache.commons.lang3.StringUtils;
         
         StyledDocument doc;  
         static StyleContext sc = StyleContext.getDefaultStyleContext();
-        static Style style, chatStyle, timestampStyle, actionStyle, errorStyle, serverStyle, connectStyle, ctcpStyle, userNameStyle, disconnectStyle, joinStyle, hyperlinkUnclickedStyle;
+        static Style style, chatStyle, timestampStyle, actionStyle, errorStyle, serverStyle, connectStyle, ctcpStyle, userNameStyle,
+		disconnectStyle, joinStyle, hyperlinkUnclickedStyle, highlightStyle;
         final static String errorColor = "#FF0000", chatColor="#000000", serverColor="#960096", connectColor="#993300", timestampColor="#909090";
         final static String actionColor = "#0000FF", disconnectColor = "#CAA234", joinColor = "#D46942";
         final static String font = "courier";
@@ -61,6 +62,8 @@ import org.apache.commons.lang3.StringUtils;
 	
         final static Map CTCPMap = new HashMap(), chatColorMap = new HashMap(), userMap = new HashMap();
         boolean showTimestamp = true, chatNameColors = true;
+	int lastSearchIndex = -1;
+	ArrayList<Element> savedElements = new ArrayList<>();
         
         ArrayList<String> history;
         int historyCounter = 0;
@@ -89,8 +92,8 @@ import org.apache.commons.lang3.StringUtils;
 	   
 	    TextClickListener tcl = new TextClickListener(chatPane, this.connection);
 	    TextMotionListener tml = new TextMotionListener(chatPane);
-	   chatPane.addMouseMotionListener(tml);
-	   chatPane.addMouseListener(tcl);
+	    chatPane.addMouseMotionListener(tml);
+	    chatPane.addMouseListener(tcl);
 	    
                        
             tabbedPane.add(this, this.title);       
@@ -300,6 +303,7 @@ import org.apache.commons.lang3.StringUtils;
         disconnectStyle = sc.addStyle("Defaultstyle", style);
         joinStyle = sc.addStyle("Defaultstyle", style);
 	hyperlinkUnclickedStyle = sc.addStyle("Hyperlink", null);
+	highlightStyle = sc.addStyle("Highlight", null);
         
         StyleConstants.setFontFamily(style, font);
         StyleConstants.setFontSize(style, 12);
@@ -315,6 +319,9 @@ import org.apache.commons.lang3.StringUtils;
 	StyleConstants.setFontFamily(hyperlinkUnclickedStyle, font);
 	StyleConstants.setFontSize(hyperlinkUnclickedStyle, 12);
 	StyleConstants.setUnderline(hyperlinkUnclickedStyle, true);
+	StyleConstants.setFontFamily(highlightStyle, font);
+	StyleConstants.setFontSize(highlightStyle, 12);
+	StyleConstants.setBackground(highlightStyle, Color.YELLOW);
         }
         public void makeHashMaps()
         {
@@ -388,6 +395,15 @@ import org.apache.commons.lang3.StringUtils;
                 else tabInfo.setText(name+" - "+population+" nicks ("+ops+text+server+"  ");
             }
         }
+	public void insertString(int offset, String str, AttributeSet a) throws BadLocationException
+	{
+	    String delims = Connection.HTTP_DELIM+Connection.CTCP_DELIM + Connection.CTCP_COLOR_DELIM + Connection.CTCP_UNDERLINE_DELIM + Connection.CTCP_BOLD_DELIM + Connection.CTCP_RESET_DELIM;
+	    for (int i = 0; i < delims.length(); i++)
+	    {
+		str = str.replaceAll(String.valueOf(delims.charAt(i)), "");
+	    }
+	    doc.insertString(offset, str, a);
+	}
         public void insertString(String[] line, Style givenStyle, boolean isCTCP) throws BadLocationException, IOException
         {
             if (ignoreList.contains(line[0])) return; //change ignorelist to just hold strings and not users?
@@ -409,18 +425,18 @@ import org.apache.commons.lang3.StringUtils;
             if (showTimestamp == true)
             {
                 String timestamp = makeTimestamp();
-                doc.insertString(doc.getLength(), "["+timestamp+"] ", timestampStyle);
+                this.insertString(doc.getLength(), "["+timestamp+"] ", timestampStyle);
             }
-            if (chatNameColors == false && line[0] != null) doc.insertString(doc.getLength(), "<"+line[0]+">: ", chatStyle);
+            if (chatNameColors == false && line[0] != null) this.insertString(doc.getLength(), "<"+line[0]+">: ", chatStyle);
             if (chatNameColors == true && line[0] != null)
             {
                 Color c = getUserColor(line[0]);
-                doc.insertString(doc.getLength(), "<", style);
+                this.insertString(doc.getLength(), "<", style);
                 StyleConstants.setForeground(userNameStyle, c);
-                doc.insertString(doc.getLength(), line[0], userNameStyle);
-                doc.insertString(doc.getLength(), ">: ", style);
+                this.insertString(doc.getLength(), line[0], userNameStyle);
+                this.insertString(doc.getLength(), ">: ", style);
             }
-            doc.insertString(doc.getLength(), line[1]+"\n", givenStyle);
+            this.insertString(doc.getLength(), line[1]+"\n", givenStyle);
             checkForActiveTab();
         }
         public void insertCTCPAction (String[] line) throws BadLocationException
@@ -428,31 +444,31 @@ import org.apache.commons.lang3.StringUtils;
             String nick = line[0];
             String msg = line[1].trim();
             String timestamp = makeTimestamp();
-            if (showTimestamp == true) doc.insertString(doc.getLength(), "["+timestamp+"] " ,timestampStyle);
-            doc.insertString(doc.getLength(),"* " , actionStyle);
-            if (chatNameColors == false) doc.insertString(doc.getLength(),nick+" ", style);
+            if (showTimestamp == true) this.insertString(doc.getLength(), "["+timestamp+"] " ,timestampStyle);
+            this.insertString(doc.getLength(),"* " , actionStyle);
+            if (chatNameColors == false) this.insertString(doc.getLength(),nick+" ", style);
             else
             {
                 Color c = getUserColor(nick);
                 StyleConstants.setForeground(userNameStyle, c);
-                doc.insertString(doc.getLength(), nick+" ", userNameStyle);
+                this.insertString(doc.getLength(), nick+" ", userNameStyle);
             }
-            doc.insertString(doc.getLength(), msg+"\n", actionStyle);
+            this.insertString(doc.getLength(), msg+"\n", actionStyle);
             checkForActiveTab();
         }
         public void insertCTCPColoredString(String[] line, Style givenStyle) throws BadLocationException
         {
             ctcpStyle = sc.addStyle("Defaultstyle", givenStyle);
             String timestamp = makeTimestamp();
-            if (showTimestamp == true) doc.insertString(doc.getLength(), "["+timestamp+"] " ,timestampStyle);
-            if (chatNameColors == false && line[0] != null) doc.insertString(doc.getLength(), "<"+line[0]+">: ", chatStyle);
+            if (showTimestamp == true) this.insertString(doc.getLength(), "["+timestamp+"] " ,timestampStyle);
+            if (chatNameColors == false && line[0] != null) this.insertString(doc.getLength(), "<"+line[0]+">: ", chatStyle);
             if (chatNameColors == true && line[0] != null)
             {
                 Color c = getUserColor(line[0]);
-                doc.insertString(doc.getLength(), "<", style);
+                this.insertString(doc.getLength(), "<", style);
                 StyleConstants.setForeground(userNameStyle, c);
-                doc.insertString(doc.getLength(), line[0], userNameStyle);
-                doc.insertString(doc.getLength(), ">: ", style);
+                this.insertString(doc.getLength(), line[0], userNameStyle);
+                this.insertString(doc.getLength(), ">: ", style);
             }
             
             
@@ -512,13 +528,13 @@ import org.apache.commons.lang3.StringUtils;
 			}
 			if (min == Integer.MAX_VALUE)
 			{
-			    doc.insertString(doc.getLength(), token, hyperlinkUnclickedStyle);
+			    this.insertString(doc.getLength(), token, hyperlinkUnclickedStyle);
 			    continue;  
 			}
 			String channel = token.substring(0, min);
-			doc.insertString(doc.getLength(), channel, hyperlinkUnclickedStyle);
+			this.insertString(doc.getLength(), channel, hyperlinkUnclickedStyle);
 			String rest = token.substring(min);
-			doc.insertString(doc.getLength(), rest, ctcpStyle);
+			this.insertString(doc.getLength(), rest, ctcpStyle);
 			continue;
 		    }
 		    else //hyperlinking a URL
@@ -547,13 +563,13 @@ import org.apache.commons.lang3.StringUtils;
 			}			
 			if (min == Integer.MAX_VALUE)
 			{
-			    doc.insertString(doc.getLength(), token, hyperlinkUnclickedStyle);
+			    this.insertString(doc.getLength(), token, hyperlinkUnclickedStyle);
 			    continue;  
 			}
 			String url = token.substring(0, min);
-			doc.insertString(doc.getLength(), url, hyperlinkUnclickedStyle);
+			this.insertString(doc.getLength(), url, hyperlinkUnclickedStyle);
 			String rest = token.substring(min);
-			doc.insertString(doc.getLength(), rest, ctcpStyle);			
+			this.insertString(doc.getLength(), rest, ctcpStyle);			
 			continue;
 		    }
 		}
@@ -570,7 +586,7 @@ import org.apache.commons.lang3.StringUtils;
 
                         if (!StringUtils.isNumeric(token.substring(0,1)) && !token.startsWith(","))
                         {
-                            doc.insertString(doc.getLength(), token, chatStyle);
+                            this.insertString(doc.getLength(), token, chatStyle);
                             continue;
                         }
                         while (matcher.find())
@@ -578,7 +594,7 @@ import org.apache.commons.lang3.StringUtils;
                             if (matcher.group(8) != null && matcher.group(8).equals(",")) //invalid (ex. ,5this is a message) prints plain
                             {
                                 message = matcher.group(10);
-                                doc.insertString(doc.getLength(), message, ctcpStyle);
+                                this.insertString(doc.getLength(), message, ctcpStyle);
                                 continue;
                             }
                             if (matcher.group(6) != null && matcher.group(6).equals(",")) //foreground color, no bg color (ex. 5,this is a message)
@@ -587,7 +603,7 @@ import org.apache.commons.lang3.StringUtils;
                                 message = matcher.group(7);
                                 Color f = (Color)CTCPMap.get(Integer.valueOf(foreground));
                                 StyleConstants.setForeground(ctcpStyle, f);
-                                doc.insertString(doc.getLength(), message, ctcpStyle);
+                                this.insertString(doc.getLength(), message, ctcpStyle);
                                 continue;
                             }
                             if (matcher.group(8) != null && matcher.group(8).equals("")) //foreground color, no bg color (ex. 5this is a message)
@@ -597,7 +613,7 @@ import org.apache.commons.lang3.StringUtils;
                                 Color f = (Color)CTCPMap.get(Integer.valueOf(foreground));
                                 //StyleConstants.setBackground(ctcpStyle, Color.WHITE); ????????
                                 StyleConstants.setForeground(ctcpStyle, f);
-                                doc.insertString(doc.getLength(), message, ctcpStyle);
+                                this.insertString(doc.getLength(), message, ctcpStyle);
                                 continue;
                             }
                             if (matcher.group(2) != null && matcher.group(2).equals("")) //foreground color, no bg color, but followed by a number, ie 53 blind mice
@@ -606,7 +622,7 @@ import org.apache.commons.lang3.StringUtils;
                                 message = matcher.group(3)+matcher.group(4);
                                 Color f = (Color)CTCPMap.get(Integer.valueOf(foreground));
                                 StyleConstants.setForeground(ctcpStyle, f);
-                                doc.insertString(doc.getLength(), message, ctcpStyle);
+                                this.insertString(doc.getLength(), message, ctcpStyle);
                                 continue;
                             }
                             if (matcher.group(2) != null && matcher.group(2).equals(",")) //foreground and background (ex. 5,5this is a message)
@@ -618,7 +634,7 @@ import org.apache.commons.lang3.StringUtils;
                                 Color b = (Color)CTCPMap.get(Integer.valueOf(background));
                                 StyleConstants.setForeground(ctcpStyle, f);
                                 StyleConstants.setBackground(ctcpStyle, b);
-                                doc.insertString(doc.getLength(), message, ctcpStyle);
+                                this.insertString(doc.getLength(), message, ctcpStyle);
                                 continue;
                             }                               
                         } 
@@ -626,10 +642,10 @@ import org.apache.commons.lang3.StringUtils;
                 }
                 else
                 {
-                    doc.insertString(doc.getLength(), token, ctcpStyle);
+                    this.insertString(doc.getLength(), token, ctcpStyle);
                 }
             }
-            doc.insertString(doc.getLength(), "\n", ctcpStyle);
+            this.insertString(doc.getLength(), "\n", ctcpStyle);
             checkForActiveTab();
         }
         public void checkForActiveTab()
@@ -1028,7 +1044,6 @@ class TextMotionListener extends MouseInputAdapter {
 			else isURL = false;    
 			backwardsClickPoint--;
 		    }
-		    System.out.println("URL: "+URLString);
 		    URLLinkAction linkAction = new URLLinkAction(URLString, connection);
 		    linkAction.execute();
 	      }

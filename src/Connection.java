@@ -81,16 +81,6 @@ public class Connection implements Runnable{
         final Parser parser = new Parser(line);
         String command = parser.getCommand();
         
-        
-        
-        if (!command.equals("PRIVMSG"))
-        {
-            System.out.println(line);
-            System.out.println(parser.toString());
-        }
-        
-        
-        
         if (command.equals("AWAY"))
         {
             String channelName = parser.getTrailing();
