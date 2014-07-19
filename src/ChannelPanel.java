@@ -93,164 +93,161 @@ import org.apache.commons.lang3.StringUtils;
 	   
 	    TextClickListener tcl = new TextClickListener(chatPane, this.connection);
 	    TextMotionListener tml = new TextMotionListener(chatPane);
-	   chatPane.addMouseMotionListener(tml);
-	   chatPane.addMouseListener(tcl);
+	    chatPane.addMouseMotionListener(tml);
+	    chatPane.addMouseListener(tcl);
 	    
                        
             tabbedPane.add(this, this.title);       
         }
         private void makePanel() throws BadLocationException, IOException
         {      
-        userListPane.setModel(model);
-        userListPane.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        userListPane.setLayoutOrientation(JList.VERTICAL);
-        userListPane.setCellRenderer(new CustomRenderer());   
-        userListPane.setAutoscrolls(false);
-        userListPane.setFocusable(false);
-        userListPane.setMaximumSize(new Dimension(25, 25));
-        JPopupMenu popup = new JPopupMenu();
-        JMenuItem popOpenQuery = new JMenuItem("Open Query", GUI.popupQueryIcon);
-        JMenuItem popWhois = new JMenuItem("Whois", GUI.popupWhoisIcon);
-        JMenuItem popVersion = new JMenuItem("Version", GUI.popupVersionIcon);
-        JMenuItem popPing = new JMenuItem("Ping", GUI.popupPingIcon);
-        JMenuItem popIgnore = new JMenuItem("Ignore", GUI.popupIgnoreIcon);
-        popup.add(popOpenQuery);
-        popup.add(new JSeparator());
-        popup.add(popWhois);
-        popup.add(popVersion);
-        popup.add(popPing);
-        popup.add(new JSeparator());
-        popup.add(popIgnore);
-        
-        MouseListener popupListener = new PopupListener(popup);
-        userListPane.addMouseListener(popupListener);
-        
-        popOpenQuery.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                User nick = ((User)userListPane.getSelectedValue());
-                if (nick == null) return;
-                String nickname = nick.getText();
-                if (nickname.equals(Connection.currentNick)) return;
-                try {
-                    ChannelPanel channel = new ChannelPanel(nickname, nickname, Connection.currentNick, ChannelPanel.this.connection);
-                    channel.setRightComponent(null);
-                    channel.setDividerSize(0);
-                    tabbedPane.setSelectedComponent(channel);
-                    
-                } catch (BadLocationException ex) {
-                    Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (IOException ex) {
-                    Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        });
-        popWhois.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                User nick = ((User)userListPane.getSelectedValue());
-                if (nick == null) return;
-                String nickname = nick.getText();
-                if (nickname.equals(Connection.currentNick)) return;
-                try {
-                    ChannelPanel.this.connection.send("WHOIS "+nickname);
-                } catch (IOException ex) {
-                    Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (BadLocationException ex) {
-                    Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        });
-        popVersion.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                User nick = ((User)userListPane.getSelectedValue());
-                if (nick == null) return;
-                String nickname = nick.getText();
-                if (nickname.equals(Connection.currentNick)) return;
-                try {
-                    ChannelPanel.this.connection.send("PRIVMSG "+nickname+" \001VERSION");
-                } catch (IOException ex) {
-                    Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (BadLocationException ex) {
-                    Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        });
-        popPing.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Long longTime = System.currentTimeMillis() / 1000L;
-                User nick = ((User)userListPane.getSelectedValue());
-                if (nick == null) return;
-                String nickname = nick.getText();
-                if (nickname.equals(Connection.currentNick)) return;
-                try {
-                    ChannelPanel.this.connection.send("PRIVMSG "+nickname+" :\001PING "+longTime+"\001");
-                } catch (IOException ex) {
-                    Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (BadLocationException ex) {
-                    Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        });
-        popIgnore.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                User nick = ((User)userListPane.getSelectedValue());
-                if (nick == null) return;
-                String nickname = nick.getText();
-                if (nickname.equals(Connection.currentNick)) return;
-                if (ignoreList.contains(nick.getText())){
-                    String[] msg = {null, "*** Removed "+nickname+" from ignore list."};
-                    try {
-                        insertString(msg, serverStyle, false);
-                    } catch (BadLocationException ex) {
-                        Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (IOException ex) {
-                        Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                    nick.foreground = Color.black;
-                    nick.setForeground(nick.foreground);
-                }
-                else{
-                    ignoreList.add(nick.getText());
-                    String[] msg = {null, "*** "+nickname+" added to ignore list."};
-                    try {
-                        insertString(msg, serverStyle, false);
-                    } catch (BadLocationException ex) {
-                        Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (IOException ex) {
-                        Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                    nick.foreground = Color.LIGHT_GRAY;
-                    nick.setForeground(nick.foreground);
-                }
-            }
-        });
-        
-        setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
-        setDividerLocation(540);
-        setResizeWeight(1.0);
-        setDividerSize(5);
-        setVerifyInputWhenFocusTarget(false);
-        
-        chatPane.setEditable(false);
-        chatPane.setAutoscrolls(true);
-        userListScrollPane.setViewportView(userListPane);
-        chatScrollPane.setViewportView(chatPane);
+	    userListPane.setModel(model);
+	    userListPane.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+	    userListPane.setLayoutOrientation(JList.VERTICAL);
+	    userListPane.setCellRenderer(new CustomRenderer());   
+	    userListPane.setAutoscrolls(false);
+	    userListPane.setFocusable(false);
+	    userListPane.setMaximumSize(new Dimension(25, 25));
+	    JPopupMenu popup = new JPopupMenu();
+	    JMenuItem popOpenQuery = new JMenuItem("Open Query", GUI.popupQueryIcon);
+	    JMenuItem popWhois = new JMenuItem("Whois", GUI.popupWhoisIcon);
+	    JMenuItem popVersion = new JMenuItem("Version", GUI.popupVersionIcon);
+	    JMenuItem popPing = new JMenuItem("Ping", GUI.popupPingIcon);
+	    JMenuItem popIgnore = new JMenuItem("Ignore", GUI.popupIgnoreIcon);
+	    popup.add(popOpenQuery);
+	    popup.add(new JSeparator());
+	    popup.add(popWhois);
+	    popup.add(popVersion);
+	    popup.add(popPing);
+	    popup.add(new JSeparator());
+	    popup.add(popIgnore);
+
+	    MouseListener popupListener = new PopupListener(popup);
+	    userListPane.addMouseListener(popupListener);
+
+	    popOpenQuery.addActionListener(new ActionListener(){
+		@Override
+		public void actionPerformed(ActionEvent e) {
+		    User nick = ((User)userListPane.getSelectedValue());
+		    if (nick == null) return;
+		    String nickname = nick.getText();
+		    if (nickname.equals(Connection.currentNick)) return;
+		    try {
+			ChannelPanel channel = new ChannelPanel(nickname, nickname, Connection.currentNick, ChannelPanel.this.connection);
+			channel.setRightComponent(null);
+			channel.setDividerSize(0);
+			tabbedPane.setSelectedComponent(channel);
+
+		    } catch (BadLocationException ex) {
+			Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
+		    } catch (IOException ex) {
+			Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
+		    }
+		}
+	    });
+	    popWhois.addActionListener(new ActionListener() {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+		    User nick = ((User)userListPane.getSelectedValue());
+		    if (nick == null) return;
+		    String nickname = nick.getText();
+		    if (nickname.equals(Connection.currentNick)) return;
+		    try {
+			ChannelPanel.this.connection.send("WHOIS "+nickname);
+		    } catch (IOException ex) {
+			Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
+		    } catch (BadLocationException ex) {
+			Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
+		    }
+		}
+	    });
+	    popVersion.addActionListener(new ActionListener() {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+		    User nick = ((User)userListPane.getSelectedValue());
+		    if (nick == null) return;
+		    String nickname = nick.getText();
+		    if (nickname.equals(Connection.currentNick)) return;
+		    try {
+			ChannelPanel.this.connection.send("PRIVMSG "+nickname+" \001VERSION");
+		    } catch (IOException ex) {
+			Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
+		    } catch (BadLocationException ex) {
+			Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
+		    }
+		}
+	    });
+	    popPing.addActionListener(new ActionListener() {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+		    Long longTime = System.currentTimeMillis() / 1000L;
+		    User nick = ((User)userListPane.getSelectedValue());
+		    if (nick == null) return;
+		    String nickname = nick.getText();
+		    if (nickname.equals(Connection.currentNick)) return;
+		    try {
+			ChannelPanel.this.connection.send("PRIVMSG "+nickname+" :\001PING "+longTime+"\001");
+		    } catch (IOException ex) {
+			Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
+		    } catch (BadLocationException ex) {
+			Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
+		    }
+		}
+	    });
+	    popIgnore.addActionListener(new ActionListener() {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+		    User nick = ((User)userListPane.getSelectedValue());
+		    if (nick == null) return;
+		    String nickname = nick.getText();
+		    if (nickname.equals(Connection.currentNick)) return;
+		    if (ignoreList.contains(nick.getText())){
+			String[] msg = {null, "*** Removed "+nickname+" from ignore list."};
+			try {
+			    insertString(msg, serverStyle, false);
+			} catch (BadLocationException ex) {
+			    Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
+			} catch (IOException ex) {
+			    Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
+			}
+			nick.foreground = Color.black;
+			nick.setForeground(nick.foreground);
+		    }
+		    else{
+			ignoreList.add(nick.getText());
+			String[] msg = {null, "*** "+nickname+" added to ignore list."};
+			try {
+			    insertString(msg, serverStyle, false);
+			} catch (BadLocationException ex) {
+			    Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
+			} catch (IOException ex) {
+			    Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
+			}
+			nick.foreground = Color.LIGHT_GRAY;
+			nick.setForeground(nick.foreground);
+		    }
+		}
+	    });
+
+	    setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
+	    setDividerLocation(540);
+	    setResizeWeight(1.0);
+	    setDividerSize(5);
+	    setVerifyInputWhenFocusTarget(false);
+
+	    chatPane.setEditable(false);
+	    chatPane.setAutoscrolls(true);
+	    userListScrollPane.setViewportView(userListPane);
+	    chatScrollPane.setViewportView(chatPane);
 
 
-        setLeftComponent(chatScrollPane);
-        if (name.startsWith("#")) setRightComponent(userListScrollPane);
-        else{
-            setRightComponent(null);
-            setDividerSize(0);
-        }
-  
-        
-        DefaultCaret caret = (DefaultCaret)chatPane.getCaret();
-        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+	    setLeftComponent(chatScrollPane);
+	    if (name.startsWith("#")) setRightComponent(userListScrollPane);
+	    else{
+		setRightComponent(null);
+		setDividerSize(0);   
+	    }
+
         }
         public void closeTab()
         {
@@ -396,6 +393,38 @@ import org.apache.commons.lang3.StringUtils;
                 else tabInfo.setText(name+" - "+population+" nicks ("+ops+text+server+"  ");
             }
         }
+	private void insertString(int offset, String str, AttributeSet a ) throws BadLocationException
+	{
+	    if (doc.getLength() == 0) str = str.trim()+" "; //removes \n at start of document
+	    int extent = chatScrollPane.getVerticalScrollBar().getModel().getExtent();
+	    int max = chatScrollPane.getVerticalScrollBar().getModel().getMaximum();
+	    int val = chatScrollPane.getVerticalScrollBar().getModel().getValue();
+	    final DefaultCaret caret = (DefaultCaret)chatPane.getCaret();
+
+	    boolean end = ((val+extent == max) || val+extent > max-50);
+	    
+	    doc.insertString(offset, str, a);
+	    
+	    if (end){ //controls autoscrolling -- if scrolled to bottom then scroll to end, otherwise don't
+		
+		SwingUtilities.invokeLater (new Runnable ()
+		{
+		    @Override
+		    public void run ()
+		    {
+			SwingUtilities.invokeLater (new Runnable ()
+			{
+			    @Override
+			    public void run ()
+			    {
+				caret.setDot(doc.getLength());
+			    }
+			});
+		    }
+		});
+	    }
+	}
+	
         public void insertString(String[] line, Style givenStyle, boolean isCTCP) throws BadLocationException, IOException
         {
             if (ignoreList.contains(line[0])) return; //change ignorelist to just hold strings and not users?
@@ -417,18 +446,19 @@ import org.apache.commons.lang3.StringUtils;
             if (showTimestamp == true)
             {
                 String timestamp = makeTimestamp();
-                doc.insertString(doc.getLength(), "["+timestamp+"] ", timestampStyle);
+                this.insertString(doc.getLength(), "\n["+timestamp+"] ", timestampStyle);
             }
-            if (chatNameColors == false && line[0] != null) doc.insertString(doc.getLength(), "<"+line[0]+">: ", chatStyle);
+	    else this.insertString(doc.getLength(), "\n", style);
+            if (chatNameColors == false && line[0] != null) this.insertString(doc.getLength(), "<"+line[0]+">: ", chatStyle);
             if (chatNameColors == true && line[0] != null)
             {
                 Color c = getUserColor(line[0]);
-                doc.insertString(doc.getLength(), "<", style);
+                this.insertString(doc.getLength(), "<", style);
                 StyleConstants.setForeground(userNameStyle, c);
-                doc.insertString(doc.getLength(), line[0], userNameStyle);
-                doc.insertString(doc.getLength(), ">: ", style);
+                this.insertString(doc.getLength(), line[0], userNameStyle);
+                this.insertString(doc.getLength(), ">: ", style);
             }
-            doc.insertString(doc.getLength(), line[1]+"\n", givenStyle);
+            this.insertString(doc.getLength(), line[1], givenStyle);
             checkForActiveTab();
         }
         public void insertCTCPAction (String[] line) throws BadLocationException
@@ -436,31 +466,33 @@ import org.apache.commons.lang3.StringUtils;
             String nick = line[0];
             String msg = line[1].trim();
             String timestamp = makeTimestamp();
-            if (showTimestamp == true) doc.insertString(doc.getLength(), "["+timestamp+"] " ,timestampStyle);
-            doc.insertString(doc.getLength(),"* " , actionStyle);
-            if (chatNameColors == false) doc.insertString(doc.getLength(),nick+" ", style);
+            if (showTimestamp == true) this.insertString(doc.getLength(), "\n["+timestamp+"] " ,timestampStyle);
+	    else this.insertString(doc.getLength(), "\n", style);
+            this.insertString(doc.getLength(),"* " , actionStyle);
+            if (chatNameColors == false) this.insertString(doc.getLength(),nick+" ", style);
             else
             {
                 Color c = getUserColor(nick);
                 StyleConstants.setForeground(userNameStyle, c);
-                doc.insertString(doc.getLength(), nick+" ", userNameStyle);
+                this.insertString(doc.getLength(), nick+" ", userNameStyle);
             }
-            doc.insertString(doc.getLength(), msg+"\n", actionStyle);
+            this.insertString(doc.getLength(), msg, actionStyle);
             checkForActiveTab();
         }
         public void insertCTCPColoredString(String[] line, Style givenStyle) throws BadLocationException
         {
             ctcpStyle = sc.addStyle("Defaultstyle", givenStyle);
             String timestamp = makeTimestamp();
-            if (showTimestamp == true) doc.insertString(doc.getLength(), "["+timestamp+"] " ,timestampStyle);
-            if (chatNameColors == false && line[0] != null) doc.insertString(doc.getLength(), "<"+line[0]+">: ", chatStyle);
+            if (showTimestamp == true) this.insertString(doc.getLength(), "\n["+timestamp+"] " ,timestampStyle);
+	    else this.insertString(doc.getLength(), "\n", style);
+            if (chatNameColors == false && line[0] != null) this.insertString(doc.getLength(), "<"+line[0]+">: ", chatStyle);
             if (chatNameColors == true && line[0] != null)
             {
                 Color c = getUserColor(line[0]);
-                doc.insertString(doc.getLength(), "<", style);
+                this.insertString(doc.getLength(), "<", style);
                 StyleConstants.setForeground(userNameStyle, c);
-                doc.insertString(doc.getLength(), line[0], userNameStyle);
-                doc.insertString(doc.getLength(), ">: ", style);
+                this.insertString(doc.getLength(), line[0], userNameStyle);
+                this.insertString(doc.getLength(), ">: ", style);
             }
             
             
@@ -520,18 +552,18 @@ import org.apache.commons.lang3.StringUtils;
 			}
 			if (min == Integer.MAX_VALUE)
 			{
-			    doc.insertString(doc.getLength(), token, hyperlinkUnclickedStyle);
+			    this.insertString(doc.getLength(), token, hyperlinkUnclickedStyle);
 			    continue;  
 			}
 			String channel = token.substring(0, min);
-			doc.insertString(doc.getLength(), channel, hyperlinkUnclickedStyle);
+			this.insertString(doc.getLength(), channel, hyperlinkUnclickedStyle);
 			String rest = token.substring(min);
-			doc.insertString(doc.getLength(), rest, ctcpStyle);
+			this.insertString(doc.getLength(), rest, ctcpStyle);
 			continue;
 		    }
 		    else //hyperlinking a URL
 		    {
-			//a better option may be to have a list of allowed characters?
+			//a better option may be to have a list of allowed characters? 
 			
 			int[] ind = { token.indexOf('"'), //disallowed URL characters
 				      token.indexOf('`'),
@@ -555,13 +587,13 @@ import org.apache.commons.lang3.StringUtils;
 			}			
 			if (min == Integer.MAX_VALUE)
 			{
-			    doc.insertString(doc.getLength(), token, hyperlinkUnclickedStyle);
+			    this.insertString(doc.getLength(), token, hyperlinkUnclickedStyle);
 			    continue;  
 			}
 			String url = token.substring(0, min);
-			doc.insertString(doc.getLength(), url, hyperlinkUnclickedStyle);
+			this.insertString(doc.getLength(), url, hyperlinkUnclickedStyle);
 			String rest = token.substring(min);
-			doc.insertString(doc.getLength(), rest, ctcpStyle);			
+			this.insertString(doc.getLength(), rest, ctcpStyle);			
 			continue;
 		    }
 		}
@@ -578,7 +610,7 @@ import org.apache.commons.lang3.StringUtils;
 
                         if (!StringUtils.isNumeric(token.substring(0,1)) && !token.startsWith(","))
                         {
-                            doc.insertString(doc.getLength(), token, chatStyle);
+                            this.insertString(doc.getLength(), token, chatStyle);
                             continue;
                         }
                         while (matcher.find())
@@ -586,7 +618,7 @@ import org.apache.commons.lang3.StringUtils;
                             if (matcher.group(8) != null && matcher.group(8).equals(",")) //invalid (ex. ,5this is a message) prints plain
                             {
                                 message = matcher.group(10);
-                                doc.insertString(doc.getLength(), message, ctcpStyle);
+                                this.insertString(doc.getLength(), message, ctcpStyle);
                                 continue;
                             }
                             if (matcher.group(6) != null && matcher.group(6).equals(",")) //foreground color, no bg color (ex. 5,this is a message)
@@ -595,7 +627,7 @@ import org.apache.commons.lang3.StringUtils;
                                 message = matcher.group(7);
                                 Color f = (Color)CTCPMap.get(Integer.valueOf(foreground));
                                 StyleConstants.setForeground(ctcpStyle, f);
-                                doc.insertString(doc.getLength(), message, ctcpStyle);
+                                this.insertString(doc.getLength(), message, ctcpStyle);
                                 continue;
                             }
                             if (matcher.group(8) != null && matcher.group(8).equals("")) //foreground color, no bg color (ex. 5this is a message)
@@ -605,7 +637,7 @@ import org.apache.commons.lang3.StringUtils;
                                 Color f = (Color)CTCPMap.get(Integer.valueOf(foreground));
                                 //StyleConstants.setBackground(ctcpStyle, Color.WHITE); ????????
                                 StyleConstants.setForeground(ctcpStyle, f);
-                                doc.insertString(doc.getLength(), message, ctcpStyle);
+                                this.insertString(doc.getLength(), message, ctcpStyle);
                                 continue;
                             }
                             if (matcher.group(2) != null && matcher.group(2).equals("")) //foreground color, no bg color, but followed by a number, ie 53 blind mice
@@ -614,7 +646,7 @@ import org.apache.commons.lang3.StringUtils;
                                 message = matcher.group(3)+matcher.group(4);
                                 Color f = (Color)CTCPMap.get(Integer.valueOf(foreground));
                                 StyleConstants.setForeground(ctcpStyle, f);
-                                doc.insertString(doc.getLength(), message, ctcpStyle);
+                                this.insertString(doc.getLength(), message, ctcpStyle);
                                 continue;
                             }
                             if (matcher.group(2) != null && matcher.group(2).equals(",")) //foreground and background (ex. 5,5this is a message)
@@ -626,7 +658,7 @@ import org.apache.commons.lang3.StringUtils;
                                 Color b = (Color)CTCPMap.get(Integer.valueOf(background));
                                 StyleConstants.setForeground(ctcpStyle, f);
                                 StyleConstants.setBackground(ctcpStyle, b);
-                                doc.insertString(doc.getLength(), message, ctcpStyle);
+                                this.insertString(doc.getLength(), message, ctcpStyle);
                                 continue;
                             }                               
                         } 
@@ -634,10 +666,10 @@ import org.apache.commons.lang3.StringUtils;
                 }
                 else
                 {
-                    doc.insertString(doc.getLength(), token, ctcpStyle);
+                    this.insertString(doc.getLength(), token, ctcpStyle);
                 }
             }
-            doc.insertString(doc.getLength(), "\n", ctcpStyle);
+            //this.insertString(doc.getLength(), "\n", ctcpStyle);
             checkForActiveTab();
         }
         public void checkForActiveTab()
@@ -960,29 +992,23 @@ class PopupListener extends MouseAdapter {
 }
 
 class PlainTextHyperlinkListener implements HyperlinkListener {
-  JTextPane textPane;
+    JTextPane textPane;
 
-  public PlainTextHyperlinkListener(JTextPane textPane) {
-    this.textPane = textPane;
-  }
-
-  public void hyperlinkUpdate(HyperlinkEvent evt) {
-    HyperlinkEvent.EventType type = evt.getEventType();
-    final URL url = evt.getURL();
-    System.out.println(evt.getURL());
-    if (type == HyperlinkEvent.EventType.ENTERED) {
-      System.out.println("URL: " + url);
-    } else if (type == HyperlinkEvent.EventType.ACTIVATED) {
-      System.out.println("Activated");
-
+    public PlainTextHyperlinkListener(JTextPane textPane) {
+	this.textPane = textPane;
     }
-  }
+    public void hyperlinkUpdate(HyperlinkEvent evt) {
+	HyperlinkEvent.EventType type = evt.getEventType();
+	final URL url = evt.getURL();
+	System.out.println(evt.getURL());
+	if (type == HyperlinkEvent.EventType.ENTERED) System.out.println("URL: " + url); 
+	if (type == HyperlinkEvent.EventType.ACTIVATED) System.out.println("Activated");
+	}
 }
 
 class TextMotionListener extends MouseInputAdapter {
     JTextPane textPane;
-    public TextMotionListener(JTextPane textPane)
-    {
+    public TextMotionListener(JTextPane textPane){
 	this.textPane = textPane;
     }
   public void mouseMoved(MouseEvent e) {
