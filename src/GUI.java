@@ -956,7 +956,7 @@ public class GUI extends JFrame {
 	    final JTextField field = new JTextField();    
 	    
 	    final JCheckBox matchCase = new JCheckBox("Match Case");
-	    JCheckBox highlightAll = new JCheckBox("Highlight All");
+	    final JCheckBox highlightAll = new JCheckBox("Highlight All");
 	    final JButton findButton = new JButton("Find");
 	    final JButton closeButton = new JButton("Close");
 	    findButton.setPreferredSize(new Dimension(100, 25));
@@ -979,39 +979,58 @@ public class GUI extends JFrame {
 	    layout.putConstraint(SpringLayout.SOUTH, closeButton, -5, SpringLayout.SOUTH, contentPane);
 	    layout.putConstraint(SpringLayout.EAST, closeButton, -15, SpringLayout.EAST, dialog);
 	    
+	    closeButton.addActionListener(new ActionListener() {
+		@Override
+		public void actionPerformed(ActionEvent e)
+		{
+		    for (int i = 0; i < tabbedPane.getTabCount(); i++)
+		    {
+			ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+			DefaultHighlighter highlighter = (DefaultHighlighter) channel.chatPane.getHighlighter();
+			highlighter.removeAllHighlights();
+		    }
+
+		    dialog.dispose();
+		}
+	    });
+	    
+	    dialog.addWindowListener(new WindowAdapter() {
+		@Override
+		public void windowClosing(WindowEvent e)
+		{
+		    closeButton.getActionListeners()[0].actionPerformed(null);
+		}
+	    });
 	    field.getDocument().addDocumentListener(new DocumentListener() {
 		@Override
-		public void insertUpdate(DocumentEvent e) {
-		    clearEverything();
+		public void insertUpdate(DocumentEvent e)
+		{
+		    removeHighlights();
 		    findButton.getActionListeners()[0].actionPerformed(null);
 		}
 		@Override
-		public void removeUpdate(DocumentEvent e) {
-		    clearEverything();
+		public void removeUpdate(DocumentEvent e)
+		{
+		    removeHighlights();
 		    findButton.getActionListeners()[0].actionPerformed(null);
 		}
 		@Override
-		public void changedUpdate(DocumentEvent e) {
-		    clearEverything();
+		public void changedUpdate(DocumentEvent e)
+		{
+		    removeHighlights();
 		    findButton.getActionListeners()[0].actionPerformed(null);
 		}
-		private void clearEverything()
+		protected void removeHighlights()
 		{
 		    for (int i = 0; i < tabbedPane.getTabCount(); i++)
 		    {
 			ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
-			if (!channel.savedElements.isEmpty() && channel.lastSearchIndex != 1)
-			{
-			    for (Element savedElement : channel.savedElements) {
-				channel.chatPane.getStyledDocument().setCharacterAttributes(channel.lastSearchIndex, channel.savedElements.size(), savedElement.getAttributes(), enabled);
-			    }
-			}
-			channel.savedElements.clear();
+			DefaultHighlighter highlighter = (DefaultHighlighter) channel.chatPane.getHighlighter();
+			if (!channel.isShowing()) highlighter.removeAllHighlights();
 			channel.lastSearchIndex = -1;
-			DefaultCaret caret = (DefaultCaret) channel.chatPane.getCaret();
-			caret.setDot(channel.doc.getLength());
 		    }
 		}
+			
 	    });	    
 	    field.addKeyListener(new KeyAdapter() {
 		@Override
@@ -1021,44 +1040,31 @@ public class GUI extends JFrame {
 		    {
 			closeButton.getActionListeners()[0].actionPerformed(null);
 		    }
-		}
-	    });
-	    dialog.addWindowListener(new WindowAdapter() {
-		@Override
-		public void windowClosing(WindowEvent e)
-		{
-		    closeButton.getActionListeners()[0].actionPerformed(null);
-		}
-	    });
-	    
-	    closeButton.addActionListener(new ActionListener() {
-		@Override
-		public void actionPerformed(ActionEvent e) {
-		    for (int i = 0; i < tabbedPane.getTabCount(); i++)
+		    if (e.getKeyCode() == KeyEvent.VK_ENTER)
 		    {
-			ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
-			if (!channel.savedElements.isEmpty() && channel.lastSearchIndex != 1)
-			{
-			    for (Element savedElement : channel.savedElements)
-				channel.chatPane.getStyledDocument().setCharacterAttributes(channel.lastSearchIndex, channel.savedElements.size(), savedElement.getAttributes(), enabled);
-			}
-			channel.savedElements.clear();
-			channel.lastSearchIndex = -1;
-			DefaultCaret caret = (DefaultCaret) channel.chatPane.getCaret();
-			caret.setDot(channel.doc.getLength());
+			findButton.getActionListeners()[0].actionPerformed(null);
 		    }
-		    dialog.dispose();
 		}
 	    });
 	    findButton.addActionListener(new ActionListener() {
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void actionPerformed(ActionEvent e)
+		{
 		    ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
 		    StyledDocument doc = channel.chatPane.getStyledDocument();
-		    String searchString = field.getText().trim();
-		    if (!matchCase.isSelected()) searchString = searchString.toLowerCase();
-
-		    if (searchString.isEmpty()) return;
+		    DefaultHighlighter.DefaultHighlightPainter p = new DefaultHighlighter.DefaultHighlightPainter(ChannelPanel.highlightColor);
+		    DefaultHighlighter highlighter = (DefaultHighlighter) channel.chatPane.getHighlighter();
+		    highlighter.setDrawsLayeredHighlights(false);
+		    String searchString = field.getText();
+		    
+		    
+		    if (highlightAll.isSelected())
+		    {
+			highlightAll(searchString);
+			return;
+		    }		    
+		    
+		    
 		    String s = "";
 		    try {
 			s = doc.getText(0, doc.getLength());
@@ -1066,44 +1072,96 @@ public class GUI extends JFrame {
 			Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
 		    }
 		    
-		    int location;
-		    if (channel.lastSearchIndex == -1) location = s.indexOf(searchString);
-		    else location = s.indexOf(searchString, channel.lastSearchIndex+searchString.length());
 		    
+		    int location;
+		    if (matchCase.isSelected())
+		    {
+			if (channel.lastSearchIndex == -1) location = s.indexOf(searchString);
+			else location = s.indexOf(searchString, channel.lastSearchIndex+searchString.length());
+		    }
+		    else
+		    {
+			if (channel.lastSearchIndex == -1) location = StringUtils.indexOfIgnoreCase(s, searchString);
+			else location = StringUtils.indexOfIgnoreCase(s, searchString, channel.lastSearchIndex+searchString.length());
+		    }		    
+		    		    
 		    if (location != -1)
 		    {
-			if (!channel.savedElements.isEmpty() && channel.lastSearchIndex != 1)
-			{
-			    for (int i = 0; i < channel.savedElements.size(); i++)
-			    {				
-				doc.setCharacterAttributes(channel.lastSearchIndex+i, 1, channel.savedElements.get(i).getAttributes(), enabled);
-			    }
+			try {
+			    highlighter.removeAllHighlights();
+			    highlighter.addHighlight(location, location+searchString.length(), p);	
+			    channel.lastSearchIndex = location;
+			    DefaultCaret caret = (DefaultCaret)channel.chatPane.getCaret();
+			    caret.setDot(location);
+			} catch (BadLocationException ex) {
+			    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
 			}
-			channel.savedElements.clear();
-			for (int i = 0; i < searchString.length(); i++)
-			{
-			    Element ele = doc.getCharacterElement(location+searchString.length());
-			    channel.savedElements.add(ele);
-			}
-			channel.lastSearchIndex = location;
-			doc.setCharacterAttributes(location, searchString.length(), ChannelPanel.highlightStyle, enabled);
-			DefaultCaret caret = (DefaultCaret) channel.chatPane.getCaret();
-			caret.setDot(location);
 		    }
 		}
+		private void highlightAll(String searchString)
+		{
+		    ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+		    StyledDocument doc = channel.chatPane.getStyledDocument();
+		    DefaultHighlighter.DefaultHighlightPainter p = new DefaultHighlighter.DefaultHighlightPainter(ChannelPanel.highlightColor);
+		    DefaultHighlighter highlighter = (DefaultHighlighter) channel.chatPane.getHighlighter();
+		    String s = "";
+		    try {
+			s = doc.getText(0, doc.getLength());
+		    } catch (BadLocationException ex) {
+			Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+		    }
+		    
+		    highlighter.removeAllHighlights();
+		    
+		    int location = 0;
+
+		    while (location != -1)
+		    {
+			if (matchCase.isSelected())
+			{
+			    if (channel.lastSearchIndex == -1) location = s.indexOf(searchString);
+			    else location = s.indexOf(searchString, channel.lastSearchIndex+searchString.length());
+			}
+			else
+			{
+			    if (channel.lastSearchIndex == -1) location = StringUtils.indexOfIgnoreCase(s, searchString);
+			    else location = StringUtils.indexOfIgnoreCase(s, searchString, channel.lastSearchIndex+searchString.length());
+			}	
+			channel.lastSearchIndex = location;
+			if (location == -1) break;
+			try {
+			    highlighter.addHighlight(location, location+searchString.length(), p);
+			} catch (BadLocationException ex) {
+			    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+			}
+		    }
+		}		    
 	    });
 	    findButton.addKeyListener(new KeyAdapter() {
 		@Override
 		public void keyPressed(KeyEvent e)
 		{
-		    if (e.getKeyCode() == KeyEvent.VK_ENTER)
+		    findButton.getActionListeners()[0].actionPerformed(null);    
+		}
+	    });
+	    highlightAll.addItemListener(new ItemListener() {
+
+		@Override
+		public void itemStateChanged(ItemEvent e) {
+		    matchCase.getItemListeners()[0].itemStateChanged(null);
+		}
+	    });
+	    matchCase.addItemListener(new ItemListener() {
+		@Override
+		public void itemStateChanged(ItemEvent e) {
+		    for (int i = 0; i < tabbedPane.getTabCount(); i++)
 		    {
-			findButton.getActionListeners()[0].actionPerformed(null);
-		    }
-		    if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
-		    {
-			closeButton.getActionListeners()[0].actionPerformed(null);
-		    }
+			ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
+			DefaultHighlighter highlighter = (DefaultHighlighter) channel.chatPane.getHighlighter();
+			if (!channel.isShowing()) highlighter.removeAllHighlights();
+			channel.lastSearchIndex = -1;
+		    }  
+		    findButton.getActionListeners()[0].actionPerformed(null);
 		}
 	    });
 	}
