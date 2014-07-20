@@ -396,11 +396,10 @@ import org.apache.commons.lang3.StringUtils;
 	private void insertString(int offset, String str, AttributeSet a ) throws BadLocationException
 	{
 	    if (doc.getLength() == 0) str = str.trim()+" "; //removes \n at start of document
+	    
 	    int extent = chatScrollPane.getVerticalScrollBar().getModel().getExtent();
 	    int max = chatScrollPane.getVerticalScrollBar().getModel().getMaximum();
 	    int val = chatScrollPane.getVerticalScrollBar().getModel().getValue();
-	    final DefaultCaret caret = (DefaultCaret)chatPane.getCaret();
-
 	    boolean end = ((val+extent == max) || val+extent > max-50);
 	    
 	    doc.insertString(offset, str, a);
@@ -417,7 +416,7 @@ import org.apache.commons.lang3.StringUtils;
 			    @Override
 			    public void run ()
 			    {
-				caret.setDot(doc.getLength());
+				chatPane.getCaret().setDot(doc.getLength());
 			    }
 			});
 		    }

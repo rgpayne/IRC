@@ -129,38 +129,38 @@ public class GUI extends JFrame {
         quitProgram = new JMenuItem();
         fileMenu.add(quitProgram);
 	
-	quitProgram.setAction(new QuitProgramAction("Quit", quitProgramIcon, null, KeyEvent.VK_Q));
+	quitProgram.setAction(QuitProgramAction.getInstance());
 	quitProgram.setAccelerator(KeyStroke.getKeyStroke('Q', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
-	joinChannel.setAction(new JoinChannelAction("Join Channel", joinChannelIcon, null, KeyEvent.VK_J));
+	joinChannel.setAction(JoinChannelAction.getInstance());
 	joinChannel.setAccelerator(KeyStroke.getKeyStroke('J', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
-	clearWindow.setAction(new ClearWindowAction("Clear Window", null, null, KeyEvent.VK_C));
+	clearWindow.setAction(ClearAllWindowsAction.getInstance());
 	clearWindow.setAccelerator(KeyStroke.getKeyStroke('L', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
-	clearAllWindows.setAction(new ClearAllWindowsAction("Clear All Windows", null, null, KeyEvent.VK_A));
+	clearAllWindows.setAction(ClearAllWindowsAction.getInstance());
 	clearAllWindows.setDisplayedMnemonicIndex(6);	
 	clearAllWindows.setAccelerator(KeyStroke.getKeyStroke('L', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() | Event.SHIFT_MASK, false));
-	previousTab.setAction(new PreviousTabAction("PreviousTab", prevTabIcon, null, KeyEvent.VK_P));
+	previousTab.setAction(PreviousTabAction.getInstance());
 	previousTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, Event.SHIFT_MASK, false));	
-	nextTab.setAction(new NextTabAction("Next Tab", nextTabIcon, null, KeyEvent.VK_N));
+	nextTab.setAction(NextTabAction.getInstance());
 	nextTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, Event.SHIFT_MASK, false));	
-	moveTabLeft.setAction(new MoveTabLeftAction("Move Tab Left",moveTabLeftIcon, null, KeyEvent.VK_L));
+	moveTabLeft.setAction(MoveTabLeftAction.getInstance());
 	moveTabLeft.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
-	moveTabRight.setAction(new MoveTabRightAction("Move Tab Right", moveTabRightIcon, null, KeyEvent.VK_R));
+	moveTabRight.setAction(MoveTabRightAction.getInstance());
 	moveTabRight.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
-	closeTab.setAction(new CloseTabAction("Close Tab", closeTabIcon, null, KeyEvent.VK_T));
+	closeTab.setAction(CloseTabAction.getInstance());
 	closeTab.setAccelerator(KeyStroke.getKeyStroke('W', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
-	globalAway.setAction(new GlobalAwayAction("Global Away", globalAwayIcon, null, KeyEvent.VK_A));
+	globalAway.setAction(GlobalAwayAction.getInstance());
 	globalAway.setDisplayedMnemonicIndex(7);      
-	disconnect.setAction(new DisconnectAction("Disconnect", disconnectIcon, null, KeyEvent.VK_D));	
-	reconnect.setAction(new ReconnectAction("Reconnect", reconnectIcon, null, KeyEvent.VK_R));
-	quickConnect.setAction(new QuickConnectAction("Quick Connect", quickConnectIcon, null, KeyEvent.VK_Q));
+	disconnect.setAction(DisconnectAction.getInstance());	
+	reconnect.setAction(ReconnectAction.getInstance());
+	quickConnect.setAction(QuickConnectAction.getInstance());
 	quickConnect.setAccelerator(KeyStroke.getKeyStroke("F7"));	
-	showNickList.setAction(new ShowNickListAction("Show/Hide Nicklist", showNicklistIcon, null, KeyEvent.VK_N));
+	showNickList.setAction(ShowNickListAction.getInstance());
 	showNickList.setAccelerator(KeyStroke.getKeyStroke('H', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
-	identities.setAction(new IdentitiesAction("Identities", identitiesIcon, null, KeyEvent.VK_I));
+	identities.setAction(IdentitiesAction.getInstance());
 	identities.setAccelerator(KeyStroke.getKeyStroke("F2"));	
-	serverList.setAction(new ServerListAction("Server List", serverListIcon, null, KeyEvent.VK_L));
+	serverList.setAction(ServerListAction.getInstance());
 	serverList.setAccelerator(KeyStroke.getKeyStroke("F2"));		
-	channelList.setAction(new ChannelListAction("Channel List", channelListIcon, null, KeyEvent.VK_C));
+	channelList.setAction(ChannelListAction.getInstance());
 	channelList.setDisplayedMnemonicIndex(8);
 	channelList.setAccelerator(KeyStroke.getKeyStroke("F5"));	
 	chatInputPane.addKeyListener(new KeyAdapter()
@@ -417,7 +417,7 @@ public class GUI extends JFrame {
             System.out.println("Deserialization exception");
         }
     }
-    private void joinOKButtonFunctionality(JDialog dialog, String choice, String server)
+    private static void joinOKButtonFunctionality(JDialog dialog, String choice, String server)
     {
         if (!server.startsWith("#")) server = "#"+server;
         if (choice == null){
@@ -441,7 +441,7 @@ public class GUI extends JFrame {
             Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    private void quickConnectButtonFunctionality(JTextField[] panes, JDialog dialog)
+    private static void quickConnectButtonFunctionality(JTextField[] panes, JDialog dialog)
     {
         String name = panes[0].getText().trim();
         String chan = panes[1].getText().trim();
@@ -478,7 +478,7 @@ public class GUI extends JFrame {
             if (!pass.isEmpty()) c.password = pass;
         }
     }
-    private void identityButtonFunctionality(JTextField[] panes, JDialog dialog)
+    private static void identityButtonFunctionality(JTextField[] panes, JDialog dialog)
     {
         try {
             prop.load(new FileInputStream("config.properties"));
@@ -561,7 +561,7 @@ public class GUI extends JFrame {
         }
     }
     
-    private void serverListAddButtonFunctionality(JDialog dialog, BeanTableModel model)
+    private static void serverListAddButtonFunctionality(JDialog dialog, BeanTableModel model)
     {
         JTextField name = new JTextField();
         JTextField server = new JTextField();
@@ -585,7 +585,8 @@ public class GUI extends JFrame {
         
         String[] s = channels.getText().split(" ");
         ArrayList<String> channelList = new ArrayList<String>(Arrays.asList(s));
-        if (!StringUtils.isNumeric(port.getText())){
+        if (!StringUtils.isNumeric(port.getText()))
+	{
             JOptionPane.showMessageDialog(dialog, "Port must be an integer.");
             return;
         }
@@ -641,27 +642,29 @@ public class GUI extends JFrame {
     
     
     
-    class ChannelListAction extends AbstractAction{
-	public ChannelListAction(String text, ImageIcon icon, String desc, Integer mnemonic)
+    static class ChannelListAction extends AbstractAction{
+	private static ChannelListAction ref = null;
+	private ChannelListAction(String text, ImageIcon icon, String desc, Integer mnemonic)
 	{
 	    super(text, icon);
 	    putValue(SHORT_DESCRIPTION, desc);
 	    putValue(MNEMONIC_KEY, mnemonic);
 	}
+	public static ChannelListAction getInstance()
+	{
+	    if (ref == null) ref = new ChannelListAction("Channel List", channelListIcon, null, KeyEvent.VK_C);
+	    return ref;
+	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
-
 	    final ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
 
-	    JDialog dialog = new JDialog(GUI.this, "Channel List");
+	    JDialog dialog = new JDialog(frame, "Channel List - "+channel.connection.title, true);
 	    SpringLayout layout = new SpringLayout();
 	    JPanel panel = new JPanel(layout);
 
 	    dialog.add(panel);
 	    dialog.setPreferredSize(new Dimension(600,400));
-	    dialog.pack();
-	    dialog.setLocationRelativeTo(tabbedPane);
-	    dialog.setVisible(true);
 
 	    Container contentpane = dialog.getContentPane();
 	    contentpane.setLayout(layout);
@@ -680,7 +683,8 @@ public class GUI extends JFrame {
 		public String getToolTipText(MouseEvent e)
 		{
 		    Point p = e.getPoint();
-		    int rowIndex = rowIndex = rowAtPoint(p);
+		    int rowIndex = convertRowIndexToModel(rowAtPoint(p));
+		   
 		    String tip =  (String)getModel().getValueAt(rowIndex, 2);
 		    boolean split = false;
 		    int counter = 0;
@@ -726,7 +730,7 @@ public class GUI extends JFrame {
 	    table.getColumnModel().getColumn(0).setCellRenderer(left);
 
 	    table.getColumnModel().getColumn(1).setPreferredWidth(130);
-	    table.getColumnModel().getColumn(1).setMaxWidth(160);
+	    table.getColumnModel().getColumn(1).setMaxWidth(250);
 	    table.getColumnModel().getColumn(1).setMinWidth(130);
 
 	    table.getColumnModel().getColumn(2).setPreferredWidth(300);
@@ -758,7 +762,6 @@ public class GUI extends JFrame {
 	    layout.putConstraint(SpringLayout.NORTH, filterArea, 10, SpringLayout.SOUTH, scrollPane);
 
 
-
 	    final RowFilter<Object, Object> filter = new RowFilter<Object, Object>(){
 		public boolean include(RowFilter.Entry entry){
 		    String filter = filterArea.getText();
@@ -778,6 +781,8 @@ public class GUI extends JFrame {
 		     try {
 			channel.connection.send("LIST");
 			Thread.sleep(100);
+			model.modelData.clear();
+			model.fireTableDataChanged();
 			while (channel.connection.currentlyUpdating)
 			{
 			    Thread.sleep(100);
@@ -832,16 +837,26 @@ public class GUI extends JFrame {
 		    table.setRowSorter(sorter);
 		}
 	    });
-	}
+	    dialog.pack();
+	    dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+	    dialog.setLocationRelativeTo(frame);
+	    dialog.setVisible(true);
+	} 
     }
     
-    class ClearAllWindowsAction extends AbstractAction{
-	public ClearAllWindowsAction(String text, ImageIcon icon, String desc, Integer mnemonic)
+    static class ClearAllWindowsAction extends AbstractAction{
+	private static ClearAllWindowsAction ref = null;
+	private ClearAllWindowsAction(String text, ImageIcon icon, String desc, Integer mnemonic)
 	{
 	    super(text, icon);
 	    putValue(SHORT_DESCRIPTION, desc);
 	    putValue(MNEMONIC_KEY, mnemonic);
-	}	
+	}
+	public static ClearAllWindowsAction getInstance()
+	{
+	    if (ref == null) ref = new ClearAllWindowsAction("Clear All Windows", null, null, KeyEvent.VK_A);
+	    return ref;
+	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
 	    for (int i = 0; i < tabbedPane.getTabCount(); i++)
@@ -855,12 +870,18 @@ public class GUI extends JFrame {
 	    }                  
 	}
     }
-    class ClearWindowAction extends AbstractAction{
+    static class ClearWindowAction extends AbstractAction{
+	private static ClearWindowAction ref = null;
 	public ClearWindowAction(String text, ImageIcon icon, String desc, Integer mnemonic)
 	{
 	    super(text, icon);
 	    putValue(SHORT_DESCRIPTION, desc);
 	    putValue(MNEMONIC_KEY, mnemonic);
+	}
+	public static ClearWindowAction getInstance()
+	{
+	    if (ref == null) ref = new ClearWindowAction("Clear Window", null, null, KeyEvent.VK_C);
+	    return ref;
 	}
 	@Override    
 	public void actionPerformed(ActionEvent e) {
@@ -872,12 +893,18 @@ public class GUI extends JFrame {
 	    }
 	}
     }
-    class CloseTabAction extends AbstractAction{
-	public CloseTabAction(String text, ImageIcon icon, String desc, Integer mnemonic)
+    static class CloseTabAction extends AbstractAction{
+	private static CloseTabAction ref = null;
+	private CloseTabAction(String text, ImageIcon icon, String desc, Integer mnemonic)
 	{
 	    super(text, icon);
 	    putValue(SHORT_DESCRIPTION, desc);
 	    putValue(MNEMONIC_KEY, mnemonic);
+	}
+	public static CloseTabAction getInstance()
+	{
+	    if (ref == null) ref = new CloseTabAction("Close Tab", closeTabIcon, null, KeyEvent.VK_T);
+	    return ref;
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
@@ -889,12 +916,18 @@ public class GUI extends JFrame {
 	}
     }
     
-    class DisconnectAction extends AbstractAction{
-	public DisconnectAction(String text, ImageIcon icon, String desc, Integer mnemonic)
+    static class DisconnectAction extends AbstractAction{
+	private static DisconnectAction ref = null;
+	private DisconnectAction(String text, ImageIcon icon, String desc, Integer mnemonic)
 	{
 	    super(text, icon);
 	    putValue(SHORT_DESCRIPTION, desc);
 	    putValue(MNEMONIC_KEY, mnemonic);
+	}
+	public static DisconnectAction getInstance()
+	{
+	    if (ref == null) ref = new DisconnectAction("Disconnect", disconnectIcon, null, KeyEvent.VK_D);
+	    return ref;
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
@@ -933,7 +966,6 @@ public class GUI extends JFrame {
 
     }
     static class FindTextAction extends AbstractAction{
-	@Override
 	public void actionPerformed(ActionEvent e) {    
 	    
 	    //final ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
@@ -993,6 +1025,20 @@ public class GUI extends JFrame {
 		    dialog.dispose();
 		}
 	    });
+	    closeButton.addKeyListener(new KeyAdapter() {
+		@Override
+		public void keyPressed(KeyEvent e)
+		{
+		    if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
+		    {
+			closeButton.getActionListeners()[0].actionPerformed(null);
+		    }
+		    if (e.getKeyCode() == KeyEvent.VK_ENTER)
+		    {
+			closeButton.getActionListeners()[0].actionPerformed(null);
+		    }
+		}
+	    });
 	    
 	    dialog.addWindowListener(new WindowAdapter() {
 		@Override
@@ -1040,12 +1086,38 @@ public class GUI extends JFrame {
 		    {
 			closeButton.getActionListeners()[0].actionPerformed(null);
 		    }
+		    if (e.isControlDown() && e.getKeyCode() == KeyEvent.VK_F)
+		    {
+			closeButton.getActionListeners()[0].actionPerformed(null);
+		    }
 		    if (e.getKeyCode() == KeyEvent.VK_ENTER)
 		    {
 			findButton.getActionListeners()[0].actionPerformed(null);
 		    }
 		}
 	    });
+	    findButton.addKeyListener(new KeyAdapter() {
+		@Override
+		public void keyPressed(KeyEvent e)
+		{
+		    if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
+		    {
+			closeButton.getActionListeners()[0].actionPerformed(null);
+		    }
+		    if (e.isControlDown() && e.getKeyCode() == KeyEvent.VK_F)
+		    {
+			closeButton.getActionListeners()[0].actionPerformed(null);
+		    }
+		    if (e.getKeyCode() == KeyEvent.VK_ENTER)
+		    {
+			findButton.getActionListeners()[0].actionPerformed(null);
+		    }
+		}
+	    });
+		    
+		    
+		    
+		    
 	    findButton.addActionListener(new ActionListener() {
 		@Override
 		public void actionPerformed(ActionEvent e)
@@ -1168,12 +1240,17 @@ public class GUI extends JFrame {
 	
     }
     static class GlobalAwayAction extends AbstractAction{
-	public GlobalAwayAction(String text, ImageIcon icon, String desc, Integer mnemonic)
+	private static GlobalAwayAction ref = null;
+	private GlobalAwayAction(String text, ImageIcon icon, String desc, Integer mnemonic)
 	{
 	    super(text, icon);
 	    putValue(SHORT_DESCRIPTION, desc);
 	    putValue(MNEMONIC_KEY, mnemonic);
-	    
+	}
+	public static GlobalAwayAction getInstance()
+	{
+	    if (ref == null) ref = new GlobalAwayAction("Global Away", globalAwayIcon, null, KeyEvent.VK_A);
+	    return ref;
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
@@ -1206,17 +1283,23 @@ public class GUI extends JFrame {
 
 	}
     }   
-    class IdentitiesAction extends AbstractAction{
-	public IdentitiesAction(String text, ImageIcon icon, String desc, Integer mnemonic)
+    static class IdentitiesAction extends AbstractAction{
+	private static IdentitiesAction ref = null;
+	private IdentitiesAction(String text, ImageIcon icon, String desc, Integer mnemonic)
 	{
 	    super(text, icon);
 	    putValue(SHORT_DESCRIPTION, desc);
 	    putValue(MNEMONIC_KEY, mnemonic);
 	}
+	public static IdentitiesAction getInstance()
+	{
+	   if (ref == null) ref = new IdentitiesAction("Identities", identitiesIcon, null, KeyEvent.VK_I);
+	   return ref;
+	}
 	@Override
 	public void actionPerformed(ActionEvent e)
 	{
-	    final JDialog dialog = new JDialog(GUI.this);
+	    final JDialog dialog = new JDialog(frame, "Identities", true);
 	    SpringLayout layout = new SpringLayout();
 	    JPanel panel = new JPanel(layout);
 	    String[] labelVal = {Connection.real, Connection.nicks[0], Connection.nicks[1], Connection.nicks[2]};
@@ -1236,12 +1319,9 @@ public class GUI extends JFrame {
 		panel.add(textField);
 	    }
 
-	    dialog.setTitle("Identities");
 	    dialog.setSize(new Dimension(220,180));
 	    dialog.setResizable(false);
-	    dialog.setLocationRelativeTo(tabbedPane);                              
 	    dialog.add(panel);
-	    dialog.setVisible(true);
 	    JButton saveButton = new JButton("Save");
 	    saveButton.setPreferredSize(new Dimension(80,24));
 	    panel.add(saveButton);
@@ -1266,15 +1346,24 @@ public class GUI extends JFrame {
 		}
 
 	    });
+	    dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+	    dialog.setLocationRelativeTo(frame);
+	    dialog.setVisible(true);
 	}
     }
-    class JoinChannelAction extends AbstractAction{
-	public JoinChannelAction(String text, ImageIcon icon, String desc, Integer mnemonic)
+    static class JoinChannelAction extends AbstractAction{
+	static JoinChannelAction ref = null;
+	private JoinChannelAction(String text, ImageIcon icon, String desc, Integer mnemonic)
 	{
 	    super(text, icon);
 	    putValue(SHORT_DESCRIPTION, desc);
 	    putValue(MNEMONIC_KEY, mnemonic);
-	}	
+	}
+	public static JoinChannelAction getInstance()
+	{
+	    if (ref == null) ref = new JoinChannelAction("Join Channel", joinChannelIcon, null, KeyEvent.VK_J);
+	    return ref;
+	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
 
@@ -1282,21 +1371,18 @@ public class GUI extends JFrame {
 	    for (int i = 0; i < tabbedPane.getTabCount(); i++)
 	    {
 		ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
-		String srv = channel.server;
+		String srv = channel.connection.title;
 		set.add(srv);
 	    }
 	    Object[] things = set.toArray();
 
 
-	    final JDialog dialog = new JDialog(GUI.this);
-	    dialog.setTitle("Join Channel");
+	    final JDialog dialog = new JDialog(frame, "Join Channel", true);
 	    dialog.setSize(new Dimension(330,220));
 	    SpringLayout layout = new SpringLayout();
 	    JPanel panel = new JPanel(layout);
 	    dialog.setResizable(false);
-	    dialog.setLocationRelativeTo(tabbedPane);  
 	    dialog.add(panel);
-	    dialog.setVisible(true);
 	    final JComboBox combobox = new JComboBox(things);
 	    JLabel serverLabel = new JLabel("Connection");
 	    JLabel chanLabel = new JLabel("Channel");
@@ -1366,14 +1452,23 @@ public class GUI extends JFrame {
 		    }
 		}
 	    });
+	    dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+	    dialog.setLocationRelativeTo(frame);
+	    dialog.setVisible(true);
 	}
     }
-    class MoveTabLeftAction extends AbstractAction{
-	public MoveTabLeftAction(String text, ImageIcon icon, String desc, Integer mnemonic)
+    static class MoveTabLeftAction extends AbstractAction{
+	private static MoveTabLeftAction ref = null;
+	private MoveTabLeftAction(String text, ImageIcon icon, String desc, Integer mnemonic)
 	{
 	    super(text, icon);
 	    putValue(SHORT_DESCRIPTION, desc);
 	    putValue(MNEMONIC_KEY, mnemonic);
+	}
+	public static MoveTabLeftAction getInstance()
+	{
+	    if (ref == null) ref = new MoveTabLeftAction("Move Tab Left",moveTabLeftIcon, null, KeyEvent.VK_L);
+	    return ref;
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
@@ -1391,12 +1486,18 @@ public class GUI extends JFrame {
     }    
     
     
-    class MoveTabRightAction extends AbstractAction{
-	public MoveTabRightAction(String text, ImageIcon icon, String desc, Integer mnemonic)
+    static class MoveTabRightAction extends AbstractAction{
+	private static MoveTabRightAction ref = null;
+	private MoveTabRightAction(String text, ImageIcon icon, String desc, Integer mnemonic)
 	{
 	    super(text, icon);
 	    putValue(SHORT_DESCRIPTION, desc);
 	    putValue(MNEMONIC_KEY, mnemonic);
+	}
+	public static MoveTabRightAction getInstance()
+	{
+	    if (ref == null) ref = new MoveTabRightAction("Move Tab Right", moveTabRightIcon, null, KeyEvent.VK_R);
+	    return ref;
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
@@ -1413,12 +1514,18 @@ public class GUI extends JFrame {
 	}   
     }
     
-    class NextTabAction extends AbstractAction{
-	public NextTabAction(String text, ImageIcon icon, String desc, Integer mnemonic)
+    static class NextTabAction extends AbstractAction{
+	private static NextTabAction ref = null;
+	private NextTabAction(String text, ImageIcon icon, String desc, Integer mnemonic)
 	{
 	    super(text, icon);
 	    putValue(SHORT_DESCRIPTION, desc);
 	    putValue(MNEMONIC_KEY, mnemonic);
+	}
+	public static NextTabAction getInstance()
+	{
+	    if (ref == null) ref = new NextTabAction("Next Tab", nextTabIcon, null, KeyEvent.VK_N);
+	    return ref;
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
@@ -1428,12 +1535,18 @@ public class GUI extends JFrame {
 	}
     }
     
-    class PreviousTabAction extends AbstractAction{
-	public PreviousTabAction(String text, ImageIcon icon, String desc, Integer mnemonic)
+    static class PreviousTabAction extends AbstractAction{
+	private static PreviousTabAction ref = null;
+	private PreviousTabAction(String text, ImageIcon icon, String desc, Integer mnemonic)
 	{
 	    super(text, icon);
 	    putValue(SHORT_DESCRIPTION, desc);
 	    putValue(MNEMONIC_KEY, mnemonic);
+	}
+	public static PreviousTabAction getInstance()
+	{
+	    if (ref == null) ref = new PreviousTabAction("PreviousTab", prevTabIcon, null, KeyEvent.VK_P);
+	    return ref;
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
@@ -1443,12 +1556,18 @@ public class GUI extends JFrame {
 	}
     }    
     
-    class QuickConnectAction extends AbstractAction{
-	public QuickConnectAction(String text, ImageIcon icon, String desc, Integer mnemonic)
+    static class QuickConnectAction extends AbstractAction{
+	private static QuickConnectAction ref = null;
+	private QuickConnectAction(String text, ImageIcon icon, String desc, Integer mnemonic)
 	{
 	    super(text, icon);
 	    putValue(SHORT_DESCRIPTION, desc);
 	    putValue(MNEMONIC_KEY, mnemonic);
+	}
+	public static QuickConnectAction getInstance()
+	{
+	    if (ref == null) ref = new QuickConnectAction("Quick Connect", quickConnectIcon, null, KeyEvent.VK_Q);
+	    return ref;
 	}
 	@Override
 	public void actionPerformed(ActionEvent e)
@@ -1456,7 +1575,7 @@ public class GUI extends JFrame {
 
 	    String[] labels = {"Network Name","Server", "Port", "Nick", "Password"};
 	    int numPairs = labels.length;
-	    final JDialog dialog = new JDialog(GUI.this);
+	    final JDialog dialog = new JDialog(frame, "Quick Connect", true);
 	    SpringLayout layout = new SpringLayout();
 	    JPanel panel = new JPanel(layout);
 	    final JTextField[] panes = new JTextField[numPairs];
@@ -1473,12 +1592,9 @@ public class GUI extends JFrame {
 		l.setLabelFor(textField);
 		panel.add(textField);
 	    }
-	    dialog.setTitle("Quick Connect");
 	    dialog.setSize(new Dimension(250,220));
 	    dialog.setResizable(false);
-	    dialog.setLocationRelativeTo(tabbedPane);
 	    dialog.add(panel);
-	    dialog.setVisible(true);
 	    JButton connectButton = new JButton("Connect");
 	    connectButton.setPreferredSize(new Dimension(92,30));
 	    panel.add(connectButton);
@@ -1503,27 +1619,42 @@ public class GUI extends JFrame {
 		}
 
 	    });
+	    dialog.setLocationRelativeTo(frame);
+	    dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+	    dialog.setVisible(true);
 	}
     }
     
-    class QuitProgramAction extends AbstractAction{
-	public QuitProgramAction(String text, ImageIcon icon, String desc, Integer mnemonic)
+    static class QuitProgramAction extends AbstractAction{
+	private static QuitProgramAction ref = null;
+	private QuitProgramAction(String text, ImageIcon icon, String desc, Integer mnemonic)
 	{
 	    super(text, icon);
 	    putValue(SHORT_DESCRIPTION, desc);
 	    putValue(MNEMONIC_KEY, mnemonic);
+	}
+	public static QuitProgramAction getInstance()
+	{
+	    if (ref == null) ref = new QuitProgramAction("Quit", quitProgramIcon, null, KeyEvent.VK_Q);
+	    return ref;
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
 	    System.exit(0);
 	}
     }
-    class ReconnectAction extends AbstractAction{
-	public ReconnectAction(String text, ImageIcon icon, String desc, Integer mnemonic)
+    static class ReconnectAction extends AbstractAction{
+	private static ReconnectAction ref = null;
+	private ReconnectAction(String text, ImageIcon icon, String desc, Integer mnemonic)
 	{
 	    super(text, icon);
 	    putValue(SHORT_DESCRIPTION, desc);
 	    putValue(MNEMONIC_KEY, mnemonic);
+	}
+	public static ReconnectAction getInstance()
+	{
+	    if (ref == null) ref = new ReconnectAction("Reconnect", reconnectIcon, null, KeyEvent.VK_R);
+	    return ref;
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
@@ -1566,17 +1697,23 @@ public class GUI extends JFrame {
 	    }
 	}    
     }
-    class ServerListAction extends AbstractAction {
-	public ServerListAction(String text, ImageIcon icon, String desc, Integer mnemonic)
+    static class ServerListAction extends AbstractAction {
+	private static ServerListAction ref = null;
+	private ServerListAction(String text, ImageIcon icon, String desc, Integer mnemonic)
 	{
 	    super(text, icon);
 	    putValue(SHORT_DESCRIPTION, desc);
 	    putValue(MNEMONIC_KEY, mnemonic);
 	}
+	public static ServerListAction getInstance()
+	{
+	    if (ref == null) ref = new ServerListAction("Server List", serverListIcon, null, KeyEvent.VK_L);
+	    return ref;
+	}
 	@Override
 	public void actionPerformed(ActionEvent e)
 	{
-	    final JDialog dialog = new JDialog(GUI.this);
+	    final JDialog dialog = new JDialog(frame, "Server List", true);
 	    Container contentpane = dialog.getContentPane();
 	    SpringLayout layout = new SpringLayout();
 	    contentpane.setLayout(layout);
@@ -1609,7 +1746,6 @@ public class GUI extends JFrame {
 	    scrollPane.getViewport().setBackground(Color.white);
 	    dialog.setResizable(false);
 	    dialog.setTitle("Server List");
-	    dialog.setLocationRelativeTo(tabbedPane);   
 	    contentpane.add(scrollPane);
 	    contentpane.add(add);
 	    contentpane.add(edit);
@@ -1624,10 +1760,6 @@ public class GUI extends JFrame {
 	    layout.putConstraint(SpringLayout.WEST, remove, 10, SpringLayout.EAST, edit);                
 	    layout.putConstraint(SpringLayout.SOUTH, connect, -10, SpringLayout.SOUTH, contentpane);
 	    layout.putConstraint(SpringLayout.EAST, connect, -10 , SpringLayout.EAST, contentpane);
-
-
-	    dialog.pack();
-	    dialog.setVisible(true);
 
 	    add.addActionListener(new ActionListener()
 	    {
@@ -1744,15 +1876,24 @@ public class GUI extends JFrame {
 		    return;
 		}
 	    });
+	    dialog.pack();
+	    dialog.setLocationRelativeTo(frame);   
+	    dialog.setVisible(true);
 	}
     }
     
-    class ShowNickListAction extends AbstractAction{
-	public ShowNickListAction(String text, ImageIcon icon, String desc, Integer mnemonic)
+    static class ShowNickListAction extends AbstractAction{
+	private static ShowNickListAction ref = null;
+	private ShowNickListAction(String text, ImageIcon icon, String desc, Integer mnemonic)
 	{
 	    super(text, icon);
 	    putValue(SHORT_DESCRIPTION, desc);
 	    putValue(MNEMONIC_KEY, mnemonic);
+	}
+	public static ShowNickListAction getInstance()
+	{
+	    if (ref == null) ref = new ShowNickListAction("Show/Hide Nicklist", showNicklistIcon, null, KeyEvent.VK_N);
+	    return ref;
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {

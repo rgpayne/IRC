@@ -1,3 +1,4 @@
+import java.awt.event.ActionListener;
 import javax.swing.text.BadLocationException;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
@@ -49,11 +50,11 @@ public class Connection implements Runnable{
     }
     public void send(String line) throws IOException, BadLocationException
     {
-        if (line.toUpperCase().equals("QUIT")){
-            this.writer.write("quit+\r\n");
-            disconnect();
-            return;
-        }
+	if (line.toUpperCase().equals("QUIT"))
+	{
+	    disconnect();
+	    return;
+	}
         this.writer.write(line+"\r\n");
         this.writer.flush();   
        
@@ -236,8 +237,8 @@ public class Connection implements Runnable{
                 if (s.length >= 3) receiver = s[2];
 
                 int indexOfChannel = findTab(chan, this);
+		if (indexOfChannel == -1) return;
                 ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(indexOfChannel);
-
 
                 if (!receiver.equals(""))
                 {
