@@ -35,6 +35,8 @@ public class GUI extends JFrame {
     final static ImageIcon popupVersionIcon = new ImageIcon("src/icons/help-about.png");
     final static ImageIcon channelListIcon = new ImageIcon("src/icons/view-list-details-5.png");
     final static ImageIcon checkedBoxIcon = new ImageIcon("src/icons/checkbox-2.png"); 
+    final static ImageIcon findTextIcon = new ImageIcon("src/icons/system-search-5.png"); 
+
     
     final static Properties prop = new Properties();
     static ArrayList<SavedConnection> savedConnections = new ArrayList<SavedConnection>();
@@ -73,10 +75,13 @@ public class GUI extends JFrame {
         settingsMenu = new JMenu("Settings");
 	settingsMenu.setMnemonic('S');
         
+	
+	findTextAction = new JMenuItem();
         copyAction = new JMenuItem(new DefaultEditorKit.CopyAction());
 	copyAction.setAccelerator(KeyStroke.getKeyStroke('C', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
         copyAction.setText("Copy");
         copyAction.setIcon(copyIcon);
+	editMenu.add(findTextAction);
         editMenu.add(copyAction);
         cutAction = new JMenuItem((new DefaultEditorKit.CutAction()));
 	cutAction.setAccelerator(KeyStroke.getKeyStroke('X', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
@@ -129,6 +134,8 @@ public class GUI extends JFrame {
         quitProgram = new JMenuItem();
         fileMenu.add(quitProgram);
 	
+	findTextAction.setAction(FindTextAction.getInstance());
+	findTextAction.setAccelerator(KeyStroke.getKeyStroke('F', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
 	quitProgram.setAction(QuitProgramAction.getInstance());
 	quitProgram.setAccelerator(KeyStroke.getKeyStroke('Q', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
 	joinChannel.setAction(JoinChannelAction.getInstance());
@@ -333,7 +340,7 @@ public class GUI extends JFrame {
 	amap.put("quickConnect", quickConnect.getAction());
 	amap.put("identities", identities.getAction());
 	amap.put("serverList", serverList.getAction());
-	amap.put("findText", new FindTextAction());
+	amap.put("findText", findTextAction.getAction());
 	
 	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_H, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "showNickList");
 	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() | Event.SHIFT_MASK), "globalAway");
@@ -619,6 +626,7 @@ public class GUI extends JFrame {
     private static DnDTabbedPane tabbedPane;
     private JTextPane userListPane;
     
+    private static JMenuItem findTextAction;
     private static JMenuItem copyAction;
     private static JMenuItem cutAction;
     private static JMenuItem pasteAction;
@@ -966,20 +974,26 @@ public class GUI extends JFrame {
 
     }
     static class FindTextAction extends AbstractAction{
-	public void actionPerformed(ActionEvent e) {    
+	private static FindTextAction ref = null;	
+	private FindTextAction(String text, ImageIcon icon, String desc, Integer mnemonic)
+	{
+	    super(text, icon);
+	    putValue(SHORT_DESCRIPTION, desc);
+	    putValue(MNEMONIC_KEY, mnemonic);
+	}
+	public static FindTextAction getInstance(){
+	    if (ref == null) ref = new FindTextAction("Find", findTextIcon, null, KeyEvent.VK_F);
+	    return ref;
+	}
+	public void actionPerformed(ActionEvent e) { 
 	    
-	    //final ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
-	    //final StyledDocument doc = channel.chatPane.getStyledDocument();
-	    
-	    final JDialog dialog = new JDialog(GUI.frame,"Find");
+	    final JDialog dialog = new JDialog();
+	    dialog.setTitle("Find");
 	    SpringLayout layout = new SpringLayout();
 	    JPanel panel = new JPanel(layout);
 	    
 	    dialog.add(panel);
-	    dialog.setPreferredSize(new Dimension(240,115));
-	    dialog.pack();
-	    dialog.setLocationRelativeTo(frame);
-	    dialog.setVisible(true);
+	    dialog.setPreferredSize(new Dimension(240,100));
 	    dialog.setResizable(false);
 	    
 	    Container contentPane = dialog.getContentPane();
@@ -998,7 +1012,6 @@ public class GUI extends JFrame {
 	    contentPane.add(highlightAll);
 	    contentPane.add(findButton);
 	    contentPane.add(closeButton);
-	    
 	    layout.putConstraint(SpringLayout.NORTH, field, 5, SpringLayout.NORTH, dialog);
 	    layout.putConstraint(SpringLayout.WEST, field, 5, SpringLayout.WEST, dialog);
 	    layout.putConstraint(SpringLayout.EAST, field, -15, SpringLayout.EAST, dialog);	    
@@ -1009,8 +1022,7 @@ public class GUI extends JFrame {
 	    layout.putConstraint(SpringLayout.SOUTH, findButton, -5, SpringLayout.SOUTH, contentPane);
 	    layout.putConstraint(SpringLayout.WEST, findButton, 5, SpringLayout.WEST, dialog);
 	    layout.putConstraint(SpringLayout.SOUTH, closeButton, -5, SpringLayout.SOUTH, contentPane);
-	    layout.putConstraint(SpringLayout.EAST, closeButton, -15, SpringLayout.EAST, dialog);
-	    
+	    layout.putConstraint(SpringLayout.EAST, closeButton, -15, SpringLayout.EAST, dialog);	    	    
 	    closeButton.addActionListener(new ActionListener() {
 		@Override
 		public void actionPerformed(ActionEvent e)
@@ -1114,10 +1126,7 @@ public class GUI extends JFrame {
 		    }
 		}
 	    });
-		    
-		    
-		    
-		    
+		      
 	    findButton.addActionListener(new ActionListener() {
 		@Override
 		public void actionPerformed(ActionEvent e)
@@ -1236,6 +1245,11 @@ public class GUI extends JFrame {
 		    findButton.getActionListeners()[0].actionPerformed(null);
 		}
 	    });
+	    dialog.pack();
+	    dialog.setLocationRelativeTo(frame);
+	    dialog.setVisible(!dialog.isShowing());
+	    dialog.setAlwaysOnTop(true);
+
 	}
 	
     }
