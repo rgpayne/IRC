@@ -987,7 +987,7 @@ public class GUI extends JFrame {
 	}
 	public void actionPerformed(ActionEvent e) { 
 	    
-	    final JDialog dialog = new JDialog();
+	    final JDialog dialog = new JDialog(frame, true);
 	    dialog.setTitle("Find");
 	    SpringLayout layout = new SpringLayout();
 	    JPanel panel = new JPanel(layout);
@@ -1033,7 +1033,6 @@ public class GUI extends JFrame {
 			DefaultHighlighter highlighter = (DefaultHighlighter) channel.chatPane.getHighlighter();
 			highlighter.removeAllHighlights();
 		    }
-
 		    dialog.dispose();
 		}
 	    });
@@ -1246,10 +1245,9 @@ public class GUI extends JFrame {
 		}
 	    });
 	    dialog.pack();
+	    dialog.setModalityType(Dialog.ModalityType.MODELESS);
 	    dialog.setLocationRelativeTo(frame);
 	    dialog.setVisible(!dialog.isShowing());
-	    dialog.setAlwaysOnTop(true);
-
 	}
 	
     }

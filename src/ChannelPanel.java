@@ -97,7 +97,7 @@ import org.apache.commons.lang3.StringUtils;
 	    chatPane.addMouseListener(tcl);
 	    
                        
-            tabbedPane.add(this, this.title);       
+            tabbedPane.add(this, this.title);	    
         }
         private void makePanel() throws BadLocationException, IOException
         {      
@@ -230,7 +230,8 @@ import org.apache.commons.lang3.StringUtils;
 	    });
 
 	    setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
-	    setDividerLocation(540);
+	    
+	    
 	    setResizeWeight(1.0);
 	    setDividerSize(5);
 	    setVerifyInputWhenFocusTarget(false);
@@ -242,7 +243,11 @@ import org.apache.commons.lang3.StringUtils;
 
 
 	    setLeftComponent(chatScrollPane);
-	    if (name.startsWith("#")) setRightComponent(userListScrollPane);
+	    if (name.startsWith("#"))
+	    {
+		setRightComponent(userListScrollPane);
+		setDividerLocation(GUI.frame.getWidth()-160);
+	    }
 	    else{
 		setRightComponent(null);
 		setDividerSize(0);   
