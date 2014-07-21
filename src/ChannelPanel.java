@@ -375,6 +375,7 @@ import org.apache.commons.lang3.StringUtils;
         {
             if (tabbedPane.getTabCount() == 0)
             {
+		GUI.frame.setTitle(GUI.appName);
                 tabInfo.setText("Disconnected    ");
                 return;
             }
@@ -383,20 +384,21 @@ import org.apache.commons.lang3.StringUtils;
                 tabInfo.setText("Disconnected    ");
                 return;
             }
-            
+            ChannelPanel cc = (ChannelPanel)tabbedPane.getSelectedComponent();
             if (this.isShowing())
             {
                 String text ="";
                 if (ops != 1) text = " ops) ";
                 if (ops == 1) text = " op) ";
                     
-                ChannelPanel cc = (ChannelPanel)tabbedPane.getSelectedComponent();
                 if (!cc.name.startsWith("#"))
                 {
+		    GUI.frame.setTitle(name+" - "+GUI.appName);
                     tabInfo.setText(name+"  ");
                 }
                 else tabInfo.setText(name+" - "+population+" nicks ("+ops+text+server+"  ");
             }
+	    GUI.frame.setTitle(cc.title+" - "+GUI.appName);
         }
 	private void insertString(int offset, String str, AttributeSet a ) throws BadLocationException
 	{
@@ -728,6 +730,7 @@ import org.apache.commons.lang3.StringUtils;
             else
             {
                 ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+		if (channel == null) return;
                 final int index = Connection.findTab(channel.name, connection);
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override

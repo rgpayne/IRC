@@ -20,7 +20,7 @@ public class ListChannel implements Serializable{
     {
         return Name;
     }
-    public String getInfo()
+    public String get_Topic()
     {
         return Topic;
     }

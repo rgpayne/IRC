@@ -37,13 +37,13 @@ public class GUI extends JFrame {
     final static ImageIcon checkedBoxIcon = new ImageIcon("src/icons/checkbox-2.png"); 
     final static ImageIcon findTextIcon = new ImageIcon("src/icons/system-search-5.png"); 
 
-    
+    final static String appName = "Alpha IRC";
     final static Properties prop = new Properties();
     static ArrayList<SavedConnection> savedConnections = new ArrayList<SavedConnection>();
 	
     static JFrame frame;
     public GUI() {
-        super("Alpha IRC 0.1");
+        super(appName);
         setIconImage(mainIcon.getImage());
 	
         loadProperties();
@@ -59,8 +59,8 @@ public class GUI extends JFrame {
     }
 
     @SuppressWarnings("unchecked")
-    private void initComponents() {
-                
+    private void initComponents()
+    {              
         chatInputPane = new JTextField();
         tabbedPane = new DnDTabbedPane();
         userListPane = new JTextPane();
@@ -74,11 +74,8 @@ public class GUI extends JFrame {
 	windowMenu.setMnemonic('W');
         settingsMenu = new JMenu("Settings");
 	settingsMenu.setMnemonic('S');
-        
-	
 	findTextAction = new JMenuItem();
         copyAction = new JMenuItem(new DefaultEditorKit.CopyAction());
-	copyAction.setAccelerator(KeyStroke.getKeyStroke('C', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
         copyAction.setText("Copy");
         copyAction.setIcon(copyIcon);
 	editMenu.add(findTextAction);
@@ -217,6 +214,7 @@ public class GUI extends JFrame {
 	    public void componentAdded(ContainerEvent e) {
 		int index = tabbedPane.getSelectedIndex();
 		if (index == -1) return;
+		
                 ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(index);
 
                 if (index == 0)
@@ -244,8 +242,13 @@ public class GUI extends JFrame {
 
 	    @Override
 	    public void componentRemoved(ContainerEvent e) {
+
 		int index = tabbedPane.getSelectedIndex();
-		if (index == -1) return;
+		if (index == -1)
+		{
+		    setTitle(GUI.appName); 
+		    return;
+		}
                 ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(index);
 
                 if (index == 0)
@@ -1923,7 +1926,7 @@ public class GUI extends JFrame {
 		    { 
 			channel.setRightComponent(channel.userListScrollPane);
 			channel.setDividerSize(5);
-			channel.setDividerLocation(540);
+			channel.setDividerLocation(GUI.frame.getWidth()-160);
 		    }
 		}                    
 	    }
