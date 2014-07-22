@@ -1001,6 +1001,7 @@ public class Connection implements Runnable{
             String[] msg = {null, parser.getTrailing()};
             int channelIndex = findTab(channelName, this);
             ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(channelIndex);
+	    channel.topic = "";
             channel.insertString(msg, ChannelPanel.serverStyle, false);
             return;
         }

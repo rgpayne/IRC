@@ -433,10 +433,10 @@ class DnDTabbedPane extends JTabbedPane {
 	return r.contains(tabPt) ? getTabCount() : -1;
     }
 
-    private void convertTab(int prev, int next) {
-	if (next < 0 || prev == next) {
-	    return;
-	}
+    private void convertTab(int prev, int next) 
+    {
+	if (next < 0 || prev == next) return;
+	
 	Component cmp = getComponentAt(prev);
 	Component tab = getTabComponentAt(prev);
 	String str = getTitleAt(prev);
@@ -449,9 +449,8 @@ class DnDTabbedPane extends JTabbedPane {
 	setEnabledAt(tgtindex, flg);
     //When you drag'n'drop a disabled tab, it finishes enabled and selected.
 	//pointed out by dlorde
-	if (flg) {
-	    setSelectedIndex(tgtindex);
-	}
+	if (flg) setSelectedIndex(tgtindex);
+	
 
     //I have a component in all tabs (jlabel with an X to close the tab)
 	//and when i move a tab the component disappear.

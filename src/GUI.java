@@ -36,6 +36,8 @@ public class GUI extends JFrame {
     final static ImageIcon channelListIcon = new ImageIcon("src/icons/view-list-details-5.png");
     final static ImageIcon checkedBoxIcon = new ImageIcon("src/icons/checkbox-2.png"); 
     final static ImageIcon findTextIcon = new ImageIcon("src/icons/system-search-5.png"); 
+    final static ImageIcon configureIcon = new ImageIcon("src/icons/configure-5.png"); 
+
 
     final static String appName = "Alpha IRC";
     final static Properties prop = new Properties();
@@ -118,8 +120,10 @@ public class GUI extends JFrame {
         fileMenu.add(disconnect);
         identities = new JMenuItem();
         showNickList = new JMenuItem();
+	configure = new JMenuItem();
         settingsMenu.add(showNickList);
-        settingsMenu.add(identities);        
+        settingsMenu.add(identities);  
+	settingsMenu.add(configure);
         reconnect = new JMenuItem();
         fileMenu.add(reconnect);
         joinChannel = new JMenuItem();
@@ -161,7 +165,8 @@ public class GUI extends JFrame {
 	showNickList.setAction(ShowNickListAction.getInstance());
 	showNickList.setAccelerator(KeyStroke.getKeyStroke('H', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
 	identities.setAction(IdentitiesAction.getInstance());
-	identities.setAccelerator(KeyStroke.getKeyStroke("F2"));	
+	identities.setAccelerator(KeyStroke.getKeyStroke("F2"));
+	configure.setAction(ConfigureAction.getInstance());
 	serverList.setAction(ServerListAction.getInstance());
 	serverList.setAccelerator(KeyStroke.getKeyStroke("F2"));		
 	channelList.setAction(ChannelListAction.getInstance());
@@ -180,7 +185,7 @@ public class GUI extends JFrame {
             {
                 DnDTabbedPane pane = (DnDTabbedPane)changeEvent.getSource();
                 int index = pane.getSelectedIndex();
-                if (pane == null || index == -1) return;
+                if (index == -1) return;
                 ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(index);
                 if (!channel.connection.isConnected) pane.setForegroundAt(index, Color.gray);
                 else pane.setForegroundAt(index, Color.BLACK);
@@ -650,6 +655,7 @@ public class GUI extends JFrame {
     private static JMenuItem globalAway;
     private static JMenuItem joinChannel;
     private static JMenuItem quitProgram;
+    private static JMenuItem configure;
     
     
     
@@ -926,6 +932,102 @@ public class GUI extends JFrame {
 	    channel.closeTab();
 	}
     }
+    
+    static class ConfigureAction extends AbstractAction {
+	private static ConfigureAction ref = null;
+	private ConfigureAction(String text, ImageIcon icon, String desc, Integer mnemonic)
+	{
+	    super(text, icon);
+	    putValue(SHORT_DESCRIPTION, desc);
+	    putValue(MNEMONIC_KEY, mnemonic);
+	}
+	public static ConfigureAction getInstance()
+	{
+	    if (ref == null) ref = new ConfigureAction("Configure", configureIcon, null, KeyEvent.VK_C);
+	    return ref;
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+	    final JDialog dialog = new JDialog(frame, "Configure", true);
+	    final SpringLayout layout = new SpringLayout();
+
+	    String[] options = {"  Interface", "  Chatting", "  Option 3", "  Option 4"};
+	    JList list = new JList(options);
+	    final JPanel listPanel = new JPanel();
+	    final JPanel contentPanel = new JPanel();
+	    contentPanel.setBorder(BorderFactory.createLineBorder(Color.gray, 1));
+	    contentPanel.setPreferredSize(new Dimension(365, 295));
+	    listPanel.add(list);
+	    dialog.add(listPanel);
+	    dialog.add(contentPanel);
+	    listPanel.setPreferredSize(new Dimension(110,300));
+	    list.setPreferredSize(new Dimension(110,295));
+	    list.setBorder(BorderFactory.createLineBorder(Color.gray, 1));
+	    list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+	    dialog.setPreferredSize(new Dimension(500,400));
+
+	    Container contentpane = dialog.getContentPane();
+	    contentpane.setLayout(layout);
+	    
+	    layout.putConstraint(SpringLayout.NORTH, listPanel, 5, SpringLayout.NORTH, dialog);
+	    layout.putConstraint(SpringLayout.WEST, listPanel, 5, SpringLayout.WEST, dialog);
+	    layout.putConstraint(SpringLayout.WEST, contentPanel, 5, SpringLayout. EAST, listPanel);
+	    layout.putConstraint(SpringLayout.NORTH, contentPanel, 10, SpringLayout.NORTH, dialog);
+	    
+	   // final SpringLayout cpLayout = new SpringLayout();
+	    //contentPanel.setLayout(cpLayout);
+	    
+	    
+	    
+	    
+	    
+	    list.addListSelectionListener(new ListSelectionListener() {
+
+		@Override
+		public void valueChanged(ListSelectionEvent e) {
+		    JList list = (JList)e.getSource();
+		    int index = -1;
+		    if (!e.getValueIsAdjusting())
+		    {
+			index = list.getSelectedIndex();
+		
+		    }
+		    if (index == 1)
+		    {		
+			JLabel fontLabel = new JLabel("Font");
+			JTextField tf = new JTextField(ChannelPanel.font + ChannelPanel.fontSize);
+			tf.setPreferredSize(new Dimension(300,300));
+			contentPanel.add(fontLabel);
+			contentPanel.add(tf);
+			contentPanel.revalidate();
+			
+		    }
+		}
+	    });
+	    
+	   
+
+	    
+	    //this all comes last
+	    dialog.pack();
+	    dialog.setResizable(false);
+	    dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+	    dialog.setLocationRelativeTo(frame);
+	    dialog.setVisible(true);
+    	}
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     static class DisconnectAction extends AbstractAction{
 	private static DisconnectAction ref = null;
