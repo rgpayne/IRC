@@ -48,15 +48,14 @@ import org.apache.commons.lang3.StringUtils;
         public ArrayList<String> ignoreList = new ArrayList<String>();
         
         StyledDocument doc;  
-        static StyleContext sc = StyleContext.getDefaultStyleContext();
+        static StyleContext sc;
         static Style style, chatStyle, timestampStyle, actionStyle, errorStyle, serverStyle, connectStyle, ctcpStyle, userNameStyle,
 		disconnectStyle, joinStyle, hyperlinkUnclickedStyle, highlightStyle;
         final static String errorColor = "#FF0000", chatColor="#000000", serverColor="#960096", connectColor="#993300", timestampColor="#909090";
         final static String actionColor = "#0000FF", disconnectColor = "#CAA234", joinColor = "#D46942";
-        final static String font = "courier";
-	final static boolean fontBold = false;
-	final static boolean fontItalic = false;
-	final static int fontSize = 12;
+        static String font = "Courier New";
+	static String fontStyle = "Regular";
+	static int fontSize = 12;
 	
 	
         final static Color CTCP0 = Color.WHITE, CTCP1 = Color.BLACK, CTCP2 = Color.decode("#000080"), CTCP3 = Color.decode("#008000"), CTCP4 = Color.decode("#FF0000"),
@@ -82,7 +81,7 @@ import org.apache.commons.lang3.StringUtils;
                                 
             doc = chatPane.getStyledDocument();
                     
-            setStyles();
+            //setStyles(); //needs only to be done once (at GUI init) or when called by fonts screen?
 	    
             PlainTextHyperlinkListener hyperlinkListener = new PlainTextHyperlinkListener(chatPane);
 	    chatPane.addHyperlinkListener(hyperlinkListener);
@@ -92,7 +91,7 @@ import org.apache.commons.lang3.StringUtils;
             if (showTimestamp == true) history = new ArrayList<String>();
             
             makePanel();
-            makeHashMaps();
+            //makeHashMaps(); //should only be done one at launch of GUI
 	    GUI.loadKeyBinds(chatPane.getActionMap(), chatPane.getInputMap());
 	    
 	   
@@ -297,8 +296,9 @@ import org.apache.commons.lang3.StringUtils;
                 this.connection.disconnect();
             }
         }
-        public void setStyles()
+        public static void setStyles()
         {
+	sc = StyleContext.getDefaultStyleContext();
         style = sc.addStyle("DefaultStyle", null);
         chatStyle = sc.addStyle("DefaultStyle", style);
         timestampStyle = sc.addStyle("DefaultStyle", style);
@@ -315,8 +315,6 @@ import org.apache.commons.lang3.StringUtils;
         
         StyleConstants.setFontFamily(style, font);
         StyleConstants.setFontSize(style, fontSize);
-	if (fontBold) StyleConstants.setBold(style, true);
-	if (fontItalic) StyleConstants.setItalic(style, true);
 	
         StyleConstants.setForeground(chatStyle, Color.decode(chatColor));
         StyleConstants.setForeground(timestampStyle, Color.decode(timestampColor) );
@@ -334,7 +332,7 @@ import org.apache.commons.lang3.StringUtils;
 	StyleConstants.setFontSize(highlightStyle, 12);
 	StyleConstants.setBackground(highlightStyle, Color.YELLOW);
         }
-        public void makeHashMaps()
+        public static void makeHashMaps()
         {
             CTCPMap.put(0, CTCP0);
             CTCPMap.put(1, CTCP1);
@@ -683,7 +681,6 @@ import org.apache.commons.lang3.StringUtils;
                     this.insertString(doc.getLength(), token, ctcpStyle);
                 }
             }
-            //this.insertString(doc.getLength(), "\n", ctcpStyle);
             checkForActiveTab();
         }
         public void checkForActiveTab()

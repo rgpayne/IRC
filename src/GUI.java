@@ -47,7 +47,8 @@ public class GUI extends JFrame {
     public GUI() {
         super(appName);
         setIconImage(mainIcon.getImage());
-	
+	ChannelPanel.setStyles();
+	ChannelPanel.makeHashMaps();
         loadProperties();
         initComponents();
 
@@ -63,7 +64,7 @@ public class GUI extends JFrame {
     @SuppressWarnings("unchecked")
     private void initComponents()
     {              
-        chatInputPane = new JTextField();
+	chatInputPane = new JTextField();
         tabbedPane = new DnDTabbedPane();
         userListPane = new JTextPane();
         tabInfo = new JLabel();
@@ -618,6 +619,17 @@ public class GUI extends JFrame {
 
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
+		try {
+		    UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
+		} catch (ClassNotFoundException ex) {
+		    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+		} catch (InstantiationException ex) {
+		    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+		} catch (IllegalAccessException ex) {
+		    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+		} catch (UnsupportedLookAndFeelException ex) {
+		    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+		}
                 new GUI().setVisible(true);
             }
         });
@@ -975,12 +987,8 @@ public class GUI extends JFrame {
 	    layout.putConstraint(SpringLayout.WEST, contentPanel, 5, SpringLayout. EAST, listPanel);
 	    layout.putConstraint(SpringLayout.NORTH, contentPanel, 10, SpringLayout.NORTH, dialog);
 	    
-	   // final SpringLayout cpLayout = new SpringLayout();
-	    //contentPanel.setLayout(cpLayout);
-	    
-	    
-	    
-	    
+	    final SpringLayout cpLayout = new SpringLayout();
+	    contentPanel.setLayout(cpLayout);
 	    
 	    list.addListSelectionListener(new ListSelectionListener() {
 
@@ -996,20 +1004,211 @@ public class GUI extends JFrame {
 		    if (index == 1)
 		    {		
 			JLabel fontLabel = new JLabel("Font");
-			JTextField tf = new JTextField(ChannelPanel.font + ChannelPanel.fontSize);
-			tf.setPreferredSize(new Dimension(300,300));
-			contentPanel.add(fontLabel);
-			contentPanel.add(tf);
-			contentPanel.revalidate();
+			JButton fontButton = new JButton("Choose");
+			final JTextField fontField = new JTextField(" "+ChannelPanel.font + " "+ChannelPanel.fontSize); //set bold/ital
+			fontField.setEditable(false);
+			fontField.setPreferredSize(new Dimension(200,25));
 			
+			cpLayout.putConstraint(SpringLayout.WEST, fontLabel, 10, SpringLayout.WEST, contentPanel);
+			cpLayout.putConstraint(SpringLayout.NORTH, fontLabel, 15, SpringLayout.NORTH, contentPanel);
+			cpLayout.putConstraint(SpringLayout.WEST, fontField, 10, SpringLayout.EAST, fontLabel);
+			cpLayout.putConstraint(SpringLayout.NORTH, fontField, 10, SpringLayout.NORTH, contentPanel);
+			cpLayout.putConstraint(SpringLayout.NORTH, fontButton, 8, SpringLayout.NORTH, contentPanel);
+			cpLayout.putConstraint(SpringLayout.WEST, fontButton, 10, SpringLayout.EAST, fontField);
+			
+			contentPanel.add(fontLabel);
+			contentPanel.add(fontField);
+			contentPanel.add(fontButton);
+			contentPanel.revalidate();
+
+			fontButton.addActionListener(new ActionListener() {
+
+			    @Override
+			    public void actionPerformed(ActionEvent e) {
+				
+				
+				
+				SpringLayout fontLayout = new SpringLayout();
+				final JDialog fontDialog = new JDialog(frame, "Select Font", true);
+				fontDialog.getContentPane().setLayout(fontLayout);
+				fontDialog.setPreferredSize(new Dimension(395,350));
+				fontDialog.setResizable(false);
+				
+				JLabel fontLabel = new JLabel("Family");
+				JLabel fontStyleLabel = new JLabel("Style");
+				JLabel fontSizeLabel = new JLabel("Size");
+				JLabel fontPreview = new JLabel("Preview");
+				final JButton OKButton = new JButton("OK");
+				OKButton.setPreferredSize(new Dimension(70,30));
+				JButton cancelButton = new JButton("Cancel");
+				cancelButton.setPreferredSize(new Dimension(70,30));
+				
+				
+				String[] fonts = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
+				final JList ffList = new JList(fonts);
+				ffList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+				JScrollPane ffsp = new JScrollPane(ffList);
+				ffsp.setPreferredSize(new Dimension(200,200));
+				ffList.setSelectedValue(ChannelPanel.font, true);
+
+				
+				String fontStyles[] = {"Regular", "Bold", "Italic", "Bold Italic"};
+				final JList fsList = new JList(fontStyles);
+				fsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+				JScrollPane fssp = new JScrollPane(fsList);
+				fssp.setPreferredSize(new Dimension(100,200));
+				fsList.setSelectedValue(ChannelPanel.fontStyle, true);
+				
+				Integer[] fontSizes = {6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30,32};
+				final JList sizeList = new JList(fontSizes);
+				sizeList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+				JScrollPane sizesp = new JScrollPane(sizeList);
+				sizesp.setPreferredSize(new Dimension(50,200));
+				sizeList.setSelectedValue(ChannelPanel.fontSize, true);
+				
+				final JTextField previewArea = new JTextField();
+				previewArea.setPreferredSize(new Dimension(370,70));
+				previewArea.setAlignmentY(JTextField.CENTER_ALIGNMENT);
+				previewArea.setHorizontalAlignment(JTextField.CENTER);
+				final String fontName = (String)ffList.getSelectedValue();
+				final int size = (int)sizeList.getSelectedValue();
+				final String style = (String)fsList.getSelectedValue();
+				
+				Font font;
+				if (style.equals("Bold")) font = new Font(fontName, Font.BOLD, size);
+				if (style.equals("Italic")) font = new Font(fontName, Font.ITALIC, size);
+				if (style.equals("Bold Italic")) font = new Font(fontName, Font.ITALIC | Font.BOLD, size);
+				else font = new Font(fontName, Font.PLAIN, size);
+		
+				previewArea.setFont(font);
+				previewArea.setText("The quick brown fox jumps over the lazy dog");
+				
+				fontLayout.putConstraint(SpringLayout.NORTH, fontLabel, 0, SpringLayout.NORTH, fontDialog);
+				fontLayout.putConstraint(SpringLayout.WEST, fontLabel, 10, SpringLayout.WEST, fontDialog);
+				fontLayout.putConstraint(SpringLayout.NORTH, ffsp, 2, SpringLayout.SOUTH, fontLabel);
+				fontLayout.putConstraint(SpringLayout.WEST, ffsp, 0, SpringLayout.WEST, fontLabel);
+				
+				fontLayout.putConstraint(SpringLayout.NORTH, fontStyleLabel, 0, SpringLayout.NORTH, fontDialog);
+				fontLayout.putConstraint(SpringLayout.WEST, fontStyleLabel, 10, SpringLayout.EAST, ffsp);
+				fontLayout.putConstraint(SpringLayout.NORTH, fssp, 2, SpringLayout.SOUTH, fontStyleLabel);
+				fontLayout.putConstraint(SpringLayout.WEST, fssp, 10, SpringLayout.EAST, ffsp);
+				
+				fontLayout.putConstraint(SpringLayout.NORTH, fontSizeLabel, 0, SpringLayout.NORTH, fontDialog);
+				fontLayout.putConstraint(SpringLayout.WEST, fontSizeLabel, 10, SpringLayout.EAST, fssp);
+				fontLayout.putConstraint(SpringLayout.NORTH, sizesp, 2, SpringLayout.SOUTH, fontSizeLabel);
+				fontLayout.putConstraint(SpringLayout.WEST, sizesp, 10, SpringLayout.EAST, fssp);
+				
+				fontLayout.putConstraint(SpringLayout.NORTH, fontPreview, 5, SpringLayout.SOUTH, ffsp);
+				fontLayout.putConstraint(SpringLayout.WEST, fontPreview, 10, SpringLayout.WEST, fontDialog);
+				fontLayout.putConstraint(SpringLayout.NORTH, previewArea, 2, SpringLayout.SOUTH, fontPreview);
+				fontLayout.putConstraint(SpringLayout.WEST, previewArea, 0, SpringLayout.WEST, ffsp);
+				
+				fontLayout.putConstraint(SpringLayout.EAST, OKButton, -15, SpringLayout.EAST, fontDialog);
+				fontLayout.putConstraint(SpringLayout.SOUTH, OKButton, -5, SpringLayout.SOUTH, fontDialog);
+				fontLayout.putConstraint(SpringLayout.SOUTH, cancelButton, 0, SpringLayout.SOUTH, OKButton);
+				fontLayout.putConstraint(SpringLayout.EAST, cancelButton, -5, SpringLayout.WEST, OKButton);
+				
+				fontDialog.getRootPane().setDefaultButton(OKButton);
+				OKButton.requestFocus();	
+				
+				fontDialog.add(OKButton);
+				fontDialog.add(cancelButton);
+				fontDialog.add(fontLabel);
+				fontDialog.add(fontStyleLabel);
+				fontDialog.add(fontSizeLabel);
+				fontDialog.add(fontPreview);
+				fontDialog.add(previewArea);
+				fontDialog.add(ffsp);
+				fontDialog.add(fssp);
+				fontDialog.add(sizesp);
+				
+				cancelButton.addActionListener(new ActionListener() {
+				    @Override
+				    public void actionPerformed(ActionEvent e) {
+					fontDialog.dispose();
+				    }
+				});
+				cancelButton.addKeyListener(new KeyAdapter() {
+				    @Override
+				    public void keyPressed(KeyEvent e)
+				    {
+					if (e.getKeyCode() == KeyEvent.VK_ENTER || e.getKeyCode() == KeyEvent.VK_ESCAPE)
+					{
+					    fontDialog.dispose();
+					}
+				    }
+				});
+				OKButton.addActionListener(new ActionListener() {
+				    @Override
+				    public void actionPerformed(ActionEvent e) {
+					ChannelPanel.font = (String) ffList.getSelectedValue();
+					ChannelPanel.fontSize = (int) sizeList.getSelectedValue();
+					ChannelPanel.fontStyle = (String)fsList.getSelectedValue();
+					ChannelPanel.setStyles();
+					fontDialog.dispose();					
+				    }
+				});
+				OKButton.addKeyListener(new KeyAdapter() {
+				    @Override
+				    public void keyPressed(KeyEvent e)
+				    {
+					if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
+					{
+					    fontDialog.dispose();
+					}
+					if (e.getKeyCode() == KeyEvent.VK_ENTER)
+					{
+					    OKButton.getActionListeners()[0].actionPerformed(null);
+					}
+				    }
+				});
+				ffList.addListSelectionListener(new ListSelectionListener() {
+				    @Override
+				    public void valueChanged(ListSelectionEvent e) {
+					final String fontName = (String)ffList.getSelectedValue();
+					final int size = (int)sizeList.getSelectedValue();
+					final String style = (String)fsList.getSelectedValue();
+
+					Font font;
+					switch (style) {
+					    case "Bold":
+						font = new Font(fontName, Font.BOLD, size);
+						break;
+					    case "Italic":
+						font = new Font(fontName, Font.ITALIC, size);
+						break;
+					    case "Bold Italic":
+						font = new Font(fontName, Font.ITALIC | Font.BOLD, size);
+						break;
+					    default:
+						font = new Font(fontName, Font.PLAIN, size);
+						break;
+					}
+					previewArea.setFont(font);
+					String text = previewArea.getText();
+					try {
+					    previewArea.getDocument().remove(0, previewArea.getDocument().getLength());
+					    previewArea.setText(text);
+					    fontField.setText(text);
+					} catch (BadLocationException ex) {
+					    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+					}
+				    }
+				});
+				fsList.addListSelectionListener(ffList.getListSelectionListeners()[0]);
+				sizeList.addListSelectionListener(ffList.getListSelectionListeners()[0]);
+
+				fontDialog.pack();
+				fontDialog.setResizable(false);
+				fontDialog.setLocationRelativeTo(dialog);
+				fontDialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+				fontDialog.setVisible(true);
+			    }
+			});			
 		    }
 		}
 	    });
-	    
-	   
-
-	    
-	    //this all comes last
 	    dialog.pack();
 	    dialog.setResizable(false);
 	    dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -1709,7 +1908,7 @@ public class GUI extends JFrame {
 		l.setLabelFor(textField);
 		panel.add(textField);
 	    }
-	    dialog.setSize(new Dimension(250,220));
+	    dialog.setSize(new Dimension(280,220));
 	    dialog.setResizable(false);
 	    dialog.add(panel);
 	    JButton connectButton = new JButton("Connect");
