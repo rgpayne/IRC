@@ -5,6 +5,7 @@ import javax.swing.text.*;
 import java.util.*;
 import java.util.logging.*;
 import java.io.*;
+import javax.swing.border.LineBorder;
 import javax.swing.event.*;
 import javax.swing.table.*;
 import org.apache.commons.lang3.StringUtils;
@@ -135,6 +136,13 @@ public class GUI extends JFrame {
         fileMenu.add(new JSeparator());
         quitProgram = new JMenuItem();
         fileMenu.add(quitProgram);
+	
+	fileMenu.getPopupMenu().setBorder(BorderFactory.createCompoundBorder(new LineBorder(Color.lightGray), new LineBorder(Color.gray)));
+	editMenu.getPopupMenu().setBorder(BorderFactory.createCompoundBorder(new LineBorder(Color.lightGray), new LineBorder(Color.gray)));
+	settingsMenu.getPopupMenu().setBorder(BorderFactory.createCompoundBorder(new LineBorder(Color.lightGray), new LineBorder(Color.gray)));
+	windowMenu.getPopupMenu().setBorder(BorderFactory.createCompoundBorder(new LineBorder(Color.lightGray), new LineBorder(Color.gray)));
+	
+	
 	
 	findTextAction.setAction(FindTextAction.getInstance());
 	findTextAction.setAccelerator(KeyStroke.getKeyStroke('F', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));

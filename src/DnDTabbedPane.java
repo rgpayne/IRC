@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.*;
+import javax.swing.border.LineBorder;
 import javax.swing.text.BadLocationException;
 
 class DnDTabbedPane extends JTabbedPane {
@@ -158,6 +159,7 @@ class DnDTabbedPane extends JTabbedPane {
 		final ChannelPanel channel = (ChannelPanel) this.getComponentAt(index);
 		{
 		    JPopupMenu popupMenu = new JPopupMenu();
+		    popupMenu.setBorder(BorderFactory.createCompoundBorder(new LineBorder(Color.lightGray), new LineBorder(Color.gray)));
 		    JMenuItem enableNotificationsButton = new JMenuItem("Enable Notifications");
 		    if (channel.enableNotifications) {
 			enableNotificationsButton.setIcon(GUI.checkedBoxIcon);

@@ -4,6 +4,7 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Point;
+import java.awt.SystemColor;
 import java.awt.event.*;
 import java.io.IOException;
 import java.net.URL;
@@ -12,6 +13,7 @@ import java.util.*;
 import java.util.logging.*;
 import java.util.regex.*;
 import javax.swing.*;
+import javax.swing.border.LineBorder;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 import javax.swing.event.MouseInputAdapter;
@@ -125,6 +127,8 @@ import org.apache.commons.lang3.StringUtils;
 	    popup.add(popPing);
 	    popup.add(new JSeparator());
 	    popup.add(popIgnore);
+	    popup.setBorder(BorderFactory.createCompoundBorder(new LineBorder(Color.lightGray), new LineBorder(Color.gray)));
+
 
 	    MouseListener popupListener = new PopupListener(popup);
 	    userListPane.addMouseListener(popupListener);
@@ -949,14 +953,14 @@ import org.apache.commons.lang3.StringUtils;
 
             if (isSelected)
             {
-                Color color = (Color)ChannelPanel.chatColorMap.get(3);
-                user.setBackground(color);
-                user.setForeground(Color.WHITE);
+                //Color color = (Color)ChannelPanel.chatColorMap.get(3);
+                user.setBackground(SystemColor.textHighlightText);
+                user.setForeground(list.getBackground());
             }
             else
             {
-                user.setBackground(Color.WHITE);
-                user.setForeground(user.foreground);
+                user.setBackground(list.getBackground());
+                user.setForeground(Color.black);
             }
             user.setIcon(icon);
             return user;
