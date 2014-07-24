@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.*;
-import javax.swing.border.LineBorder;
 import javax.swing.text.BadLocationException;
 
 class DnDTabbedPane extends JTabbedPane {

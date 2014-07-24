@@ -9,6 +9,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import javax.swing.border.LineBorder;
 import javax.swing.event.*;
+import javax.swing.plaf.ColorUIResource;
 import javax.swing.table.*;
 import org.apache.commons.lang3.StringUtils;
 
@@ -48,7 +49,9 @@ public class GUI extends JFrame {
 	
     static JFrame frame;
     public GUI() {
+
         super(appName);
+
         setIconImage(mainIcon.getImage());
 	ChannelPanel.setStyles();
 	ChannelPanel.makeHashMaps();
@@ -461,43 +464,7 @@ public class GUI extends JFrame {
             Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    private static void quickConnectButtonFunctionality(JTextField[] panes, JDialog dialog)
-    {
-        String name = panes[0].getText().trim();
-        String chan = panes[1].getText().trim();
-        String p = panes[2].getText().trim();
-        String n = panes[3].getText().trim();
-        String pass = panes[4].getText().trim();
 
-        if (name.isEmpty() || chan.isEmpty() || p.isEmpty() || n.isEmpty())
-        {
-            JOptionPane.showMessageDialog(dialog, "Network name, server, port and nick are required");
-        }
-        else
-        {
-            dialog.dispose();
-            Connection.nicks[0] = n;
-
-            for (int i = 0; i < tabbedPane.getTabCount(); i++)
-            {
-                ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
-                if (name.equals(channel.title))
-                {
-                    tabbedPane.setSelectedComponent(channel);
-                    String[] msg = {null, "You are already connected to "+name+"."};
-                    try {
-                        channel.insertString(msg, ChannelPanel.errorStyle, false);
-                    } catch (BadLocationException | IOException ex) {
-                        Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                    return;
-                }
-            }
-
-            Connection c = new Connection(name, chan, Integer.valueOf(p), false);
-            if (!pass.isEmpty()) c.password = pass;
-        }
-    }
     private static void identityButtonFunctionality(JTextField[] panes, JDialog dialog)
     {
         try {
@@ -719,12 +686,12 @@ public class GUI extends JFrame {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
 		try {
-		    UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
+		    UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel"); 
+
 		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
 		    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
 		}
-		
-		installGtkPopupBugWorkaround();
+	        installGtkPopupBugWorkaround();
                 new GUI().setVisible(true);
             }
         });
@@ -1373,7 +1340,8 @@ public class GUI extends JFrame {
 
     }
     static class FindTextAction extends AbstractAction{
-	private static FindTextAction ref = null;	
+	private static FindTextAction ref = null;
+	static boolean isOpened;
 	private FindTextAction(String text, ImageIcon icon, String desc, Integer mnemonic)
 	{
 	    super(text, icon);
@@ -1384,8 +1352,18 @@ public class GUI extends JFrame {
 	    if (ref == null) ref = new FindTextAction("Find", findTextIcon, null, KeyEvent.VK_F);
 	    return ref;
 	}
+	private void removeHighlights()
+	{
+	    for (int i = 0; i < tabbedPane.getTabCount(); i++)
+	    {
+		ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
+		DefaultHighlighter highlighter = (DefaultHighlighter) channel.chatPane.getHighlighter();
+		highlighter.removeAllHighlights();
+		channel.lastSearchIndex = -1;
+	    }  
+	}
 	public void actionPerformed(ActionEvent e) { 
-	    
+	    if (isOpened) return;
 	    final JDialog dialog = new JDialog(frame, true);
 	    dialog.setTitle("Find");
 	    SpringLayout layout = new SpringLayout();
@@ -1430,7 +1408,7 @@ public class GUI extends JFrame {
 		    {
 			ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
 			DefaultHighlighter highlighter = (DefaultHighlighter) channel.chatPane.getHighlighter();
-			highlighter.removeAllHighlights();
+			
 		    }
 		    dialog.dispose();
 		}
@@ -1475,18 +1453,7 @@ public class GUI extends JFrame {
 		{
 		    removeHighlights();
 		    findButton.getActionListeners()[0].actionPerformed(null);
-		}
-		protected void removeHighlights()
-		{
-		    for (int i = 0; i < tabbedPane.getTabCount(); i++)
-		    {
-			ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
-			DefaultHighlighter highlighter = (DefaultHighlighter) channel.chatPane.getHighlighter();
-			if (!channel.isShowing()) highlighter.removeAllHighlights();
-			channel.lastSearchIndex = -1;
-		    }
-		}
-			
+		}	
 	    });	    
 	    field.addKeyListener(new KeyAdapter() {
 		@Override
@@ -1567,7 +1534,7 @@ public class GUI extends JFrame {
 		    if (location != -1)
 		    {
 			try {
-			    highlighter.removeAllHighlights();
+			    removeHighlights();
 			    highlighter.addHighlight(location, location+searchString.length(), p);	
 			    channel.lastSearchIndex = location;
 			    DefaultCaret caret = (DefaultCaret)channel.chatPane.getCaret();
@@ -1590,7 +1557,7 @@ public class GUI extends JFrame {
 			Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
 		    }
 		    
-		    highlighter.removeAllHighlights();
+		    removeHighlights();
 		    
 		    int location = 0;
 
@@ -1624,7 +1591,6 @@ public class GUI extends JFrame {
 		}
 	    });
 	    highlightAll.addItemListener(new ItemListener() {
-
 		@Override
 		public void itemStateChanged(ItemEvent e) {
 		    matchCase.getItemListeners()[0].itemStateChanged(null);
@@ -1633,6 +1599,7 @@ public class GUI extends JFrame {
 	    matchCase.addItemListener(new ItemListener() {
 		@Override
 		public void itemStateChanged(ItemEvent e) {
+		    if (field.getText().isEmpty()) return;
 		    for (int i = 0; i < tabbedPane.getTabCount(); i++)
 		    {
 			ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
@@ -1643,7 +1610,16 @@ public class GUI extends JFrame {
 		    findButton.getActionListeners()[0].actionPerformed(null);
 		}
 	    });
+	    dialog.addWindowListener(new WindowAdapter() {
+		@Override
+		public void windowClosed(WindowEvent e)
+		{
+		    removeHighlights();
+		    isOpened = false;
+		}
+	    });
 	    dialog.pack();
+	    isOpened = true;
 	    dialog.setModalityType(Dialog.ModalityType.MODELESS);
 	    dialog.setLocationRelativeTo(frame);
 	    dialog.setVisible(!dialog.isShowing());
@@ -1696,21 +1672,21 @@ public class GUI extends JFrame {
     }   
     static class IdentitiesAction extends AbstractAction{
 	private static IdentitiesAction ref = null;
+	static JDialog dialog;
 	private IdentitiesAction(String text, ImageIcon icon, String desc, Integer mnemonic)
 	{
 	    super(text, icon);
 	    putValue(SHORT_DESCRIPTION, desc);
 	    putValue(MNEMONIC_KEY, mnemonic);
 	}
-	public static IdentitiesAction getInstance()
-	{
+	public static IdentitiesAction getInstance(){
 	   if (ref == null) ref = new IdentitiesAction("Identities", identitiesIcon, null, KeyEvent.VK_I);
 	   return ref;
 	}
 	@Override
 	public void actionPerformed(ActionEvent e)
 	{
-	    final JDialog dialog = new JDialog(frame, "Identities", true);
+	    dialog = new JDialog(frame, "Identities", true);
 	    SpringLayout layout = new SpringLayout();
 	    JPanel panel = new JPanel(layout);
 	    String[] labelVal = {Connection.real, Connection.nicks[0], Connection.nicks[1], Connection.nicks[2]};
@@ -1741,15 +1717,14 @@ public class GUI extends JFrame {
 	    SpringUtilities.makeCompactGrid(panel, numPairs, 2, 6, 6, 10, 10); //rows, cols, initX, initY, xPad, yPad
 
 	    saveButton.addKeyListener(new KeyAdapter(){
-	    public void keyPressed(KeyEvent evt)
-	    {
-		if (evt.getKeyCode() == KeyEvent.VK_ENTER)
+		public void keyPressed(KeyEvent evt)
 		{
-		    identityButtonFunctionality(panes, dialog);
+		    if (evt.getKeyCode() == KeyEvent.VK_ENTER)
+		    {
+			identityButtonFunctionality(panes, dialog);
+		    }
 		}
-	    }
-	     });
-
+	    });
 	    saveButton.addActionListener(new ActionListener(){
 		public void actionPerformed(ActionEvent e)
 		{
@@ -1988,42 +1963,93 @@ public class GUI extends JFrame {
 	@Override
 	public void actionPerformed(ActionEvent e)
 	{
-
-	    String[] labels = {"Network Name","Server", "Port", "Nick", "Password"};
-	    int numPairs = labels.length;
-	    final JDialog dialog = new JDialog(frame, "Quick Connect", true);
 	    SpringLayout layout = new SpringLayout();
-	    JPanel panel = new JPanel(layout);
-	    final JTextField[] panes = new JTextField[numPairs];
 
-	    for (int i = 0; i < numPairs; i++)
-	    {
-		JLabel l = new JLabel(labels[i], JLabel.TRAILING);
-		panel.add(l);
-		JTextField textField = new JTextField(10);
-		if (i == 2) textField.setText("6667");
-		if (i == 3) textField.setText(Connection.currentNick);
-		panes[i] = textField;
-		textField.setMaximumSize(new Dimension(10,10));
-		l.setLabelFor(textField);
-		panel.add(textField);
-	    }
-	    dialog.setSize(new Dimension(280,220));
-	    dialog.setResizable(false);
-	    dialog.add(panel);
-	    JButton connectButton = new JButton("Connect");
-	    connectButton.setPreferredSize(new Dimension(92,30));
-	    panel.add(connectButton);
-	    layout.putConstraint(SpringLayout.SOUTH, connectButton, 0, SpringLayout.SOUTH, dialog);
-	    layout.putConstraint(SpringLayout.EAST, connectButton, -30, SpringLayout.EAST, dialog);
-	    SpringUtilities.makeCompactGrid(panel, numPairs, 2, 6, 6, 10, 10); //rows, cols, initX, initY, xPad, yPad
+	    final JDialog dialog = new JDialog(frame, "Quick Connect", true);
+	    dialog.getContentPane().setLayout(layout);
+	    dialog.setPreferredSize(new Dimension(200,320));
+	    final JButton connectButton = new JButton("Connect");
+	    JButton cancelButton = new JButton("Cancel");
+	    connectButton.setPreferredSize(new Dimension(70,30));
+	    cancelButton.setPreferredSize(new Dimension(70,30));
+	    
+	    JLabel networkNameLabel = new JLabel("Network Name");
+	    JLabel serverLabel = new JLabel("Server");
+	    JLabel portLabel = new JLabel("Port");
+	    JLabel nickLabel = new JLabel("Nick");
+	    JLabel passLabel = new JLabel("Password");
+	    
+	    final JTextField networkNameField = new JTextField();
+	    networkNameField.setPreferredSize(new Dimension(175, 25));
+	    final JTextField serverField = new JTextField();
+	    serverField.setPreferredSize(new Dimension(175, 25));
+	    final JTextField portField = new JTextField();
+	    portField.setPreferredSize(new Dimension(175, 25));
+	    final JTextField nickField = new JTextField();
+	    nickField.setPreferredSize(new Dimension(175, 25));
+	    final JTextField passField = new JTextField();
+	    passField.setPreferredSize(new Dimension(175, 25));
+	    
+	    layout.putConstraint(SpringLayout.WEST, networkNameLabel, 5, SpringLayout.WEST, dialog);
+	    layout.putConstraint(SpringLayout.NORTH, networkNameLabel, 5, SpringLayout.NORTH, dialog);
+	    
+	    layout.putConstraint(SpringLayout.WEST, networkNameField, 5, SpringLayout.WEST, dialog);
+	    layout.putConstraint(SpringLayout.NORTH, networkNameField, 5, SpringLayout.SOUTH, networkNameLabel);
+	    
+	    layout.putConstraint(SpringLayout.WEST, serverLabel, 5, SpringLayout.WEST, dialog);
+	    layout.putConstraint(SpringLayout.NORTH, serverLabel, 5, SpringLayout.SOUTH, networkNameField);
+	    
+	    layout.putConstraint(SpringLayout.WEST, serverField, 5, SpringLayout.WEST, dialog);
+	    layout.putConstraint(SpringLayout.NORTH, serverField, 5, SpringLayout.SOUTH, serverLabel);
+ 
+	    layout.putConstraint(SpringLayout.WEST, portLabel, 5, SpringLayout.WEST, dialog);
+	    layout.putConstraint(SpringLayout.NORTH, portLabel, 5, SpringLayout.SOUTH, serverField);	    
+	    
+	    layout.putConstraint(SpringLayout.WEST, portField, 5, SpringLayout.WEST, dialog);
+	    layout.putConstraint(SpringLayout.NORTH, portField, 5, SpringLayout.SOUTH, portLabel);
+	    
+	    layout.putConstraint(SpringLayout.WEST, nickLabel, 5, SpringLayout.WEST, dialog);
+	    layout.putConstraint(SpringLayout.NORTH, nickLabel, 5, SpringLayout.SOUTH, portField);	    
+	    
+	    layout.putConstraint(SpringLayout.WEST, nickField, 5, SpringLayout.WEST, dialog);
+	    layout.putConstraint(SpringLayout.NORTH, nickField, 5, SpringLayout.SOUTH, nickLabel);	    
+	    
+	    layout.putConstraint(SpringLayout.WEST, passLabel, 5, SpringLayout.WEST, dialog);
+	    layout.putConstraint(SpringLayout.NORTH, passLabel, 5, SpringLayout.SOUTH, nickField);	    
+	    
+	    layout.putConstraint(SpringLayout.WEST, passField, 5, SpringLayout.WEST, dialog);
+	    layout.putConstraint(SpringLayout.NORTH, passField, 5, SpringLayout.SOUTH, passLabel);
+	    
+	    layout.putConstraint(SpringLayout.WEST, cancelButton, 15, SpringLayout.WEST, dialog);
+	    layout.putConstraint(SpringLayout.SOUTH, cancelButton, -35, SpringLayout.SOUTH, dialog);	    
+	    
+	    layout.putConstraint(SpringLayout.WEST, connectButton, 10, SpringLayout.EAST, cancelButton);
+	    layout.putConstraint(SpringLayout.SOUTH, connectButton, -35, SpringLayout.SOUTH, dialog);	    
+	    
+	    dialog.add(networkNameLabel);
+	    dialog.add(networkNameField);
+	    dialog.add(serverLabel);
+	    dialog.add(serverField);
+	    dialog.add(portLabel);
+	    dialog.add(portField);
+	    dialog.add(nickLabel);
+	    dialog.add(nickField);
+	    dialog.add(passLabel);
+	    dialog.add(passField);
+	    dialog.add(connectButton);
+	    dialog.add(cancelButton);
+	    
 
 	    connectButton.addKeyListener(new KeyAdapter(){
 	    public void keyPressed(KeyEvent evt)
 	    {
 		if (evt.getKeyCode() == KeyEvent.VK_ENTER)
 		{
-		    quickConnectButtonFunctionality(panes, dialog);
+		    connectButton.getActionListeners()[0].actionPerformed(null);
+		}
+		if (evt.getKeyCode() == KeyEvent.VK_ENTER)
+		{
+		    dialog.dispose();
 		}
 	    }
 	     });
@@ -2031,12 +2057,65 @@ public class GUI extends JFrame {
 	    connectButton.addActionListener(new ActionListener(){
 		public void actionPerformed(ActionEvent e)
 		{
-		    quickConnectButtonFunctionality(panes, dialog);
+		    String networkName = networkNameField.getText().trim();
+		    String server = serverField.getText().trim();
+		    String port = portField.getText().trim();
+		    String nick = nickField.getText().trim();
+		    String pass = passField.getText().trim();
+
+		    if (networkName.isEmpty() || server.isEmpty() || port.isEmpty() || nick.isEmpty())
+		    {
+			JOptionPane.showMessageDialog(dialog, "Network name, server, port and nick are required");
+		    }
+		    else
+		    {
+			dialog.dispose();
+			Connection.nicks[0] = nick;
+
+			for (int i = 0; i < tabbedPane.getTabCount(); i++)
+			{
+			    ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
+			    if (networkName.equals(channel.title))
+			    {
+				tabbedPane.setSelectedComponent(channel);
+				String[] msg = {null, "You are already connected to "+networkName+"."};
+				try {
+				    channel.insertString(msg, ChannelPanel.errorStyle, false);
+				} catch (BadLocationException | IOException ex) {
+				    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+				}
+				return;
+			    }
+			}
+
+			Connection c = new Connection(networkName, server, Integer.valueOf(port), false);
+			if (!pass.isEmpty()) c.password = pass;
+		    }		    
 		}
 
 	    });
-	    dialog.setLocationRelativeTo(frame);
-	    dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+	    cancelButton.addKeyListener(new KeyAdapter() {
+		@Override
+		public void keyPressed(KeyEvent e)
+		{
+		    if (e.getKeyCode() == KeyEvent.VK_ENTER || e.getKeyCode() == KeyEvent.VK_ENTER)
+		    {
+			dialog.dispose();
+		    }
+		}
+	    });
+	    cancelButton.addActionListener(new ActionListener() {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+		    dialog.dispose();
+		}
+	    });
+	    
+	    cancelButton.getRootPane().setDefaultButton(cancelButton);
+	    cancelButton.requestFocus();	    
+	    dialog.pack();
+	    dialog.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+	    dialog.setLocationRelativeTo(frame);	    
 	    dialog.setVisible(true);
 	}
     }

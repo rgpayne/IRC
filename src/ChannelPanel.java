@@ -713,7 +713,7 @@ import org.apache.commons.lang3.StringUtils;
                 });
                 return;
             }
-            if (!this.isShowing() && enableNotifications) //check for foreground color?
+            if (!this.isShowing() && enableNotifications)
             { 
                 int totalTabs = tabbedPane.getTabCount();
                 int indexOfTab = -1;
