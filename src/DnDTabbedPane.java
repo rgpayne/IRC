@@ -159,7 +159,6 @@ class DnDTabbedPane extends JTabbedPane {
 		final ChannelPanel channel = (ChannelPanel) this.getComponentAt(index);
 		{
 		    JPopupMenu popupMenu = new JPopupMenu();
-		    popupMenu.setBorder(BorderFactory.createCompoundBorder(new LineBorder(Color.lightGray), new LineBorder(Color.gray)));
 		    JMenuItem enableNotificationsButton = new JMenuItem("Enable Notifications");
 		    if (channel.enableNotifications) {
 			enableNotificationsButton.setIcon(GUI.checkedBoxIcon);

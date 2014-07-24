@@ -8,17 +8,15 @@ class SavedConnection implements Serializable{
     private String password;
     private ArrayList<String> channels;
     private boolean autoConnect;
-    private boolean useSSL;
     private int port;
     private static final long serialVersionUID = 1L;
     
-    SavedConnection(String name, String server, String password, ArrayList<String> channels, boolean autoConnect, boolean useSSL, int port){
+    SavedConnection(String name, String server, String password, ArrayList<String> channels, boolean autoConnect, int port){
         this.name = name;
         this.server = server;
         this.password = password;
         this.channels = channels;
         this.autoConnect = autoConnect;
-        this.useSSL = useSSL;
         this.port = port;
     }
     SavedConnection(){
@@ -85,11 +83,5 @@ class SavedConnection implements Serializable{
     }
     public void changeAutoConnect(boolean autoConnect){
         this.autoConnect = autoConnect;
-    }
-    public boolean retrieveUseSSL(){
-        return useSSL;
-    }
-    public void changeUseSSL(boolean useSSL){
-        this.useSSL = useSSL;
     }
 }

@@ -5,6 +5,8 @@ import javax.swing.text.*;
 import java.util.*;
 import java.util.logging.*;
 import java.io.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import javax.swing.border.LineBorder;
 import javax.swing.event.*;
 import javax.swing.table.*;
@@ -133,16 +135,10 @@ public class GUI extends JFrame {
         fileMenu.add(new JSeparator());
         globalAway = new JMenuItem();
         fileMenu.add(globalAway);
-        fileMenu.add(new JSeparator());
+	fileMenu.addSeparator();
         quitProgram = new JMenuItem();
         fileMenu.add(quitProgram);
-	
-	fileMenu.getPopupMenu().setBorder(BorderFactory.createCompoundBorder(new LineBorder(Color.lightGray), new LineBorder(Color.gray)));
-	editMenu.getPopupMenu().setBorder(BorderFactory.createCompoundBorder(new LineBorder(Color.lightGray), new LineBorder(Color.gray)));
-	settingsMenu.getPopupMenu().setBorder(BorderFactory.createCompoundBorder(new LineBorder(Color.lightGray), new LineBorder(Color.gray)));
-	windowMenu.getPopupMenu().setBorder(BorderFactory.createCompoundBorder(new LineBorder(Color.lightGray), new LineBorder(Color.gray)));
-	
-	
+		
 	
 	findTextAction.setAction(FindTextAction.getInstance());
 	findTextAction.setAccelerator(KeyStroke.getKeyStroke('F', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
@@ -593,7 +589,6 @@ public class GUI extends JFrame {
         JTextField password = new JTextField();
         JTextField channels = new JTextField();
         JCheckBox autoconnect = new JCheckBox();
-        JCheckBox secure = new JCheckBox();
 
         Object[] fields = {
             "Name", name,
@@ -602,9 +597,8 @@ public class GUI extends JFrame {
             "Password", password,
             "Auto Join Channels (#c1 #c2)", channels,
             "Connect on startup", autoconnect,
-            "Secure connection (SSL)", secure
         };
-        int x = JOptionPane.showConfirmDialog(dialog, fields, "Add Server", JOptionPane.OK_CANCEL_OPTION);
+        int x = JOptionPane.showConfirmDialog(dialog, fields, "Add Server", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (x == JOptionPane.CLOSED_OPTION || x == JOptionPane.CANCEL_OPTION) return;
         
         String[] s = channels.getText().split(" ");
@@ -614,13 +608,110 @@ public class GUI extends JFrame {
             JOptionPane.showMessageDialog(dialog, "Port must be an integer.");
             return;
         }
-        SavedConnection connection = new SavedConnection(name.getText(), server.getText(), password.getText(), channelList, autoconnect.isSelected(), secure.isSelected(), Integer.valueOf(port.getText().trim()));
+        SavedConnection connection = new SavedConnection(name.getText(), server.getText(), password.getText(), channelList, autoconnect.isSelected(), Integer.valueOf(port.getText().trim()));
         model.addRow(connection);
         savedConnections.add(connection);
         serializeSavedConnections();
         return;
     }
+    /**
+     * Swing menus are looking pretty bad on Linux when the GTK LaF is used (See
+     * bug #6925412). It will most likely never be fixed anytime soon so this
+     * method provides a workaround for it. It uses reflection to change the GTK
+     * style objects of Swing so popup menu borders have a minimum thickness of
+     * 1 and menu separators have a minimum vertical thickness of 1.
+     */
+    public static void installGtkPopupBugWorkaround()
+    {
+	// Get current look-and-feel implementation class
+	LookAndFeel laf = UIManager.getLookAndFeel();
+	Class<?> lafClass = laf.getClass();
 
+	// Do nothing when not using the problematic LaF
+	if (!lafClass.getName().equals(
+	    "com.sun.java.swing.plaf.gtk.GTKLookAndFeel")) return;
+
+	// We do reflection from here on. Failure is silently ignored. The
+	// workaround is simply not installed when something goes wrong here
+	try
+	{
+	    // Access the GTK style factory
+	    Field field = lafClass.getDeclaredField("styleFactory");
+	    boolean accessible = field.isAccessible();
+	    field.setAccessible(true);
+	    Object styleFactory = field.get(laf);
+	    field.setAccessible(accessible);
+
+	    // Fix the horizontal and vertical thickness of popup menu style
+	    Object style = getGtkStyle(styleFactory, new JPopupMenu(),
+		"POPUP_MENU");
+	    fixGtkThickness(style, "yThickness");
+	    fixGtkThickness(style, "xThickness");
+
+	    // Fix the vertical thickness of the popup menu separator style
+	    style = getGtkStyle(styleFactory, new JSeparator(), 
+		"POPUP_MENU_SEPARATOR");
+	    fixGtkThickness(style, "yThickness");
+	}
+	catch (Exception e)
+	{
+	    // Silently ignored. Workaround can't be applied.
+	}
+    }
+
+    /**
+     * Called internally by installGtkPopupBugWorkaround to fix the thickness
+     * of a GTK style field by setting it to a minimum value of 1.
+     * 
+     * @param style
+     *            The GTK style object.
+     * @param fieldName
+     *            The field name.
+     * @throws Exception
+     *             When reflection fails.
+     */
+    private static void fixGtkThickness(Object style, String fieldName)
+	throws Exception
+    {
+	Field field = style.getClass().getDeclaredField(fieldName);
+	boolean accessible = field.isAccessible();
+	field.setAccessible(true);
+	field.setInt(style, Math.max(1, field.getInt(style)));
+	field.setAccessible(accessible);
+    }
+
+    /**
+     * Called internally by installGtkPopupBugWorkaround. Returns a specific
+     * GTK style object.
+     * 
+     * @param styleFactory
+     *            The GTK style factory.
+     * @param component
+     *            The target component of the style.
+     * @param regionName
+     *            The name of the target region of the style.
+     * @return The GTK style.
+     * @throws Exception
+     *             When reflection fails.
+     */
+    private static Object getGtkStyle(Object styleFactory,
+	JComponent component, String regionName) throws Exception
+    {
+	// Create the region object
+	Class<?> regionClass = Class.forName("javax.swing.plaf.synth.Region");
+	Field field = regionClass.getField(regionName);
+	Object region = field.get(regionClass);
+
+	// Get and return the style
+	Class<?> styleFactoryClass = styleFactory.getClass();
+	Method method = styleFactoryClass.getMethod("getStyle",
+	    new Class<?>[] { JComponent.class, regionClass });
+	boolean accessible = method.isAccessible();
+	method.setAccessible(true);
+	Object style = method.invoke(styleFactory, component, region);
+	method.setAccessible(accessible);
+	return style;
+    }
     
     
     public static void main(String args[]) {
@@ -629,15 +720,11 @@ public class GUI extends JFrame {
             public void run() {
 		try {
 		    UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
-		} catch (ClassNotFoundException ex) {
-		    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-		} catch (InstantiationException ex) {
-		    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-		} catch (IllegalAccessException ex) {
-		    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-		} catch (UnsupportedLookAndFeelException ex) {
+		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
 		    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
 		}
+		
+		installGtkPopupBugWorkaround();
                 new GUI().setVisible(true);
             }
         });
@@ -1702,7 +1789,7 @@ public class GUI extends JFrame {
 
 
 	    final JDialog dialog = new JDialog(frame, "Join Channel", true);
-	    dialog.setSize(new Dimension(330,220));
+	    dialog.setSize(new Dimension(300,180));
 	    SpringLayout layout = new SpringLayout();
 	    JPanel panel = new JPanel(layout);
 	    dialog.setResizable(false);
@@ -1710,6 +1797,7 @@ public class GUI extends JFrame {
 	    final JComboBox combobox = new JComboBox(things);
 	    JLabel serverLabel = new JLabel("Connection");
 	    JLabel chanLabel = new JLabel("Channel");
+	    
 	    JLabel pwLabel = new JLabel("Password");
 	    final JTextField channelField = new JTextField();
 	    channelField.setPreferredSize(new Dimension(180,20));
@@ -1718,6 +1806,10 @@ public class GUI extends JFrame {
 	    combobox.setPreferredSize(new Dimension(180,20));
 	    JButton cancel = new JButton("Cancel");
 	    JButton ok = new JButton("Join");
+	    
+	    cancel.setPreferredSize(new Dimension(70,30));
+	    ok.setPreferredSize(new Dimension(70,30));
+
 	    panel.add(serverLabel);
 	    panel.add(combobox);
 	    panel.add(chanLabel);
@@ -1728,9 +1820,9 @@ public class GUI extends JFrame {
 	    panel.add(ok);
 
 
-	    layout.putConstraint(SpringLayout.NORTH, serverLabel, 25, SpringLayout.NORTH, dialog);
-	    layout.putConstraint(SpringLayout.WEST, serverLabel, 25, SpringLayout.WEST, dialog);
-	    layout.putConstraint(SpringLayout.NORTH, combobox, 23, SpringLayout.NORTH, dialog);
+	    layout.putConstraint(SpringLayout.NORTH, serverLabel, 15, SpringLayout.NORTH, dialog);
+	    layout.putConstraint(SpringLayout.WEST, serverLabel, 15, SpringLayout.WEST, dialog);
+	    layout.putConstraint(SpringLayout.NORTH, combobox, 13, SpringLayout.NORTH, dialog);
 	    layout.putConstraint(SpringLayout.WEST, combobox, 10, SpringLayout.EAST, serverLabel);
 	    layout.putConstraint(SpringLayout.NORTH, chanLabel, 16, SpringLayout.SOUTH, combobox);
 	    layout.putConstraint(SpringLayout.WEST, chanLabel, 0, SpringLayout.WEST, serverLabel);
@@ -1740,10 +1832,10 @@ public class GUI extends JFrame {
 	    layout.putConstraint(SpringLayout.WEST, pwLabel, 0, SpringLayout.WEST, serverLabel);
 	    layout.putConstraint(SpringLayout.NORTH, pwField, 13, SpringLayout.SOUTH, channelField);
 	    layout.putConstraint(SpringLayout.WEST, pwField, 0, SpringLayout.WEST, combobox);
-	    layout.putConstraint(SpringLayout.WEST, cancel, 122, SpringLayout.WEST, dialog);
-	    layout.putConstraint(SpringLayout.SOUTH, cancel, 55, SpringLayout.SOUTH, pwLabel);
-	    layout.putConstraint(SpringLayout.WEST, ok, 25, SpringLayout.EAST, cancel);
-	    layout.putConstraint(SpringLayout.SOUTH, ok, 55, SpringLayout.SOUTH, pwLabel);
+	    layout.putConstraint(SpringLayout.WEST, cancel, 115, SpringLayout.WEST, dialog);
+	    layout.putConstraint(SpringLayout.SOUTH, cancel, 120, SpringLayout.SOUTH, dialog);
+	    layout.putConstraint(SpringLayout.WEST, ok, 10, SpringLayout.EAST, cancel);
+	    layout.putConstraint(SpringLayout.SOUTH, ok, 0, SpringLayout.SOUTH, cancel);
 
 	    cancel.addActionListener(new ActionListener() {
 		@Override
@@ -1890,7 +1982,7 @@ public class GUI extends JFrame {
 	}
 	public static QuickConnectAction getInstance()
 	{
-	    if (ref == null) ref = new QuickConnectAction("Quick Connect", quickConnectIcon, null, KeyEvent.VK_Q);
+	    if (ref == null) ref = new QuickConnectAction("Quick Connect", quickConnectIcon, null, KeyEvent.VK_C);
 	    return ref;
 	}
 	@Override
@@ -2054,20 +2146,26 @@ public class GUI extends JFrame {
 	    };
 
 	    table.setShowGrid(false);
+	    table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 	    table.getColumnModel().getColumn(0).setPreferredWidth(150);
 	    table.getColumnModel().getColumn(1).setPreferredWidth(120);
 	    table.getColumnModel().getColumn(2).setPreferredWidth(272);
 
 	    JScrollPane scrollPane = new JScrollPane(table);
-	    scrollPane.setPreferredSize(new Dimension(542,150));
+	    scrollPane.setPreferredSize(new Dimension(540,150));
 	    scrollPane.setViewportView(table);
+	    	    
 	    JButton add = new JButton("Add");
 	    JButton edit = new JButton ("Edit");
 	    JButton remove = new JButton("Remove");
 	    JButton connect = new JButton("Connect");
+	    add.setPreferredSize(new Dimension(70,30));
+	    edit.setPreferredSize(new Dimension(70,30));
+	    remove.setPreferredSize(new Dimension(70,30));
+	    connect.setPreferredSize(new Dimension(70,30));
+
 	    scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
 	    scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-	    scrollPane.getViewport().setBackground(Color.white);
 	    dialog.setResizable(false);
 	    dialog.setTitle("Server List");
 	    contentpane.add(scrollPane);
@@ -2083,7 +2181,7 @@ public class GUI extends JFrame {
 	    layout.putConstraint(SpringLayout.SOUTH, remove, -10, SpringLayout.SOUTH, contentpane);
 	    layout.putConstraint(SpringLayout.WEST, remove, 10, SpringLayout.EAST, edit);                
 	    layout.putConstraint(SpringLayout.SOUTH, connect, -10, SpringLayout.SOUTH, contentpane);
-	    layout.putConstraint(SpringLayout.EAST, connect, -10 , SpringLayout.EAST, contentpane);
+	    layout.putConstraint(SpringLayout.EAST, connect, -15 , SpringLayout.EAST, contentpane);
 
 	    add.addActionListener(new ActionListener()
 	    {
@@ -2121,9 +2219,6 @@ public class GUI extends JFrame {
 		    JCheckBox eautoconnect = new JCheckBox();
 		    if (conn.retrieveAutoConnect() == true) eautoconnect.setSelected(true);
 		    else eautoconnect.setSelected(false);
-		    JCheckBox esecure = new JCheckBox();
-		    if (conn.retrieveUseSSL() == true) esecure.setSelected(true);
-		    else esecure.setSelected(false);
 
 		    Object[] efields = {
 			"Name", ename,
@@ -2132,9 +2227,8 @@ public class GUI extends JFrame {
 			"Password", epassword,
 			"Auto Join Channels (#c1 #c2)", echannels,
 			"Connect on startup", eautoconnect,
-			"Secure connection (SSL)", esecure
 		    };
-		    int ex = JOptionPane.showConfirmDialog(dialog, efields, "Edit Server", JOptionPane.OK_CANCEL_OPTION);
+		    int ex = JOptionPane.showConfirmDialog(dialog, efields, "Edit Server", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 		    if (ex == JOptionPane.CLOSED_OPTION || ex == JOptionPane.CANCEL_OPTION) return;
 
 		    String[] es = echannels.getText().split(" ");
@@ -2145,7 +2239,7 @@ public class GUI extends JFrame {
 		    }
 		    model.removeRowRange(modelIndex, modelIndex);
 		    savedConnections.remove(conn);
-		    SavedConnection connection = new SavedConnection(ename.getText(), eserver.getText(), epassword.getText(), echannelList, eautoconnect.isSelected(), esecure.isSelected(), Integer.valueOf(eport.getText().trim()));
+		    SavedConnection connection = new SavedConnection(ename.getText(), eserver.getText(), epassword.getText(), echannelList, eautoconnect.isSelected(), Integer.valueOf(eport.getText().trim()));
 		    model.addRow(connection);
 		    savedConnections.add(connection);
 		    serializeSavedConnections();

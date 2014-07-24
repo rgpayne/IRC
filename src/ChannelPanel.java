@@ -127,7 +127,7 @@ import org.apache.commons.lang3.StringUtils;
 	    popup.add(popPing);
 	    popup.add(new JSeparator());
 	    popup.add(popIgnore);
-	    popup.setBorder(BorderFactory.createCompoundBorder(new LineBorder(Color.lightGray), new LineBorder(Color.gray)));
+	    //popup.setBorder(BorderFactory.createCompoundBorder(new LineBorder(Color.lightGray), new LineBorder(Color.gray)));
 
 
 	    MouseListener popupListener = new PopupListener(popup);
@@ -939,6 +939,7 @@ import org.apache.commons.lang3.StringUtils;
         final static ImageIcon iconPurple = new ImageIcon("src/icons/user-red.png");
         final static ImageIcon iconRed = new ImageIcon("src/icons/user-green.png");
         final static ImageIcon iconBlue = new ImageIcon("src/icons/user-gray.png");
+        Color color = Color.decode("#8FAE70");
 
         @Override
         public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus)
@@ -953,8 +954,7 @@ import org.apache.commons.lang3.StringUtils;
 
             if (isSelected)
             {
-                //Color color = (Color)ChannelPanel.chatColorMap.get(3);
-                user.setBackground(SystemColor.textHighlightText);
+                user.setBackground(color);
                 user.setForeground(list.getBackground());
             }
             else
