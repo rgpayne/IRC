@@ -294,7 +294,6 @@ public class GUI extends JFrame {
         tabbedPane.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
         tabbedPane.setTabLayoutPolicy(DnDTabbedPane.SCROLL_TAB_LAYOUT);
         tabbedPane.setTabPlacement(DnDTabbedPane.BOTTOM);
-        tabbedPane.setToolTipText("");
         tabbedPane.setCursor(new java.awt.Cursor(Cursor.DEFAULT_CURSOR)); //cursor necessary?
         tabbedPane.setFocusable(false);
         tabbedPane.setPreferredSize(new Dimension(600, 450));

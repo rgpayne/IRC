@@ -16,6 +16,8 @@ import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 import javax.swing.event.MouseInputAdapter;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 import javax.swing.text.*;
 import org.apache.commons.lang3.StringUtils;
 
@@ -231,11 +233,8 @@ import org.apache.commons.lang3.StringUtils;
 		}
 	    });
 	    
-	    
-	    
-	    
 	    JPopupMenu CPpopup = new JPopupMenu();
-	    JMenuItem CPCopy = new JMenuItem("Copy", GUI.copyIcon);
+	    final JMenuItem CPCopy = new JMenuItem("Copy", GUI.copyIcon);
 	    JMenuItem CPFind = new JMenuItem("Find", GUI.findTextIcon);
 	    JMenuItem CPSelectAll = new JMenuItem("Select All", GUI.selectAllIcon);
 	    CPpopup.add(CPCopy);
@@ -256,15 +255,33 @@ import org.apache.commons.lang3.StringUtils;
 		    });
 		}
 	    });
+	    CPpopup.addPopupMenuListener(new PopupMenuListener() {
+		@Override
+		public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+		    if (chatPane == null ) return;
+		    if (chatPane.getSelectedText().isEmpty()) CPCopy.setForeground(Color.gray);
+		    else CPCopy.setForeground(Color.black);
+		}
+		@Override
+		public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+		}
+		@Override
+		public void popupMenuCanceled(PopupMenuEvent e) {
+		    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+		}
+	    });
+	    
+	    
+	    
 	    
 	    
 
 	    JPopupMenu CIPpopup = new JPopupMenu();
-	    JMenuItem CIPCut = new JMenuItem("Cut", GUI.cutIcon);
-	    JMenuItem CIPCopy = new JMenuItem("Copy", GUI.copyIcon);
-	    JMenuItem CIPPaste = new JMenuItem("Paste", GUI.pasteIcon);
-	    JMenuItem CIPClear = new JMenuItem("Clear", GUI.clearTextIcon);
-	    JMenuItem CIPSelectAll = new JMenuItem("Select All", GUI.selectAllIcon);
+	    final JMenuItem CIPCut = new JMenuItem("Cut", GUI.cutIcon);
+	    final JMenuItem CIPCopy = new JMenuItem("Copy", GUI.copyIcon);
+	    final JMenuItem CIPPaste = new JMenuItem("Paste", GUI.pasteIcon);
+	    final JMenuItem CIPClear = new JMenuItem("Clear", GUI.clearTextIcon);
+	    final JMenuItem CIPSelectAll = new JMenuItem("Select All", GUI.selectAllIcon);
 	    CIPpopup.add(CIPCut);
 	    CIPpopup.add(CIPCopy);
 	    CIPpopup.add(CIPPaste);
@@ -299,7 +316,33 @@ import org.apache.commons.lang3.StringUtils;
 		    });
 		}
 	    });	    
-	    
+	    CIPpopup.addPopupMenuListener(new PopupMenuListener() {
+		@Override
+		public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+		    if (GUI.chatInputPane.getText().isEmpty())
+		    {
+			CIPCut.setForeground(Color.gray);
+			CIPPaste.setForeground(Color.black);
+			CIPCopy.setForeground(Color.gray);
+			CIPSelectAll.setForeground(Color.gray);
+			CIPClear.setForeground(Color.gray);
+		    }
+		    else
+		    {
+			CIPCut.setForeground(Color.black);
+			CIPPaste.setForeground(Color.black);
+			CIPCopy.setForeground(Color.black);
+			CIPSelectAll.setForeground(Color.black);
+			CIPClear.setForeground(Color.black);			
+		    }
+		}
+
+		@Override
+		public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {}
+
+		@Override
+		public void popupMenuCanceled(PopupMenuEvent e) {}
+	    });
 	    
 	    setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
 	    
