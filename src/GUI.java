@@ -7,16 +7,14 @@ import java.util.logging.*;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import javax.swing.border.LineBorder;
 import javax.swing.event.*;
-import javax.swing.plaf.ColorUIResource;
 import javax.swing.table.*;
 import org.apache.commons.lang3.StringUtils;
 
 public class GUI extends JFrame {
     final static ImageIcon mainIcon = new ImageIcon("src/icons/weather-sun.png");
     final static ImageIcon quickConnectIcon = new ImageIcon("src/icons/connect.png");
-    final static ImageIcon identitiesIcon = new ImageIcon("src/icons/edit-group.png");
+    final static ImageIcon identityIcon = new ImageIcon("src/icons/edit-group.png");
     final static ImageIcon serverListIcon = new ImageIcon("src/icons/unsortedlist1.png");
     final static ImageIcon copyIcon = new ImageIcon("src/icons/edit-copy-3.png");
     final static ImageIcon cutIcon = new ImageIcon("src/icons/edit-cut-red.png");
@@ -74,7 +72,7 @@ public class GUI extends JFrame {
         tabbedPane = new DnDTabbedPane();
         userListPane = new JTextPane();
         tabInfo = new JLabel();
-        jMenuBar2 = new JMenuBar();
+        menuBar = new JMenuBar();
         fileMenu = new JMenu("File");
 	fileMenu.setMnemonic('F');
         editMenu = new JMenu("Edit");
@@ -125,11 +123,11 @@ public class GUI extends JFrame {
         fileMenu.add(new JSeparator());
         disconnect = new JMenuItem();
         fileMenu.add(disconnect);
-        identities = new JMenuItem();
+        identity = new JMenuItem();
         showNickList = new JMenuItem();
 	configure = new JMenuItem();
         settingsMenu.add(showNickList);
-        settingsMenu.add(identities);  
+        settingsMenu.add(identity);  
 	settingsMenu.add(configure);
         reconnect = new JMenuItem();
         fileMenu.add(reconnect);
@@ -172,8 +170,8 @@ public class GUI extends JFrame {
 	quickConnect.setAccelerator(KeyStroke.getKeyStroke("F7"));	
 	showNickList.setAction(ShowNickListAction.getInstance());
 	showNickList.setAccelerator(KeyStroke.getKeyStroke('H', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(), false));
-	identities.setAction(IdentitiesAction.getInstance());
-	identities.setAccelerator(KeyStroke.getKeyStroke("F2"));
+	identity.setAction(IdentityAction.getInstance());
+	identity.setAccelerator(KeyStroke.getKeyStroke("F2"));
 	configure.setAction(ConfigureAction.getInstance());
 	serverList.setAction(ServerListAction.getInstance());
 	serverList.setAccelerator(KeyStroke.getKeyStroke("F2"));		
@@ -306,16 +304,16 @@ public class GUI extends JFrame {
 
         tabInfo.setHorizontalAlignment(SwingConstants.RIGHT);
 
-        jMenuBar2.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
-        jMenuBar2.setFocusable(false);
+        menuBar.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
+        menuBar.setFocusable(false);
 
-        jMenuBar2.add(fileMenu);
-        jMenuBar2.add(editMenu);
-        jMenuBar2.add(settingsMenu);
-        jMenuBar2.add(windowMenu);
+        menuBar.add(fileMenu);
+        menuBar.add(editMenu);
+        menuBar.add(settingsMenu);
+        menuBar.add(windowMenu);
         
 
-        setJMenuBar(jMenuBar2);
+        setJMenuBar(menuBar);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -354,7 +352,7 @@ public class GUI extends JFrame {
 	amap.put("disconnect", disconnect.getAction());
 	amap.put("reconnect", reconnect.getAction());
 	amap.put("quickConnect", quickConnect.getAction());
-	amap.put("identities", identities.getAction());
+	amap.put("identity", identity.getAction());
 	amap.put("serverList", serverList.getAction());
 	amap.put("findText", findTextAction.getAction());
 	
@@ -371,7 +369,7 @@ public class GUI extends JFrame {
 	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "moveTabRight");
 	imap.put(KeyStroke.getKeyStroke("F5"), "channelList");
 	imap.put(KeyStroke.getKeyStroke("F7"), "quickConnect");
-	imap.put(KeyStroke.getKeyStroke("F8"), "identities");
+	imap.put(KeyStroke.getKeyStroke("F8"), "identy");
 	imap.put(KeyStroke.getKeyStroke("F2"), "serverList");
 	imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "findText");
     }
@@ -465,22 +463,6 @@ public class GUI extends JFrame {
         }
     }
 
-    private static void identityButtonFunctionality(JTextField[] panes, JDialog dialog)
-    {
-        try {
-            prop.load(new FileInputStream("config.properties"));
-            prop.setProperty("Real", panes[0].getText().trim());
-            prop.setProperty("Nick", panes[1].getText().trim());
-            prop.setProperty("Second", panes[2].getText().trim() );
-            prop.setProperty("Third", panes[3].getText().trim());
-            prop.store(new FileOutputStream("config.properties"), null);
-
-            } catch (IOException io) {
-                Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, io);
-            } 
-        dialog.dispose();
-
-    }
     private void chatInputPaneKeyPressed(KeyEvent evt)
     {
         ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
@@ -703,7 +685,7 @@ public class GUI extends JFrame {
     private JMenu editMenu;
     private JMenu settingsMenu;
     private JMenu windowMenu;
-    private JMenuBar jMenuBar2;
+    private JMenuBar menuBar;
     private static JLabel tabInfo;
     private static DnDTabbedPane tabbedPane;
     private JTextPane userListPane;
@@ -713,7 +695,7 @@ public class GUI extends JFrame {
     private static JMenuItem cutAction;
     private static JMenuItem pasteAction;
     private static JMenuItem quickConnect;
-    private static JMenuItem identities;
+    private static JMenuItem identity;
     private static JMenuItem serverList;
     private static JMenuItem clearWindow;
     private static JMenuItem clearAllWindows;
@@ -1670,68 +1652,124 @@ public class GUI extends JFrame {
 
 	}
     }   
-    static class IdentitiesAction extends AbstractAction{
-	private static IdentitiesAction ref = null;
+    static class IdentityAction extends AbstractAction{
+	private static IdentityAction ref = null;
 	static JDialog dialog;
-	private IdentitiesAction(String text, ImageIcon icon, String desc, Integer mnemonic)
+	private IdentityAction(String text, ImageIcon icon, String desc, Integer mnemonic)
 	{
 	    super(text, icon);
 	    putValue(SHORT_DESCRIPTION, desc);
 	    putValue(MNEMONIC_KEY, mnemonic);
 	}
-	public static IdentitiesAction getInstance(){
-	   if (ref == null) ref = new IdentitiesAction("Identities", identitiesIcon, null, KeyEvent.VK_I);
+	public static IdentityAction getInstance(){
+	   if (ref == null) ref = new IdentityAction("Identities", identityIcon, null, KeyEvent.VK_I);
 	   return ref;
 	}
 	@Override
 	public void actionPerformed(ActionEvent e)
 	{
-	    dialog = new JDialog(frame, "Identities", true);
+	    final JDialog dialog = new JDialog(frame, "Identity", true);
 	    SpringLayout layout = new SpringLayout();
-	    JPanel panel = new JPanel(layout);
-	    String[] labelVal = {Connection.real, Connection.nicks[0], Connection.nicks[1], Connection.nicks[2]};
-	    String[] labels = {"Real Name", "Nick", "Second choice", "Third choice"};
-	    int numPairs = labels.length;
-	    final JTextField[] panes = new JTextField[numPairs];
+	    dialog.getContentPane().setLayout(layout);
+	    dialog.setPreferredSize(new Dimension(200,290));	    
+	    
+	    JLabel realNameLabel = new JLabel(" Real Name");
+	    realNameLabel.setPreferredSize(new Dimension(175,25));
+	    JLabel firstChoiceLabel = new JLabel(" Nick");
+	    firstChoiceLabel.setPreferredSize(new Dimension(175,25));
+	    JLabel secondChoiceLabel = new JLabel("Second choice");
+	    secondChoiceLabel.setPreferredSize(new Dimension(175,25));
+	    JLabel thirdChoiceLabel = new JLabel(" Third Choice");
+	    thirdChoiceLabel.setPreferredSize(new Dimension(175,25));
+	    
+	    final JTextField realNameField = new JTextField();
+	    realNameField.setText(Connection.real);
+	    realNameField.setPreferredSize(new Dimension(175,25));
+	    final JTextField nameField = new JTextField();
+	    nameField.setText(Connection.nicks[0]);
+	    nameField.setPreferredSize(new Dimension(175,25));
+	    final JTextField secondNameField = new JTextField();
+	    secondNameField.setText(Connection.nicks[1]);
+	    secondNameField.setPreferredSize(new Dimension(175,25));
+	    final JTextField thirdNameField = new JTextField();
+	    thirdNameField.setText(Connection.nicks[2]);
+	    thirdNameField.setPreferredSize(new Dimension(175,25));
+	    
+	    final JButton saveButton = new JButton("Save");
+	    saveButton.setPreferredSize(new Dimension(70,30));
+	    
+	    layout.putConstraint(SpringLayout.WEST, realNameLabel, 5, SpringLayout.WEST, dialog);
+	    layout.putConstraint(SpringLayout.NORTH, realNameLabel, 5, SpringLayout.NORTH, dialog);
+	    
+	    layout.putConstraint(SpringLayout.WEST, realNameField, 5, SpringLayout.WEST, dialog);
+	    layout.putConstraint(SpringLayout.NORTH, realNameField, 0, SpringLayout.SOUTH, realNameLabel);	
+	    
+	    layout.putConstraint(SpringLayout.WEST, firstChoiceLabel, 5, SpringLayout.WEST, dialog);
+	    layout.putConstraint(SpringLayout.NORTH, firstChoiceLabel, 5, SpringLayout.SOUTH, realNameField);
+	    
+	    layout.putConstraint(SpringLayout.WEST, nameField, 5, SpringLayout.WEST, dialog);
+	    layout.putConstraint(SpringLayout.NORTH, nameField, 0, SpringLayout.SOUTH, firstChoiceLabel);		    
 
-	    for (int i = 0; i < numPairs; i++)
-	    {
-		JLabel l = new JLabel(labels[i], JLabel.TRAILING);
-		panel.add(l);
-		JTextField textField = new JTextField(10);
-		textField.setText(labelVal[i]);
-		panes[i] = textField;
-		textField.setMaximumSize(new Dimension(10,10));
-		l.setLabelFor(textField);
-		panel.add(textField);
-	    }
-
-	    dialog.setSize(new Dimension(220,180));
-	    dialog.setResizable(false);
-	    dialog.add(panel);
-	    JButton saveButton = new JButton("Save");
-	    saveButton.setPreferredSize(new Dimension(80,24));
-	    panel.add(saveButton);
-	    layout.putConstraint(SpringLayout.SOUTH, saveButton, 0, SpringLayout.SOUTH, dialog);
-	    layout.putConstraint(SpringLayout.EAST, saveButton, -39, SpringLayout.EAST, dialog);
-	    SpringUtilities.makeCompactGrid(panel, numPairs, 2, 6, 6, 10, 10); //rows, cols, initX, initY, xPad, yPad
+	    layout.putConstraint(SpringLayout.WEST, secondChoiceLabel, 5, SpringLayout.WEST, nameField);
+	    layout.putConstraint(SpringLayout.NORTH, secondChoiceLabel, 5, SpringLayout.SOUTH, nameField);
+	    
+	    layout.putConstraint(SpringLayout.WEST, secondNameField, 5, SpringLayout.WEST, dialog);
+	    layout.putConstraint(SpringLayout.NORTH, secondNameField, 0, SpringLayout.SOUTH, secondChoiceLabel);	    
+	    
+	    layout.putConstraint(SpringLayout.WEST, thirdChoiceLabel, 5, SpringLayout.WEST, dialog);
+	    layout.putConstraint(SpringLayout.NORTH, thirdChoiceLabel, 5, SpringLayout.SOUTH, secondNameField);
+	    
+	    layout.putConstraint(SpringLayout.WEST, thirdNameField, 5, SpringLayout.WEST, dialog);
+	    layout.putConstraint(SpringLayout.NORTH, thirdNameField, 0, SpringLayout.SOUTH, thirdChoiceLabel);	    
+	    	    
+	    layout.putConstraint(SpringLayout.EAST, saveButton, -35, SpringLayout.EAST, dialog);
+	    layout.putConstraint(SpringLayout.SOUTH, saveButton, -35, SpringLayout.SOUTH, dialog);	 	    
+	    
+	    dialog.add(realNameLabel);
+	    dialog.add(realNameField);
+	    dialog.add(firstChoiceLabel);
+	    dialog.add(nameField);
+	    dialog.add(secondChoiceLabel);
+	    dialog.add(secondNameField);
+	    dialog.add(thirdChoiceLabel);
+	    dialog.add(thirdNameField);
+	    dialog.add(saveButton);
+	    
 
 	    saveButton.addKeyListener(new KeyAdapter(){
 		public void keyPressed(KeyEvent evt)
 		{
 		    if (evt.getKeyCode() == KeyEvent.VK_ENTER)
-		    {
-			identityButtonFunctionality(panes, dialog);
+		    {	
+			saveButton.getActionListeners()[0].actionPerformed(null);
 		    }
 		}
 	    });
 	    saveButton.addActionListener(new ActionListener(){
 		public void actionPerformed(ActionEvent e)
 		{
-		    identityButtonFunctionality(panes,dialog);
+		    try {
+			Connection.real = realNameField.getText().trim();
+			Connection.nicks[0] = nameField.getText().trim();
+			Connection.nicks[1] = secondNameField.getText().trim();
+			Connection.nicks[2] = thirdNameField.getText().trim();
+			
+			prop.load(new FileInputStream("config.properties"));
+			prop.setProperty("Real", Connection.real);
+			prop.setProperty("Nick", Connection.nicks[0]);
+			prop.setProperty("Second", Connection.nicks[1]);
+			prop.setProperty("Third", Connection.nicks[2]);
+			prop.store(new FileOutputStream("config.properties"), null);
+
+			} catch (IOException io) {
+			    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, io);
+			} 
+			dialog.dispose();		      
 		}
 
 	    });
+	    
+	    dialog.pack();
 	    dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 	    dialog.setLocationRelativeTo(frame);
 	    dialog.setVisible(true);
