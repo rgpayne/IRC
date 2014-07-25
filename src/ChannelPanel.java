@@ -3,8 +3,8 @@ import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Insets;
 import java.awt.Point;
-import java.awt.SystemColor;
 import java.awt.event.*;
 import java.io.IOException;
 import java.net.URL;
@@ -13,7 +13,6 @@ import java.util.*;
 import java.util.logging.*;
 import java.util.regex.*;
 import javax.swing.*;
-import javax.swing.border.LineBorder;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 import javax.swing.event.MouseInputAdapter;
@@ -83,7 +82,6 @@ import org.apache.commons.lang3.StringUtils;
                                 
             doc = chatPane.getStyledDocument();
                     
-            //setStyles(); //needs only to be done once (at GUI init) or when called by fonts screen?
 	    
             PlainTextHyperlinkListener hyperlinkListener = new PlainTextHyperlinkListener(chatPane);
 	    chatPane.addHyperlinkListener(hyperlinkListener);
@@ -93,7 +91,6 @@ import org.apache.commons.lang3.StringUtils;
             if (showTimestamp == true) history = new ArrayList<String>();
             
             makePanel();
-            //makeHashMaps(); //should only be done one at launch of GUI
 	    GUI.loadKeyBinds(chatPane.getActionMap(), chatPane.getInputMap());
 	    
 	   
@@ -114,26 +111,23 @@ import org.apache.commons.lang3.StringUtils;
 	    userListPane.setAutoscrolls(false);
 	    userListPane.setFocusable(false);
 	    userListPane.setMaximumSize(new Dimension(25, 25));
-	    JPopupMenu popup = new JPopupMenu();
-	    JMenuItem popOpenQuery = new JMenuItem("Open Query", GUI.popupQueryIcon);
-	    JMenuItem popWhois = new JMenuItem("Whois", GUI.popupWhoisIcon);
-	    JMenuItem popVersion = new JMenuItem("Version", GUI.popupVersionIcon);
-	    JMenuItem popPing = new JMenuItem("Ping", GUI.popupPingIcon);
-	    JMenuItem popIgnore = new JMenuItem("Ignore", GUI.popupIgnoreIcon);
-	    popup.add(popOpenQuery);
-	    popup.add(new JSeparator());
-	    popup.add(popWhois);
-	    popup.add(popVersion);
-	    popup.add(popPing);
-	    popup.add(new JSeparator());
-	    popup.add(popIgnore);
-	    //popup.setBorder(BorderFactory.createCompoundBorder(new LineBorder(Color.lightGray), new LineBorder(Color.gray)));
-
-
-	    MouseListener popupListener = new PopupListener(popup);
-	    userListPane.addMouseListener(popupListener);
-
-	    popOpenQuery.addActionListener(new ActionListener(){
+	    
+	    
+	    JPopupMenu ULpopup = new JPopupMenu();
+	    JMenuItem ULpopOpenQuery = new JMenuItem("Open Query", GUI.popupQueryIcon);
+	    JMenuItem ULpopWhois = new JMenuItem("Whois", GUI.popupWhoisIcon);
+	    JMenuItem ULpopVersion = new JMenuItem("Version", GUI.popupVersionIcon);
+	    JMenuItem ULpopPing = new JMenuItem("Ping", GUI.popupPingIcon);
+	    JMenuItem ULpopIgnore = new JMenuItem("Ignore", GUI.popupIgnoreIcon);
+	    ULpopup.add(ULpopOpenQuery);
+	    ULpopup.add(new JSeparator());
+	    ULpopup.add(ULpopWhois);
+	    ULpopup.add(ULpopVersion);
+	    ULpopup.add(ULpopPing);
+	    ULpopup.add(new JSeparator());
+	    ULpopup.add(ULpopIgnore);
+	    userListPane.setComponentPopupMenu(ULpopup);
+	    ULpopOpenQuery.addActionListener(new ActionListener(){
 		@Override
 		public void actionPerformed(ActionEvent e) {
 		    User nick = ((User)userListPane.getSelectedValue());
@@ -153,7 +147,7 @@ import org.apache.commons.lang3.StringUtils;
 		    }
 		}
 	    });
-	    popWhois.addActionListener(new ActionListener() {
+	    ULpopWhois.addActionListener(new ActionListener() {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 		    User nick = ((User)userListPane.getSelectedValue());
@@ -169,7 +163,7 @@ import org.apache.commons.lang3.StringUtils;
 		    }
 		}
 	    });
-	    popVersion.addActionListener(new ActionListener() {
+	    ULpopVersion.addActionListener(new ActionListener() {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 		    User nick = ((User)userListPane.getSelectedValue());
@@ -185,7 +179,7 @@ import org.apache.commons.lang3.StringUtils;
 		    }
 		}
 	    });
-	    popPing.addActionListener(new ActionListener() {
+	    ULpopPing.addActionListener(new ActionListener() {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 		    Long longTime = System.currentTimeMillis() / 1000L;
@@ -202,7 +196,7 @@ import org.apache.commons.lang3.StringUtils;
 		    }
 		}
 	    });
-	    popIgnore.addActionListener(new ActionListener() {
+	    ULpopIgnore.addActionListener(new ActionListener() {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 		    User nick = ((User)userListPane.getSelectedValue());
@@ -236,7 +230,77 @@ import org.apache.commons.lang3.StringUtils;
 		    }
 		}
 	    });
+	    
+	    
+	    
+	    
+	    JPopupMenu CPpopup = new JPopupMenu();
+	    JMenuItem CPCopy = new JMenuItem("Copy", GUI.copyIcon);
+	    JMenuItem CPFind = new JMenuItem("Find", GUI.findTextIcon);
+	    JMenuItem CPSelectAll = new JMenuItem("Select All", GUI.selectAllIcon);
+	    CPpopup.add(CPCopy);
+	    CPpopup.add(CPFind);
+	    CPpopup.add(CPSelectAll);	    
+	    chatPane.setComponentPopupMenu(CPpopup);
+	    CPCopy.addActionListener(new DefaultEditorKit.CopyAction());
+	    CPFind.addActionListener(GUI.FindTextAction.getInstance());
+	    CPSelectAll.addActionListener(new ActionListener() {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+		    SwingUtilities.invokeLater(new Runnable() {
 
+			@Override
+			public void run() {
+			    chatPane.selectAll();
+			}
+		    });
+		}
+	    });
+	    
+	    
+
+	    JPopupMenu CIPpopup = new JPopupMenu();
+	    JMenuItem CIPCut = new JMenuItem("Cut", GUI.cutIcon);
+	    JMenuItem CIPCopy = new JMenuItem("Copy", GUI.copyIcon);
+	    JMenuItem CIPPaste = new JMenuItem("Paste", GUI.pasteIcon);
+	    JMenuItem CIPClear = new JMenuItem("Clear", GUI.clearTextIcon);
+	    JMenuItem CIPSelectAll = new JMenuItem("Select All", GUI.selectAllIcon);
+	    CIPpopup.add(CIPCut);
+	    CIPpopup.add(CIPCopy);
+	    CIPpopup.add(CIPPaste);
+	    CIPpopup.add(new JSeparator());
+	    CIPpopup.add(CIPClear);
+	    CIPpopup.add(CIPSelectAll);	    	    
+	    GUI.chatInputPane.setComponentPopupMenu(CIPpopup);
+	    
+	    CIPCopy.addActionListener(new DefaultEditorKit.CopyAction());
+	    CIPCut.addActionListener(new DefaultEditorKit.CutAction());
+	    CIPPaste.addActionListener(new DefaultEditorKit.PasteAction());
+	    CIPClear.addActionListener(new ActionListener() {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+		    SwingUtilities.invokeLater(new Runnable(){
+			@Override
+			public void run() {
+			    GUI.chatInputPane.setText(null);
+			}
+		    });
+		}
+	    });
+	    CIPSelectAll.addActionListener(new ActionListener() {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+		    SwingUtilities.invokeLater(new Runnable() {
+
+			@Override
+			public void run() {
+			    GUI.chatInputPane.selectAll();
+			}
+		    });
+		}
+	    });	    
+	    
+	    
 	    setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
 	    
 	    
@@ -262,6 +326,7 @@ import org.apache.commons.lang3.StringUtils;
 	    }
 
         }
+	
         public void closeTab()
         {
             String name = this.name;         
@@ -433,6 +498,7 @@ import org.apache.commons.lang3.StringUtils;
 			    @Override
 			    public void run ()
 			    {
+				if (chatPane.getDocument().getLength() == 0) return;
 				chatPane.getCaret().setDot(doc.getLength());
 			    }
 			});
@@ -987,26 +1053,6 @@ import org.apache.commons.lang3.StringUtils;
         }
 
     }
-class PopupListener extends MouseAdapter {
-    private JPopupMenu popup;
-    
-    public PopupListener(JPopupMenu popup)
-    {
-        this.popup = popup;
-    }
-    public void mousePressed(MouseEvent e){
-        maybeShowPopup(e);
-    }
-    public void mouseReleased(MouseEvent e){
-        maybeShowPopup(e);
-    }
-    private void maybeShowPopup(MouseEvent e){
-        if (e.isPopupTrigger()){
-            popup.show(e.getComponent(), e.getX(), e.getY());
-        }
-    }
-}
-
 class PlainTextHyperlinkListener implements HyperlinkListener {
     JTextPane textPane;
 
@@ -1024,118 +1070,119 @@ class PlainTextHyperlinkListener implements HyperlinkListener {
 
 class TextMotionListener extends MouseInputAdapter {
     JTextPane textPane;
-    public TextMotionListener(JTextPane textPane){
+    public TextMotionListener(JTextPane textPane)
+    {
 	this.textPane = textPane;
     }
-  public void mouseMoved(MouseEvent e) {
-       Element elem = textPane.getStyledDocument().getCharacterElement(textPane.viewToModel(e.getPoint()));
-       AttributeSet as = elem.getAttributes();
-       if(StyleConstants.isUnderline(as))
-	    textPane.setCursor(new Cursor(Cursor.HAND_CURSOR));
-       else
-	    textPane.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-  }
+    @Override
+      public void mouseMoved(MouseEvent e)
+      {
+	   Element elem = textPane.getStyledDocument().getCharacterElement(textPane.viewToModel(e.getPoint()));
+	   AttributeSet as = elem.getAttributes();
+	   if(StyleConstants.isUnderline(as))
+		textPane.setCursor(new Cursor(Cursor.HAND_CURSOR));
+	   else
+		textPane.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+      }
 }
 
- class TextClickListener extends MouseAdapter {
-     JTextPane textPane;
-     Connection connection;
-     public TextClickListener(JTextPane textPane, Connection connection)
-     {
-	 this.textPane = textPane;
-	 this.connection = connection;
-     }
-	 public void mouseClicked( MouseEvent e ) {
-	  try{
-	       Element elem = textPane.getStyledDocument().getCharacterElement(textPane.viewToModel(e.getPoint()));	       
-	       boolean contains = elem.getAttributes().containsAttributes(ChannelPanel.hyperlinkUnclickedStyle);
-	       if(contains)
-	        {
-		    StyledDocument document = textPane.getStyledDocument();
-		    Point pt = new Point(e.getX(), e.getY());
-		    int originalClickPoint = textPane.viewToModel(pt);
-		    boolean isURL = true;
-		    String URLString = "";
-		    int backwardsClickPoint = originalClickPoint-1;
-		    while (isURL)
-		    {
-			elem = document.getCharacterElement(originalClickPoint);
-			if (elem.getAttributes().containsAttributes(ChannelPanel.hyperlinkUnclickedStyle))
-			{
-			    URLString = URLString+(document.getText(originalClickPoint, 1));
-			}
-			else break;
-			originalClickPoint++;
-		    }
-
-		    while (isURL)
-		    {
-			elem = document.getCharacterElement(backwardsClickPoint);
-			if (elem.getAttributes().containsAttributes(ChannelPanel.hyperlinkUnclickedStyle))
-			{
-			    URLString = document.getText(backwardsClickPoint, 1)+URLString;
-			}
-			else isURL = false;    
-			backwardsClickPoint--;
-		    }
-		    URLLinkAction linkAction = new URLLinkAction(URLString, connection);
-		    linkAction.execute();
-	      }
-	  }
-	  catch(BadLocationException x) {
-	       x.printStackTrace();
-	  }
-	 }
+class TextClickListener extends MouseAdapter{
+    JTextPane textPane;
+    Connection connection;
+    public TextClickListener(JTextPane textPane, Connection connection)
+    {
+	this.textPane = textPane;
+	this.connection = connection;
     }
-
-     class URLLinkAction extends AbstractAction{
-          private String url;
-	  private Connection connection;
-
-          URLLinkAction(String bac, Connection connection)
-          {
-               url=bac;
-	       this.connection = connection;
-          }
-
-             protected void execute()
-	     {
-		 if (url.startsWith("#")) 
-		   try {
-		       connection.send("JOIN "+url);
-		 } catch (IOException ex) {
-		     Logger.getLogger(URLLinkAction.class.getName()).log(Level.SEVERE, null, ex);
-		 } catch (BadLocationException ex) {
-		     Logger.getLogger(URLLinkAction.class.getName()).log(Level.SEVERE, null, ex);
-		 }
-
-		 
-		 else {
-		    try {
-			String osName = System.getProperty("os.name").toLowerCase();
-			Runtime rt = Runtime.getRuntime();
-			if (osName.indexOf( "win" ) >= 0) rt.exec( "rundll32 url.dll,FileProtocolHandler " + url);
-			else if (osName.indexOf("mac") >= 0) rt.exec( "open " + url);
-			else if (osName.indexOf("ix") >=0 || osName.indexOf("ux") >=0 || osName.indexOf("sun") >=0) 
-			{
-			    String[] browsers = {"epiphany", "firefox", "mozilla", "konqueror", "netscape","opera","links","lynx"};
-
-				   // Build a command string which looks like "browser1 "url" || browser2 "url" ||..."
-				   StringBuffer cmd = new StringBuffer();
-				   for (int i = 0 ; i < browsers.length ; i++)
-					cmd.append((i == 0  ? "" : " || " ) + browsers[i] +" \"" + url + "\" ");
-
-				   rt.exec(new String[] { "sh", "-c", cmd.toString() });
-			}
-		   }
-		   catch (Exception ex)
-		   {
-			ex.printStackTrace();
-		   }
+    @Override
+    public void mouseClicked( MouseEvent e )
+    {
+	try{
+	    Element elem = textPane.getStyledDocument().getCharacterElement(textPane.viewToModel(e.getPoint()));	       
+	    boolean contains = elem.getAttributes().containsAttributes(ChannelPanel.hyperlinkUnclickedStyle);
+	    if(contains)
+	    {
+		StyledDocument document = textPane.getStyledDocument();
+		Point pt = new Point(e.getX(), e.getY());
+		int originalClickPoint = textPane.viewToModel(pt);
+		boolean isURL = true;
+		String URLString = "";
+		int backwardsClickPoint = originalClickPoint-1;
+		while (isURL)
+		{
+		    elem = document.getCharacterElement(originalClickPoint);
+		    if (elem.getAttributes().containsAttributes(ChannelPanel.hyperlinkUnclickedStyle))
+		    {
+			URLString = URLString+(document.getText(originalClickPoint, 1));
+		    }
+		    else break;
+		    originalClickPoint++;
 		}
-            }
 
-             public void actionPerformed(ActionEvent e){
-                     execute();
-             }
-     }
+		while (isURL)
+		{
+		    elem = document.getCharacterElement(backwardsClickPoint);
+		    if (elem.getAttributes().containsAttributes(ChannelPanel.hyperlinkUnclickedStyle))
+		    {
+			URLString = document.getText(backwardsClickPoint, 1)+URLString;
+		    }
+		    else isURL = false;    
+		    backwardsClickPoint--;
+		}
+		URLLinkAction linkAction = new URLLinkAction(URLString, connection);
+		linkAction.execute();
+	    }    
+	}
+	catch(BadLocationException x) {
+	     x.printStackTrace();
+	}
+    }
+}
+
+class URLLinkAction extends AbstractAction{
+    private String url;
+    private Connection connection;
+
+    URLLinkAction(String bac, Connection connection)
+    {
+	url=bac;
+        this.connection = connection;
+    }
+    protected void execute()
+    {
+	if (url.startsWith("#")) 
+	    try {
+	        connection.send("JOIN "+url);
+	} catch (IOException ex) {
+	    Logger.getLogger(URLLinkAction.class.getName()).log(Level.SEVERE, null, ex);
+	} catch (BadLocationException ex) {
+	    Logger.getLogger(URLLinkAction.class.getName()).log(Level.SEVERE, null, ex);
+	}
+	else {
+	    try {
+		String osName = System.getProperty("os.name").toLowerCase();
+		Runtime rt = Runtime.getRuntime();
+		if (osName.indexOf( "win" ) >= 0) rt.exec( "rundll32 url.dll,FileProtocolHandler " + url);
+		else if (osName.indexOf("mac") >= 0) rt.exec( "open " + url);
+		else if (osName.indexOf("ix") >=0 || osName.indexOf("ux") >=0 || osName.indexOf("sun") >=0) 
+		{
+		    String[] browsers = {"epiphany", "firefox", "mozilla", "konqueror", "netscape","opera","links","lynx"};
+
+		    // Build a command string which looks like "browser1 "url" || browser2 "url" ||..."
+		    StringBuffer cmd = new StringBuffer();
+			for (int i = 0 ; i < browsers.length ; i++)
+			    cmd.append((i == 0  ? "" : " || " ) + browsers[i] +" \"" + url + "\" ");
+
+		    rt.exec(new String[] { "sh", "-c", cmd.toString() });
+		}
+	    }
+	   catch (Exception ex)
+	    {
+		ex.printStackTrace();
+	    }
+	}
+    }
+    public void actionPerformed(ActionEvent e){
+	execute();
+    }
+ }

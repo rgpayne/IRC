@@ -39,6 +39,8 @@ public class GUI extends JFrame {
     final static ImageIcon checkedBoxIcon = new ImageIcon("src/icons/checkbox-2.png"); 
     final static ImageIcon findTextIcon = new ImageIcon("src/icons/system-search-5.png"); 
     final static ImageIcon configureIcon = new ImageIcon("src/icons/configure-5.png"); 
+    final static ImageIcon selectAllIcon = new ImageIcon("src/icons/edit-select-all.png"); 
+    final static ImageIcon clearTextIcon = new ImageIcon("src/icons/edit-clear.png"); 
 
 
     final static String appName = "Alpha IRC";
@@ -680,7 +682,7 @@ public class GUI extends JFrame {
         
     }
 
-    private JTextField chatInputPane;
+    public static JTextField chatInputPane;
     private JMenu fileMenu;
     private JMenu editMenu;
     private JMenu settingsMenu;
