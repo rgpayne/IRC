@@ -81,7 +81,6 @@ import org.apache.commons.lang3.StringUtils;
             this.title = title; //this is what is shown on a tab
             this.name = name;
             this.connection = c;
-                                
             doc = chatPane.getStyledDocument();
                     
 	    
@@ -258,8 +257,8 @@ import org.apache.commons.lang3.StringUtils;
 	    CPpopup.addPopupMenuListener(new PopupMenuListener() {
 		@Override
 		public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
-		    if (chatPane == null ) return;
-		    if (chatPane.getSelectedText().isEmpty()) CPCopy.setForeground(Color.gray);
+		    if (chatPane.getSelectedText() == null ) CPCopy.setForeground(Color.gray);
+		   // if (chatPane.getSelectedText().isEmpty()) CPCopy.setForeground(Color.gray);
 		    else CPCopy.setForeground(Color.black);
 		}
 		@Override
@@ -267,14 +266,8 @@ import org.apache.commons.lang3.StringUtils;
 		}
 		@Override
 		public void popupMenuCanceled(PopupMenuEvent e) {
-		    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
 		}
 	    });
-	    
-	    
-	    
-	    
-	    
 
 	    JPopupMenu CIPpopup = new JPopupMenu();
 	    final JMenuItem CIPCut = new JMenuItem("Cut", GUI.cutIcon);
@@ -503,6 +496,9 @@ import org.apache.commons.lang3.StringUtils;
                 return;
             }
             ChannelPanel cc = (ChannelPanel)tabbedPane.getSelectedComponent();
+	    int asdf = tabbedPane.getSelectedIndex();
+	    tabbedPane.setIconAt(asdf, null);
+	    
             if (this.isShowing())
             {
                 String text ="";
@@ -841,7 +837,9 @@ import org.apache.commons.lang3.StringUtils;
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
-                        tabbedPane.setForegroundAt(ind, Color.blue);
+                        //tabbedPane.setForegroundAt(ind, Color.blue);
+			//tabbedPane.setBackgroundAt(ind, Color.blue);
+			tabbedPane.setIconAt(ind, GUI.newMessageIcon);
                     }
                 });
             }
@@ -853,7 +851,9 @@ import org.apache.commons.lang3.StringUtils;
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
-                        tabbedPane.setForegroundAt(index, Color.BLACK);
+                        //tabbedPane.setForegroundAt(index, Color.BLACK);
+			tabbedPane.setIconAt(index, null);
+
                     }
                 });
             }

@@ -41,6 +41,8 @@ public class GUI extends JFrame {
     final static ImageIcon configureIcon = new ImageIcon("src/icons/configure-5.png"); 
     final static ImageIcon selectAllIcon = new ImageIcon("src/icons/edit-select-all.png"); 
     final static ImageIcon clearTextIcon = new ImageIcon("src/icons/edit-clear.png"); 
+    final static ImageIcon newMessageIcon = new ImageIcon("src/icons/emblem-important.png"); 
+
 
 
     final static String appName = "Alpha IRC";
@@ -669,8 +671,7 @@ public class GUI extends JFrame {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
 		try {
-		    UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel"); 
-
+		    UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");    
 		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
 		    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
 		}
