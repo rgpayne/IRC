@@ -479,7 +479,6 @@ import org.apache.commons.lang3.StringUtils;
 		for (int i = 0; i < tabbedPane.getTabCount(); i++)
 		{
 		    if (tabbedPane.getTabCount() == 1) break;
-		    //if (tabbedPane.getTabCount() == 0) selection = -1;
 		    ChannelPanel c = (ChannelPanel)tabbedPane.getComponentAt(i);
 		    if (c == null) selection = i-1;
 		    if ((c.title.equals(c.connection.title)))
@@ -825,6 +824,11 @@ import org.apache.commons.lang3.StringUtils;
             }
             checkForActiveTab();
         }
+	public ArrayList<String> getMatchingUsers(String text)
+	{
+	    SortedListModel slm = (SortedListModel)userListPane.getModel();
+	    return slm.getMatchingUsers(text);
+	}
         public void checkForActiveTab()
         {
             if (!this.connection.isConnected)
@@ -1011,7 +1015,6 @@ import org.apache.commons.lang3.StringUtils;
             String user2 = u2.toLowerCase();
             return user1.compareTo(user2);
         }
-        
         public class SortedListModel<User> extends AbstractListModel
         {
             SortedSet<User> set;
@@ -1019,7 +1022,7 @@ import org.apache.commons.lang3.StringUtils;
             public SortedListModel()
             {
                 comparator = new NickComparator();
-                set = new TreeSet<User>(comparator);
+                set = new TreeSet<>(comparator);
             }
             @Override
             public synchronized int getSize()
@@ -1045,7 +1048,6 @@ import org.apache.commons.lang3.StringUtils;
             public synchronized void addManyElements(User x)
             {
                 set.add(x);
-                return;
             }
             public synchronized void fireIntervalAdded()
             {
@@ -1054,8 +1056,7 @@ import org.apache.commons.lang3.StringUtils;
             public synchronized boolean removeElement(User x)
             { 
                 boolean success = set.remove(x);
-                if (success)
-                fireIntervalRemoved(this, 0, 0);
+                if (success) fireIntervalRemoved(this, 0, 0);
                 return success;
             }
             public void removeAll()
@@ -1063,15 +1064,31 @@ import org.apache.commons.lang3.StringUtils;
                 set.clear();
                 fireIntervalRemoved(this,0,set.size());
             }
+	    public ArrayList<String> getMatchingUsers(String text)
+	    {
+		if (text.isEmpty()) return new ArrayList();
+		
+		ArrayList<String> users = new ArrayList<>();
+		for (User u : set)
+		{
+		    JLabel l = (JLabel)u;
+		    String str = l.getText();
+		    if (StringUtils.startsWithIgnoreCase(str, text)) users.add(str);
+		    if (str.charAt(0) > text.charAt(0)) break;
+		}
+		return users;
+	    }
         }
-            public class NickComparator implements Comparator{
-                public int compare(Object o1, Object o2)
-                {
-                    String p1 = ((User)o1).getText().toLowerCase();
-                    String p2 = ((User)o2).getText().toLowerCase();
-                    return p1.compareTo(p2);
-                }
-            }
+	public class NickComparator implements Comparator
+	{
+	    @Override
+	    public int compare(Object o1, Object o2)
+	    {
+		String p1 = ((User)o1).getText().toLowerCase();
+		String p2 = ((User)o2).getText().toLowerCase();
+		return p1.compareTo(p2);
+	    }
+	}
     }
     class CustomRenderer extends JLabel implements ListCellRenderer
     {
@@ -1258,6 +1275,7 @@ class URLLinkAction extends AbstractAction{
 	    }
 	}
     }
+    @Override
     public void actionPerformed(ActionEvent e){
 	execute();
     }

@@ -47,7 +47,8 @@ public class GUI extends JFrame {
 
     final static String appName = "Alpha IRC";
     final static Properties prop = new Properties();
-    static ArrayList<SavedConnection> savedConnections = new ArrayList<SavedConnection>();
+    static ArrayList<SavedConnection> savedConnections = new ArrayList<>();
+    static ArrayList<String> tabNicks;
 	
     static JFrame frame;
     public GUI() {
@@ -181,9 +182,13 @@ public class GUI extends JFrame {
 	serverList.setAccelerator(KeyStroke.getKeyStroke("F2"));		
 	channelList.setAction(ChannelListAction.getInstance());
 	channelList.setDisplayedMnemonicIndex(8);
-	channelList.setAccelerator(KeyStroke.getKeyStroke("F5"));	
+	channelList.setAccelerator(KeyStroke.getKeyStroke("F5"));
+	
+	
+	chatInputPane.setFocusTraversalKeysEnabled(false);
 	chatInputPane.addKeyListener(new KeyAdapter()
         {
+	    @Override
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 chatInputPaneKeyPressed(evt);
             }
@@ -511,7 +516,7 @@ public class GUI extends JFrame {
                 }
             } catch (BadLocationException ex) {
                 Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            }	    
         }
         if (evt.getKeyCode() == KeyEvent.VK_UP)
         {
@@ -520,7 +525,6 @@ public class GUI extends JFrame {
             if (channel.historyCounter > 0) msg = channel.history.get(channel.historyCounter-1);
             chatInputPane.setText(msg);
             if (channel.historyCounter > 0) channel.historyCounter--;
-            return;
         }
         if (evt.getKeyCode() == KeyEvent.VK_DOWN)
         {
@@ -529,8 +533,30 @@ public class GUI extends JFrame {
             if (channel.historyCounter < channel.history.size()) msg = channel.history.get(channel.historyCounter);
             chatInputPane.setText(msg);
             if (channel.historyCounter < channel.history.size()) channel.historyCounter++;
-            return;
         }
+	if (evt.getKeyCode() == KeyEvent.VK_TAB)
+	{
+	    String a = chatInputPane.getText();
+	    int lastSpace = a.lastIndexOf(" ")+1;
+	    if (lastSpace == -1) lastSpace = 0;
+	    String nickStart = a.substring(lastSpace);
+	    System.out.println(nickStart);
+	    
+	    if (tabNicks == null || tabNicks.isEmpty()) tabNicks = channel.getMatchingUsers(nickStart);
+	    
+	    String tabNick;
+	    if (tabNicks.size() > 0)
+	    {
+		tabNick = tabNicks.get(0);
+		tabNicks.remove(tabNick);
+	    }
+	    else return;
+	    
+	    chatInputPane.setText(chatInputPane.getText().substring(0,lastSpace)+tabNick);
+	    return;
+	}
+	    if (tabNicks != null) tabNicks.clear();
+
     }
     
     private static void serverListAddButtonFunctionality(JDialog dialog, BeanTableModel model)
