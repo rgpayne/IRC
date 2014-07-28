@@ -3,7 +3,6 @@ import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Insets;
 import java.awt.Point;
 import java.awt.event.*;
 import java.io.IOException;
@@ -21,9 +20,6 @@ import javax.swing.event.PopupMenuListener;
 import javax.swing.text.*;
 import org.apache.commons.lang3.StringUtils;
 
-
-
-
     public class ChannelPanel extends JSplitPane{
            
         final String title;
@@ -35,6 +31,7 @@ import org.apache.commons.lang3.StringUtils;
         static String CTCPFingerMessage = "this is the finger message", CTCPUserInfo = "user info string";
         int listSelectedIndex = -1;
         boolean enableNotifications = true;
+	boolean sortTabsAlphabetically = true;
         User selectedUser = null;
         
         Connection connection;
@@ -100,8 +97,7 @@ import org.apache.commons.lang3.StringUtils;
 	    chatPane.addMouseMotionListener(tml);
 	    chatPane.addMouseListener(tcl);
 	    
-                       
-            tabbedPane.add(this, this.title);	    
+	    addTab();
         }
         private void makePanel() throws BadLocationException, IOException
         {      
@@ -469,9 +465,46 @@ import org.apache.commons.lang3.StringUtils;
         {
             Date date = new Date();
             SimpleDateFormat sdf = new SimpleDateFormat("hh:mm");
-            String formattedDate = sdf.format(date);
-            return formattedDate;
+            return sdf.format(date);
         }
+	public void addTab(){
+            if (!sortTabsAlphabetically)
+	    {
+		tabbedPane.add(this, this.title);
+		return;
+	    }
+	    else
+	    {
+		int selection = -1;
+		for (int i = 0; i < tabbedPane.getTabCount(); i++)
+		{
+		    if (tabbedPane.getTabCount() == 1) break;
+		    //if (tabbedPane.getTabCount() == 0) selection = -1;
+		    ChannelPanel c = (ChannelPanel)tabbedPane.getComponentAt(i);
+		    if (c == null) selection = i-1;
+		    if ((c.title.equals(c.connection.title)))
+		    {
+			System.out.println("asdf");
+			continue;
+		    }
+		    if (this.title.compareTo(c.title) <= 0)
+		    {
+			selection = i;
+			break;
+		    }
+		}
+		if (selection == -1)
+		{
+		    tabbedPane.add(this,this.title);
+		    return;
+		}
+		else
+		{
+		    tabbedPane.add(this, selection);
+		    tabbedPane.setTitleAt(selection, title);		    
+		}
+	    }
+	}
         public Color getUserColor(String user)
         {
             if (userMap.containsKey(user)) return (Color)userMap.get(user);
