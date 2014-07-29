@@ -43,9 +43,12 @@ import org.apache.commons.lang3.StringUtils;
         static DnDTabbedPane tabbedPane;
         static JLabel tabInfo;
         
-        SortedListModel<User> model = new SortedListModel<User>();
-        ArrayList<String> list = new ArrayList<String>();
-        public ArrayList<String> ignoreList = new ArrayList<String>();
+        SortedListModel<User> model = new SortedListModel<>();
+        ArrayList<String> list = new ArrayList<>();
+        public ArrayList<String> ignoreList = new ArrayList<>();
+	static ArrayList<String> tabNicks;
+	
+	
         
         StyledDocument doc;  
         static StyleContext sc;
@@ -54,17 +57,19 @@ import org.apache.commons.lang3.StringUtils;
         final static String errorColor = "#FF0000", chatColor="#000000", serverColor="#960096", connectColor="#993300", timestampColor="#909090";
         final static String actionColor = "#0000FF", disconnectColor = "#CAA234", joinColor = "#D46942";
         static String font = "Courier New";
-	static String fontStyle = "Regular";
+	static String fontStyle = "Plain";
 	static int fontSize = 12;
 	
 	
-        final static Color CTCP0 = Color.WHITE, CTCP1 = Color.BLACK, CTCP2 = Color.decode("#000080"), CTCP3 = Color.decode("#008000"), CTCP4 = Color.decode("#FF0000"),
+        static Color CTCP0 = Color.decode("#FAFAF8"), CTCP1 = Color.decode("#000000"), CTCP2 = Color.decode("#000080"), CTCP3 = Color.decode("#008000"), CTCP4 = Color.decode("#FF0000"),
                            CTCP5 = Color.decode("#A52A2A"), CTCP6 = Color.decode("#800080"), CTCP7 = Color.decode("#FF8000"), CTCP8 = Color.decode("#808000"),
                            CTCP9 = Color.decode("#00FF00"), CTCP10 = Color.decode("#008080"), CTCP11 = Color.decode("#00FFFF"), CTCP12 = Color.decode("#0000FF"),
                            CTCP13 = Color.decode("#FFC0CB"), CTCP14 = Color.decode("#A0A0A0"), CTCP15 = Color.decode("#C0C0C0"),
 			   highlightColor = Color.pink;
 		
-	
+	static Color chatColor0 = Color.decode("#E90E7F"), chatColor1 = Color.decode("#B30E0E"), chatColor2 = Color.decode("#8E55E9"), chatColor3 = Color.decode("#18B33C"),
+			chatColor4 = Color.decode("#58ADB3"), chatColor5 = Color.decode("#9E54B3"), chatColor6 = Color.decode("#B39875"), chatColor7 = Color.decode("#3465A4"),
+			chatColor8 = Color.decode("#CE5C00"), chatColor9 = Color.decode("#555753");
 	
         final static Map CTCPMap = new HashMap(), chatColorMap = new HashMap(), userMap = new HashMap();
         boolean showTimestamp = true, chatNameColors = true;
@@ -86,7 +91,7 @@ import org.apache.commons.lang3.StringUtils;
 	    
             chatPane.setDocument(doc);
             userListPane = new JList(model);
-            if (showTimestamp == true) history = new ArrayList<String>();
+            if (showTimestamp == true) history = new ArrayList<>();
             
             makePanel();
 	    GUI.loadKeyBinds(chatPane.getActionMap(), chatPane.getInputMap());
@@ -137,9 +142,7 @@ import org.apache.commons.lang3.StringUtils;
 			channel.setDividerSize(0);
 			tabbedPane.setSelectedComponent(channel);
 
-		    } catch (BadLocationException ex) {
-			Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
-		    } catch (IOException ex) {
+		    } catch (BadLocationException | IOException ex) {
 			Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
 		    }
 		}
@@ -153,9 +156,7 @@ import org.apache.commons.lang3.StringUtils;
 		    if (nickname.equals(Connection.currentNick)) return;
 		    try {
 			ChannelPanel.this.connection.send("WHOIS "+nickname);
-		    } catch (IOException ex) {
-			Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
-		    } catch (BadLocationException ex) {
+		    } catch (IOException | BadLocationException ex) {
 			Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
 		    }
 		}
@@ -169,9 +170,7 @@ import org.apache.commons.lang3.StringUtils;
 		    if (nickname.equals(Connection.currentNick)) return;
 		    try {
 			ChannelPanel.this.connection.send("PRIVMSG "+nickname+" \001VERSION");
-		    } catch (IOException ex) {
-			Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
-		    } catch (BadLocationException ex) {
+		    } catch (IOException | BadLocationException ex) {
 			Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
 		    }
 		}
@@ -186,9 +185,7 @@ import org.apache.commons.lang3.StringUtils;
 		    if (nickname.equals(Connection.currentNick)) return;
 		    try {
 			ChannelPanel.this.connection.send("PRIVMSG "+nickname+" :\001PING "+longTime+"\001");
-		    } catch (IOException ex) {
-			Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
-		    } catch (BadLocationException ex) {
+		    } catch (IOException | BadLocationException ex) {
 			Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
 		    }
 		}
@@ -204,9 +201,7 @@ import org.apache.commons.lang3.StringUtils;
 			String[] msg = {null, "*** Removed "+nickname+" from ignore list."};
 			try {
 			    insertString(msg, serverStyle, false);
-			} catch (BadLocationException ex) {
-			    Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
-			} catch (IOException ex) {
+			} catch (BadLocationException | IOException ex) {
 			    Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
 			}
 			nick.foreground = Color.black;
@@ -217,9 +212,7 @@ import org.apache.commons.lang3.StringUtils;
 			String[] msg = {null, "*** "+nickname+" added to ignore list."};
 			try {
 			    insertString(msg, serverStyle, false);
-			} catch (BadLocationException ex) {
-			    Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
-			} catch (IOException ex) {
+			} catch (BadLocationException | IOException ex) {
 			    Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
 			}
 			nick.foreground = Color.LIGHT_GRAY;
@@ -452,14 +445,16 @@ import org.apache.commons.lang3.StringUtils;
             CTCPMap.put(14, CTCP14);
             CTCPMap.put(15, CTCP15);
             
-            chatColorMap.put(0, Color.decode("#E90E7F"));
-            chatColorMap.put(1, Color.decode("#B30E0E"));
-            chatColorMap.put(2, Color.decode("#8E55E9"));
-            chatColorMap.put(3, Color.decode("#18B33C"));
-            chatColorMap.put(4, Color.decode("#58ADB3"));
-            chatColorMap.put(5, Color.decode("#9E54B3"));
-            chatColorMap.put(6, Color.decode("#B39875"));
-            chatColorMap.put(7, Color.decode("#3176B3"));
+            chatColorMap.put(0, chatColor0);
+            chatColorMap.put(1, chatColor1);
+            chatColorMap.put(2, chatColor2);
+            chatColorMap.put(3, chatColor3);
+            chatColorMap.put(4, chatColor4);
+            chatColorMap.put(5, chatColor5);
+            chatColorMap.put(6, chatColor6);
+            chatColorMap.put(7, chatColor7);
+	    chatColorMap.put(8, chatColor8);
+	    chatColorMap.put(9, chatColor9);
         }
         public String makeTimestamp()
         {
@@ -471,7 +466,6 @@ import org.apache.commons.lang3.StringUtils;
             if (!sortTabsAlphabetically)
 	    {
 		tabbedPane.add(this, this.title);
-		return;
 	    }
 	    else
 	    {
@@ -483,7 +477,6 @@ import org.apache.commons.lang3.StringUtils;
 		    if (c == null) selection = i-1;
 		    if ((c.title.equals(c.connection.title)))
 		    {
-			System.out.println("asdf");
 			continue;
 		    }
 		    if (this.title.compareTo(c.title) <= 0)
@@ -495,7 +488,6 @@ import org.apache.commons.lang3.StringUtils;
 		if (selection == -1)
 		{
 		    tabbedPane.add(this,this.title);
-		    return;
 		}
 		else
 		{
@@ -528,8 +520,8 @@ import org.apache.commons.lang3.StringUtils;
                 return;
             }
             ChannelPanel cc = (ChannelPanel)tabbedPane.getSelectedComponent();
-	    int asdf = tabbedPane.getSelectedIndex();
-	    tabbedPane.setIconAt(asdf, null);
+	    int sel = tabbedPane.getSelectedIndex();
+	    tabbedPane.setIconAt(sel, null);
 	    
             if (this.isShowing())
             {
@@ -570,7 +562,12 @@ import org.apache.commons.lang3.StringUtils;
 			    public void run ()
 			    {
 				if (chatPane.getDocument().getLength() == 0) return;
-				chatPane.getCaret().setDot(doc.getLength());
+				try {
+				    chatPane.getCaret().setDot(doc.getLength());
+				} catch (Exception e)
+				{
+				    System.out.println("#########NPE");
+				}
 			    }
 			});
 		    }
@@ -812,7 +809,6 @@ import org.apache.commons.lang3.StringUtils;
                                 StyleConstants.setForeground(ctcpStyle, f);
                                 StyleConstants.setBackground(ctcpStyle, b);
                                 this.insertString(doc.getLength(), message, ctcpStyle);
-                                continue;
                             }                               
                         } 
                     }
@@ -894,7 +890,6 @@ import org.apache.commons.lang3.StringUtils;
                     }
                 });
             }
-            return;
         }
         public void addToUserList(String nick) throws BadLocationException, IOException
         {
@@ -934,7 +929,6 @@ import org.apache.commons.lang3.StringUtils;
                 
             }
             updateTabInfo();
-            return;
         }
         
         public void addManyToUserList(String nick)
@@ -959,7 +953,6 @@ import org.apache.commons.lang3.StringUtils;
             model.fireIntervalAdded();
             population = model.getSize();
             updateTabInfo();
-            return;
         }
         
         public boolean removeFromUserList(String nick) throws BadLocationException, IOException
@@ -969,13 +962,13 @@ import org.apache.commons.lang3.StringUtils;
             String[] prefix = new String[] {" ","+","@","~","&"};
             SortedListModel<User>  model = (SortedListModel<User>) this.userListPane.getModel();
             int oldPop = model.getSize();
-            boolean success = false;
+            boolean success;
             
             for (int i = 0; i < prefix.length; i++)
             {
                 User u = new User(prefix[i]+nick);
                 success = model.removeElement(u);
-                if (success == true)
+                if (success)
                 {
                     if (!prefix[i].equals(" ") && prefix[i].equals("+")) ops--;
                     break;
@@ -1007,7 +1000,6 @@ import org.apache.commons.lang3.StringUtils;
             ops = 0;
             population = 0;
             model.removeAll();
-            return;
         }
         public static int compareNicks(String u1, String u2)
         {
@@ -1152,6 +1144,7 @@ class PlainTextHyperlinkListener implements HyperlinkListener {
     public PlainTextHyperlinkListener(JTextPane textPane) {
 	this.textPane = textPane;
     }
+    @Override
     public void hyperlinkUpdate(HyperlinkEvent evt) {
 	HyperlinkEvent.EventType type = evt.getEventType();
 	final URL url = evt.getURL();
@@ -1226,9 +1219,7 @@ class TextClickListener extends MouseAdapter{
 		linkAction.execute();
 	    }    
 	}
-	catch(BadLocationException x) {
-	     x.printStackTrace();
-	}
+	catch(BadLocationException x) {}
     }
 }
 
@@ -1246,33 +1237,28 @@ class URLLinkAction extends AbstractAction{
 	if (url.startsWith("#")) 
 	    try {
 	        connection.send("JOIN "+url);
-	} catch (IOException ex) {
-	    Logger.getLogger(URLLinkAction.class.getName()).log(Level.SEVERE, null, ex);
-	} catch (BadLocationException ex) {
+	} catch (IOException | BadLocationException ex) {
 	    Logger.getLogger(URLLinkAction.class.getName()).log(Level.SEVERE, null, ex);
 	}
 	else {
 	    try {
 		String osName = System.getProperty("os.name").toLowerCase();
 		Runtime rt = Runtime.getRuntime();
-		if (osName.indexOf( "win" ) >= 0) rt.exec( "rundll32 url.dll,FileProtocolHandler " + url);
-		else if (osName.indexOf("mac") >= 0) rt.exec( "open " + url);
-		else if (osName.indexOf("ix") >=0 || osName.indexOf("ux") >=0 || osName.indexOf("sun") >=0) 
+		if (osName.contains("win")) rt.exec( "rundll32 url.dll,FileProtocolHandler " + url);
+		else if (osName.contains("mac")) rt.exec( "open " + url);
+		else if (osName.contains("ix") || osName.contains("ux") || osName.contains("sun")) 
 		{
 		    String[] browsers = {"epiphany", "firefox", "mozilla", "konqueror", "netscape","opera","links","lynx"};
 
 		    // Build a command string which looks like "browser1 "url" || browser2 "url" ||..."
-		    StringBuffer cmd = new StringBuffer();
+		    StringBuilder cmd = new StringBuilder();
 			for (int i = 0 ; i < browsers.length ; i++)
-			    cmd.append((i == 0  ? "" : " || " ) + browsers[i] +" \"" + url + "\" ");
+			    cmd.append(i == 0  ? "" : " || ").append(browsers[i]).append(" \"").append(url).append("\" ");
 
 		    rt.exec(new String[] { "sh", "-c", cmd.toString() });
 		}
 	    }
-	   catch (Exception ex)
-	    {
-		ex.printStackTrace();
-	    }
+	   catch (IOException ex) {}
 	}
     }
     @Override

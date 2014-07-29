@@ -25,7 +25,7 @@ public class Connection implements Runnable{
     int port;
     static DnDTabbedPane tabbedPane;
     static JLabel tabInfo;
-    ArrayList<ListChannel> channelList = new ArrayList<ListChannel>();
+    ArrayList<ListChannel> channelList = new ArrayList<>();
     boolean isConnected;
     
 
@@ -77,8 +77,7 @@ public class Connection implements Runnable{
     }
     public boolean checkForCTCPDelims(String line)
     {
-        if (line.contains(CTCP_BOLD_DELIM) || line.contains(CTCP_COLOR_DELIM) || line.contains(CTCP_DELIM) || line.contains(CTCP_UNDERLINE_DELIM)) return true;
-        return false;
+        return line.contains(CTCP_BOLD_DELIM) || line.contains(CTCP_COLOR_DELIM) || line.contains(CTCP_DELIM) || line.contains(CTCP_UNDERLINE_DELIM);
     }
 
     public void parseFromServer(String line) throws IOException, BadLocationException
@@ -152,9 +151,7 @@ public class Connection implements Runnable{
                                }
                            });
                            return;
-                       } catch (InterruptedException ex) {
-                           Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
-                       } catch (InvocationTargetException ex) {
+                       } catch (InterruptedException | InvocationTargetException ex) {
                            Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
                        }
                    }
@@ -347,8 +344,8 @@ public class Connection implements Runnable{
                     String[] msg = {null, "*** You are now known as "+newNick};
                     ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
                     channel.removeFromUserList(oldNick);
-                    this.currentNick = prefix+newNick.substring(1);
-                    channel.addToUserList(this.currentNick);
+                    Connection.currentNick = prefix+newNick.substring(1);
+                    channel.addToUserList(Connection.currentNick);
                     channel.insertString(msg, ChannelPanel.serverStyle, false);
                 }
                 return;
@@ -363,7 +360,7 @@ public class Connection implements Runnable{
             
             if (indexOfChannel == -1)
 	    {
-		channel = new ChannelPanel(title, "", Connection.this.currentNick, Connection.this);
+		channel = new ChannelPanel(title, "", Connection.currentNick, Connection.this);
 		//new ChannelPanel(Connection.this.title,)
 		//channel = (ChannelPanel)tabbedPane.getSelectedComponent();
 	    }
@@ -547,9 +544,7 @@ public class Connection implements Runnable{
                         
                         
                         return;
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (InvocationTargetException ex) {
+                    } catch (InterruptedException | InvocationTargetException ex) {
                         Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
@@ -572,18 +567,14 @@ public class Connection implements Runnable{
                                 ChannelPanel channel = new ChannelPanel(channelName2, channelName2, currentNick, Connection.this);
                                                                         String[] msg = {channelName2, parser.getTrailing()};
                                 channel.insertString(msg, ChannelPanel.chatStyle, ctcp);  
-                            } catch (BadLocationException ex) {
-                                Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
-                            } catch (IOException ex) {
+                            } catch (BadLocationException | IOException ex) {
                                 Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
                             }
                             
                         }
 
                     });
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (InvocationTargetException ex) {
+                } catch (InterruptedException | InvocationTargetException ex) {
                     Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
                 }
                               
@@ -650,16 +641,12 @@ public class Connection implements Runnable{
                             try {
                                 ChannelPanel c = new ChannelPanel(Connection.this.title, host, currentNick, Connection.this);
                                 c.server = parser.getPrefix();
-                            } catch (BadLocationException ex) {
-                                Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
-                            } catch (IOException ex) {
+                            } catch (BadLocationException | IOException ex) {
                                 Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
                             }
                         }
                     });
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (InvocationTargetException ex) {
+                } catch (InterruptedException | InvocationTargetException ex) {
                     Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
@@ -1292,7 +1279,7 @@ public class Connection implements Runnable{
                     if (i < 2) newNick = nicks[i+1];
                 }
             }
-            this.currentNick = newNick;
+            Connection.currentNick = newNick;
             if (currentNick.equals(""))
             {
                 ChannelPanel channel = ((ChannelPanel)tabbedPane.getSelectedComponent());
@@ -1335,16 +1322,14 @@ public class Connection implements Runnable{
                         @Override
                         public void run() {
                             try {
-                                new ChannelPanel(title, parser.getPrefix(), Connection.this.currentNick, Connection.this);
+                                new ChannelPanel(title, parser.getPrefix(), Connection.currentNick, Connection.this);
                             } catch (BadLocationException | IOException ex) {
                                 Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
                             }
                         }
                     });
                     indexOfChannel = findTab(Connection.this.title, this);
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (InvocationTargetException ex) {
+                } catch (InterruptedException | InvocationTargetException ex) {
                     Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
@@ -1436,6 +1421,13 @@ public class Connection implements Runnable{
             channel.insertString(msg, ChannelPanel.errorStyle, false);
             return;            
         }
+	if (command.equals("479")) //illegal channel name
+	{
+	    ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+	    String[] msg = {null, parser.getTrailing()};
+	    channel.insertString(msg, ChannelPanel.errorStyle, false);
+	    return;
+	}
         if (command.equals("481")) //permission denied (/stats rieux)
         {
             ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
@@ -1486,7 +1478,6 @@ public class Connection implements Runnable{
             ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
             String[] msg = {null, target+" "+info};
             channel.insertString(msg, ChannelPanel.serverStyle, false);    
-            return;
         }
         else
         {
@@ -1503,6 +1494,7 @@ public class Connection implements Runnable{
             //do nothing
         }
     }
+    @Override
     public void run()
     {
         try 

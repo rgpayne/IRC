@@ -48,7 +48,6 @@ public class GUI extends JFrame {
     final static String appName = "Alpha IRC";
     final static Properties prop = new Properties();
     static ArrayList<SavedConnection> savedConnections = new ArrayList<>();
-    static ArrayList<String> tabNicks;
 	
     static JFrame frame;
     public GUI() {
@@ -198,6 +197,7 @@ public class GUI extends JFrame {
             @Override
             public void stateChanged(ChangeEvent changeEvent)
             {
+		if (ChannelPanel.tabNicks != null && !ChannelPanel.tabNicks.isEmpty()) ChannelPanel.tabNicks.clear();
                 DnDTabbedPane pane = (DnDTabbedPane)changeEvent.getSource();
                 int index = pane.getSelectedIndex();
                 if (index == -1) return;
@@ -396,16 +396,13 @@ public class GUI extends JFrame {
                 Connection.nicks[1] = prop.getProperty("Second");
                 Connection.nicks[2] = prop.getProperty("Third");               
                 deserializeSavedConnections();
-	} catch (IOException ex) {
-		ex.printStackTrace();
-	} finally {
-		if (input != null) {
-			try {
-				input.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+	} catch (IOException ex) {}
+	finally {
+	    if (input != null) {
+		    try {
+			    input.close();
+		    } catch (IOException e) {}
+	    }
 	}        
     }
     private void autoConnect()
@@ -430,9 +427,7 @@ public class GUI extends JFrame {
             out.writeObject(savedConnections);
             
             out.close();
-        }catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        }catch (IOException ex) {}
     }
     public static void deserializeSavedConnections()
     {
@@ -442,7 +437,7 @@ public class GUI extends JFrame {
 	    fis = new FileInputStream("servers.ser");
 	    in = new ObjectInputStream(fis);
 	    savedConnections = (ArrayList<SavedConnection>)in.readObject();
-        } catch (Exception ex){
+        } catch (IOException | ClassNotFoundException ex){
             System.out.println("Deserialization exception");
         }
     }
@@ -464,9 +459,7 @@ public class GUI extends JFrame {
         try {
             channel.connection.send("JOIN "+server);
             dialog.dispose();
-        } catch (IOException ex) {
-            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (BadLocationException ex) {
+        } catch (IOException | BadLocationException ex) {
             Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -509,9 +502,7 @@ public class GUI extends JFrame {
                     channel.insertString(msg,ChannelPanel.errorStyle, false);
                     chatInputPane.setText(null);
                     evt.consume();
-                } catch (BadLocationException ex) {
-                    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (IOException ex) {
+                } catch (BadLocationException | IOException ex) {
                     Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
                 }
             } catch (BadLocationException ex) {
@@ -542,20 +533,20 @@ public class GUI extends JFrame {
 	    String nickStart = a.substring(lastSpace);
 	    System.out.println(nickStart);
 	    
-	    if (tabNicks == null || tabNicks.isEmpty()) tabNicks = channel.getMatchingUsers(nickStart);
+	    if (ChannelPanel.tabNicks == null || ChannelPanel.tabNicks.isEmpty()) ChannelPanel.tabNicks = channel.getMatchingUsers(nickStart);
 	    
 	    String tabNick;
-	    if (tabNicks.size() > 0)
+	    if (ChannelPanel.tabNicks.size() > 0)
 	    {
-		tabNick = tabNicks.get(0);
-		tabNicks.remove(tabNick);
+		tabNick = ChannelPanel.tabNicks.get(0);
+		ChannelPanel.tabNicks.remove(tabNick);
 	    }
 	    else return;
 	    
 	    chatInputPane.setText(chatInputPane.getText().substring(0,lastSpace)+tabNick);
 	    return;
 	}
-	    if (tabNicks != null) tabNicks.clear();
+	    if (ChannelPanel.tabNicks != null) ChannelPanel.tabNicks.clear();
 
     }
     
@@ -580,7 +571,7 @@ public class GUI extends JFrame {
         if (x == JOptionPane.CLOSED_OPTION || x == JOptionPane.CANCEL_OPTION) return;
         
         String[] s = channels.getText().split(" ");
-        ArrayList<String> channelList = new ArrayList<String>(Arrays.asList(s));
+        ArrayList<String> channelList = new ArrayList<>(Arrays.asList(s));
         if (!StringUtils.isNumeric(port.getText()))
 	{
             JOptionPane.showMessageDialog(dialog, "Port must be an integer.");
@@ -590,7 +581,6 @@ public class GUI extends JFrame {
         model.addRow(connection);
         savedConnections.add(connection);
         serializeSavedConnections();
-        return;
     }
     /**
      * Swing menus are looking pretty bad on Linux when the GTK LaF is used (See
@@ -695,6 +685,7 @@ public class GUI extends JFrame {
     public static void main(String args[]) {
 
         java.awt.EventQueue.invokeLater(new Runnable() {
+	    @Override
             public void run() {
 		try {
 		    UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");    
@@ -778,9 +769,11 @@ public class GUI extends JFrame {
 	    final JTextArea filterArea = new JTextArea();
 	    filterArea.getDocument().putProperty("filterNewlines", Boolean.TRUE);
 	    final JTable table = new JTable(model){
+		@Override
 		public boolean isCellEditable(int row, int column){  
 		    return false;  
 		}  
+		@Override
 		public String getToolTipText(MouseEvent e)
 		{
 		    Point p = e.getPoint();
@@ -864,6 +857,7 @@ public class GUI extends JFrame {
 
 
 	    final RowFilter<Object, Object> filter = new RowFilter<Object, Object>(){
+		@Override
 		public boolean include(RowFilter.Entry entry){
 		    String filter = filterArea.getText();
 		    for (int i = entry.getValueCount() - 1; i >= 0; i--){
@@ -920,9 +914,7 @@ public class GUI extends JFrame {
 
 		    try {
 			channel.connection.send("JOIN "+chan);
-		    } catch (IOException ex) {
-			Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-		    } catch (BadLocationException ex) {
+		    } catch (IOException | BadLocationException ex) {
 			Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
 		    }
 		}
@@ -1017,6 +1009,33 @@ public class GUI extends JFrame {
 	}
     }
     
+    static class ColorChooseAction extends AbstractAction {
+	private static ColorChooseAction ref = null;
+	private ColorChooseAction(String text, ImageIcon icon, String desc, Integer mnemonic)
+	{
+	    super(text, icon);
+	    putValue(SHORT_DESCRIPTION, desc);
+	    putValue(MNEMONIC_KEY, mnemonic);
+	}
+	public static ColorChooseAction getInstance()
+	{
+	    if (ref == null) ref = new ColorChooseAction("Choose Color", null, null, null);
+	    return ref;
+	}
+	@Override
+	public void actionPerformed(ActionEvent e)
+	{
+	    Button button = (Button)e.getSource();
+	    Color c = JColorChooser.showDialog(frame, "Select Color", button.getBackground());
+	    if (c != null)
+	    {
+		button.setBackground(c);
+		button.revalidate();
+	    }
+	}
+    }
+    
+    
     static class ConfigureAction extends AbstractAction {
 	private static ConfigureAction ref = null;
 	private ConfigureAction(String text, ImageIcon icon, String desc, Integer mnemonic)
@@ -1036,251 +1055,266 @@ public class GUI extends JFrame {
 	    final JDialog dialog = new JDialog(frame, "Configure", true);
 	    final SpringLayout layout = new SpringLayout();
 
-	    String[] options = {"  Interface", "  Chatting", "  Option 3", "  Option 4"};
-	    JList list = new JList(options);
-	    final JPanel listPanel = new JPanel();
-	    final JPanel contentPanel = new JPanel();
-	    contentPanel.setBorder(BorderFactory.createLineBorder(Color.gray, 1));
-	    contentPanel.setPreferredSize(new Dimension(365, 295));
-	    listPanel.add(list);
-	    dialog.add(listPanel);
-	    dialog.add(contentPanel);
-	    listPanel.setPreferredSize(new Dimension(110,300));
-	    list.setPreferredSize(new Dimension(110,295));
-	    list.setBorder(BorderFactory.createLineBorder(Color.gray, 1));
-	    list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 	    dialog.setPreferredSize(new Dimension(500,400));
 
 	    Container contentpane = dialog.getContentPane();
 	    contentpane.setLayout(layout);
+
+	    JLabel fontLabel = new JLabel("Font");
+    
+	    final JTextField fontField = new JTextField(" "+ChannelPanel.font + " "+ChannelPanel.fontSize);
+	    fontField.setFont(Font.decode(ChannelPanel.font));
+	    fontField.setEditable(false);
+	    fontField.setPreferredSize(new Dimension(200,25));
+	    JButton fontButton = new JButton("Choose");
 	    
-	    layout.putConstraint(SpringLayout.NORTH, listPanel, 5, SpringLayout.NORTH, dialog);
-	    layout.putConstraint(SpringLayout.WEST, listPanel, 5, SpringLayout.WEST, dialog);
-	    layout.putConstraint(SpringLayout.WEST, contentPanel, 5, SpringLayout. EAST, listPanel);
-	    layout.putConstraint(SpringLayout.NORTH, contentPanel, 10, SpringLayout.NORTH, dialog);
+	    JLabel colorsLabel = new JLabel("CTCP Text Colors");
+	    JLabel nickColorsLabel = new JLabel("Nick Colors");
 	    
-	    final SpringLayout cpLayout = new SpringLayout();
-	    contentPanel.setLayout(cpLayout);
+	    layout.putConstraint(SpringLayout.WEST, fontLabel, 10, SpringLayout.WEST, dialog);
+	    layout.putConstraint(SpringLayout.NORTH, fontLabel, 15, SpringLayout.NORTH, dialog);
+	    layout.putConstraint(SpringLayout.WEST, fontField, 10, SpringLayout.EAST, fontLabel);
+	    layout.putConstraint(SpringLayout.NORTH, fontField, 10, SpringLayout.NORTH, dialog);
+	    layout.putConstraint(SpringLayout.NORTH, fontButton, 8, SpringLayout.NORTH, dialog);
+	    layout.putConstraint(SpringLayout.WEST, fontButton, 10, SpringLayout.EAST, fontField);
 	    
-	    list.addListSelectionListener(new ListSelectionListener() {
+	    
+	    
+	    layout.putConstraint(SpringLayout.WEST, colorsLabel, 10, SpringLayout.WEST, dialog);
+	    layout.putConstraint(SpringLayout.NORTH, colorsLabel, 15, SpringLayout.SOUTH, fontLabel);
+
+	    for (int i = 0; i < ChannelPanel.CTCPMap.size(); i++)
+	    {
+		Color c = (Color) ChannelPanel.CTCPMap.get(i);
+		Button colorsButton = new Button();
+		colorsButton.setBackground(c);
+		colorsButton.addActionListener(ColorChooseAction.getInstance());
+		colorsButton.setPreferredSize(new Dimension(16,16));
+		dialog.add(colorsButton);
+		
+		layout.putConstraint(SpringLayout.WEST, colorsButton, 30 + 20*i, SpringLayout.WEST, dialog);
+		layout.putConstraint(SpringLayout.NORTH, colorsButton, 20, SpringLayout.NORTH, colorsLabel);
+	    }	    
+	    
+	    
+	    
+	    
+	    layout.putConstraint(SpringLayout.WEST, nickColorsLabel, 10, SpringLayout.WEST, dialog);
+	    layout.putConstraint(SpringLayout.NORTH, nickColorsLabel, 25, SpringLayout.SOUTH, colorsLabel);
+	    
+	    for (int i = 0; i < ChannelPanel.chatColorMap.size(); i++)
+	    {
+		Color c = (Color) ChannelPanel.chatColorMap.get(i);
+		Button colorsButton = new Button();
+		colorsButton.setBackground(c);
+		colorsButton.addActionListener(ColorChooseAction.getInstance());
+		colorsButton.setPreferredSize(new Dimension(16,16));
+		dialog.add(colorsButton);
+		
+		layout.putConstraint(SpringLayout.WEST, colorsButton, 30 + 20*i, SpringLayout.WEST, dialog);
+		layout.putConstraint(SpringLayout.NORTH, colorsButton, 20, SpringLayout.NORTH, nickColorsLabel);
+	    }	    
+	    
+	    
+	    
+	    dialog.add(fontLabel);
+	    dialog.add(fontField);
+	    dialog.add(fontButton);
+	    dialog.add(colorsLabel);
+	    dialog.add(nickColorsLabel);
+	    dialog.revalidate();
+	    
+	    
+	    
+	    
+	    fontButton.addActionListener(new ActionListener() {
 
 		@Override
-		public void valueChanged(ListSelectionEvent e) {
-		    JList list = (JList)e.getSource();
-		    int index = -1;
-		    if (!e.getValueIsAdjusting())
-		    {
-			index = list.getSelectedIndex();
-		
-		    }
-		    if (index == 1)
-		    {		
-			JLabel fontLabel = new JLabel("Font");
-			JButton fontButton = new JButton("Choose");
-			final JTextField fontField = new JTextField(" "+ChannelPanel.font + " "+ChannelPanel.fontSize); //set bold/ital
-			fontField.setEditable(false);
-			fontField.setPreferredSize(new Dimension(200,25));
-			
-			cpLayout.putConstraint(SpringLayout.WEST, fontLabel, 10, SpringLayout.WEST, contentPanel);
-			cpLayout.putConstraint(SpringLayout.NORTH, fontLabel, 15, SpringLayout.NORTH, contentPanel);
-			cpLayout.putConstraint(SpringLayout.WEST, fontField, 10, SpringLayout.EAST, fontLabel);
-			cpLayout.putConstraint(SpringLayout.NORTH, fontField, 10, SpringLayout.NORTH, contentPanel);
-			cpLayout.putConstraint(SpringLayout.NORTH, fontButton, 8, SpringLayout.NORTH, contentPanel);
-			cpLayout.putConstraint(SpringLayout.WEST, fontButton, 10, SpringLayout.EAST, fontField);
-			
-			contentPanel.add(fontLabel);
-			contentPanel.add(fontField);
-			contentPanel.add(fontButton);
-			contentPanel.revalidate();
+		public void actionPerformed(ActionEvent e) {
 
-			fontButton.addActionListener(new ActionListener() {
 
-			    @Override
-			    public void actionPerformed(ActionEvent e) {
-				
-				
-				
-				SpringLayout fontLayout = new SpringLayout();
-				final JDialog fontDialog = new JDialog(frame, "Select Font", true);
-				fontDialog.getContentPane().setLayout(fontLayout);
-				fontDialog.setPreferredSize(new Dimension(395,350));
-				fontDialog.setResizable(false);
-				
-				JLabel fontLabel = new JLabel("Family");
-				JLabel fontStyleLabel = new JLabel("Style");
-				JLabel fontSizeLabel = new JLabel("Size");
-				JLabel fontPreview = new JLabel("Preview");
-				final JButton OKButton = new JButton("OK");
-				OKButton.setPreferredSize(new Dimension(70,30));
-				JButton cancelButton = new JButton("Cancel");
-				cancelButton.setPreferredSize(new Dimension(70,30));
-				
-				
-				String[] fonts = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
-				final JList ffList = new JList(fonts);
-				ffList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-				JScrollPane ffsp = new JScrollPane(ffList);
-				ffsp.setPreferredSize(new Dimension(200,200));
-				ffList.setSelectedValue(ChannelPanel.font, true);
 
-				
-				String fontStyles[] = {"Regular", "Bold", "Italic", "Bold Italic"};
-				final JList fsList = new JList(fontStyles);
-				fsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		    SpringLayout fontLayout = new SpringLayout();
+		    final JDialog fontDialog = new JDialog(frame, "Select Font", true);
+		    fontDialog.getContentPane().setLayout(fontLayout);
+		    fontDialog.setPreferredSize(new Dimension(395,350));
+		    fontDialog.setResizable(false);
 
-				JScrollPane fssp = new JScrollPane(fsList);
-				fssp.setPreferredSize(new Dimension(100,200));
-				fsList.setSelectedValue(ChannelPanel.fontStyle, true);
-				
-				Integer[] fontSizes = {6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30,32};
-				final JList sizeList = new JList(fontSizes);
-				sizeList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-				JScrollPane sizesp = new JScrollPane(sizeList);
-				sizesp.setPreferredSize(new Dimension(50,200));
-				sizeList.setSelectedValue(ChannelPanel.fontSize, true);
-				
-				final JTextField previewArea = new JTextField();
-				previewArea.setPreferredSize(new Dimension(370,70));
-				previewArea.setAlignmentY(JTextField.CENTER_ALIGNMENT);
-				previewArea.setHorizontalAlignment(JTextField.CENTER);
-				final String fontName = (String)ffList.getSelectedValue();
-				final int size = (int)sizeList.getSelectedValue();
-				final String style = (String)fsList.getSelectedValue();
-				
-				Font font;
-				if (style.equals("Bold")) font = new Font(fontName, Font.BOLD, size);
-				if (style.equals("Italic")) font = new Font(fontName, Font.ITALIC, size);
-				if (style.equals("Bold Italic")) font = new Font(fontName, Font.ITALIC | Font.BOLD, size);
-				else font = new Font(fontName, Font.PLAIN, size);
-		
-				previewArea.setFont(font);
-				previewArea.setText("The quick brown fox jumps over the lazy dog");
-				
-				fontLayout.putConstraint(SpringLayout.NORTH, fontLabel, 0, SpringLayout.NORTH, fontDialog);
-				fontLayout.putConstraint(SpringLayout.WEST, fontLabel, 10, SpringLayout.WEST, fontDialog);
-				fontLayout.putConstraint(SpringLayout.NORTH, ffsp, 2, SpringLayout.SOUTH, fontLabel);
-				fontLayout.putConstraint(SpringLayout.WEST, ffsp, 0, SpringLayout.WEST, fontLabel);
-				
-				fontLayout.putConstraint(SpringLayout.NORTH, fontStyleLabel, 0, SpringLayout.NORTH, fontDialog);
-				fontLayout.putConstraint(SpringLayout.WEST, fontStyleLabel, 10, SpringLayout.EAST, ffsp);
-				fontLayout.putConstraint(SpringLayout.NORTH, fssp, 2, SpringLayout.SOUTH, fontStyleLabel);
-				fontLayout.putConstraint(SpringLayout.WEST, fssp, 10, SpringLayout.EAST, ffsp);
-				
-				fontLayout.putConstraint(SpringLayout.NORTH, fontSizeLabel, 0, SpringLayout.NORTH, fontDialog);
-				fontLayout.putConstraint(SpringLayout.WEST, fontSizeLabel, 10, SpringLayout.EAST, fssp);
-				fontLayout.putConstraint(SpringLayout.NORTH, sizesp, 2, SpringLayout.SOUTH, fontSizeLabel);
-				fontLayout.putConstraint(SpringLayout.WEST, sizesp, 10, SpringLayout.EAST, fssp);
-				
-				fontLayout.putConstraint(SpringLayout.NORTH, fontPreview, 5, SpringLayout.SOUTH, ffsp);
-				fontLayout.putConstraint(SpringLayout.WEST, fontPreview, 10, SpringLayout.WEST, fontDialog);
-				fontLayout.putConstraint(SpringLayout.NORTH, previewArea, 2, SpringLayout.SOUTH, fontPreview);
-				fontLayout.putConstraint(SpringLayout.WEST, previewArea, 0, SpringLayout.WEST, ffsp);
-				
-				fontLayout.putConstraint(SpringLayout.EAST, OKButton, -15, SpringLayout.EAST, fontDialog);
-				fontLayout.putConstraint(SpringLayout.SOUTH, OKButton, -5, SpringLayout.SOUTH, fontDialog);
-				fontLayout.putConstraint(SpringLayout.SOUTH, cancelButton, 0, SpringLayout.SOUTH, OKButton);
-				fontLayout.putConstraint(SpringLayout.EAST, cancelButton, -5, SpringLayout.WEST, OKButton);
-				
-				fontDialog.getRootPane().setDefaultButton(OKButton);
-				OKButton.requestFocus();	
-				
-				fontDialog.add(OKButton);
-				fontDialog.add(cancelButton);
-				fontDialog.add(fontLabel);
-				fontDialog.add(fontStyleLabel);
-				fontDialog.add(fontSizeLabel);
-				fontDialog.add(fontPreview);
-				fontDialog.add(previewArea);
-				fontDialog.add(ffsp);
-				fontDialog.add(fssp);
-				fontDialog.add(sizesp);
-				
-				cancelButton.addActionListener(new ActionListener() {
-				    @Override
-				    public void actionPerformed(ActionEvent e) {
-					fontDialog.dispose();
-				    }
-				});
-				cancelButton.addKeyListener(new KeyAdapter() {
-				    @Override
-				    public void keyPressed(KeyEvent e)
-				    {
-					if (e.getKeyCode() == KeyEvent.VK_ENTER || e.getKeyCode() == KeyEvent.VK_ESCAPE)
-					{
-					    fontDialog.dispose();
-					}
-				    }
-				});
-				OKButton.addActionListener(new ActionListener() {
-				    @Override
-				    public void actionPerformed(ActionEvent e) {
-					ChannelPanel.font = (String) ffList.getSelectedValue();
-					ChannelPanel.fontSize = (int) sizeList.getSelectedValue();
-					ChannelPanel.fontStyle = (String)fsList.getSelectedValue();
-					ChannelPanel.setStyles();
-					fontDialog.dispose();					
-				    }
-				});
-				OKButton.addKeyListener(new KeyAdapter() {
-				    @Override
-				    public void keyPressed(KeyEvent e)
-				    {
-					if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
-					{
-					    fontDialog.dispose();
-					}
-					if (e.getKeyCode() == KeyEvent.VK_ENTER)
-					{
-					    OKButton.getActionListeners()[0].actionPerformed(null);
-					}
-				    }
-				});
-				ffList.addListSelectionListener(new ListSelectionListener() {
-				    @Override
-				    public void valueChanged(ListSelectionEvent e) {
-					final String fontName = (String)ffList.getSelectedValue();
-					final int size = (int)sizeList.getSelectedValue();
-					final String style = (String)fsList.getSelectedValue();
+		    JLabel fontLabel = new JLabel("Family");
+		    JLabel fontStyleLabel = new JLabel("Style");
+		    JLabel fontSizeLabel = new JLabel("Size");
+		    JLabel fontPreview = new JLabel("Preview");
+		    final JButton OKButton = new JButton("OK");
+		    OKButton.setPreferredSize(new Dimension(70,30));
+		    JButton cancelButton = new JButton("Cancel");
+		    cancelButton.setPreferredSize(new Dimension(70,30));
 
-					Font font;
-					switch (style) {
-					    case "Bold":
-						font = new Font(fontName, Font.BOLD, size);
-						break;
-					    case "Italic":
-						font = new Font(fontName, Font.ITALIC, size);
-						break;
-					    case "Bold Italic":
-						font = new Font(fontName, Font.ITALIC | Font.BOLD, size);
-						break;
-					    default:
-						font = new Font(fontName, Font.PLAIN, size);
-						break;
-					}
-					previewArea.setFont(font);
-					String text = previewArea.getText();
-					try {
-					    previewArea.getDocument().remove(0, previewArea.getDocument().getLength());
-					    previewArea.setText(text);
-					    fontField.setText(text);
-					} catch (BadLocationException ex) {
-					    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-					}
-				    }
-				});
-				fsList.addListSelectionListener(ffList.getListSelectionListeners()[0]);
-				sizeList.addListSelectionListener(ffList.getListSelectionListeners()[0]);
 
-				fontDialog.pack();
-				fontDialog.setResizable(false);
-				fontDialog.setLocationRelativeTo(dialog);
-				fontDialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-				fontDialog.setVisible(true);
+		    String[] fonts = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
+		    final JList ffList = new JList(fonts);
+		    ffList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		    JScrollPane ffsp = new JScrollPane(ffList);
+		    ffsp.setPreferredSize(new Dimension(200,200));
+		    ffList.setSelectedValue(ChannelPanel.font, true);
+
+
+		    String fontStyles[] = {"Plain", "Bold", "Italic", "Bold Italic"};
+		    final JList fsList = new JList(fontStyles);
+		    fsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+		    JScrollPane fssp = new JScrollPane(fsList);
+		    fssp.setPreferredSize(new Dimension(100,200));
+		    fsList.setSelectedValue(ChannelPanel.fontStyle, true);
+
+		    Integer[] fontSizes = {6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30,32};
+		    final JList sizeList = new JList(fontSizes);
+		    sizeList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		    JScrollPane sizesp = new JScrollPane(sizeList);
+		    sizesp.setPreferredSize(new Dimension(50,200));
+		    sizeList.setSelectedValue(ChannelPanel.fontSize, true);
+
+		    final JTextField previewArea = new JTextField();
+		    previewArea.setPreferredSize(new Dimension(370,70));
+		    previewArea.setAlignmentY(JTextField.CENTER_ALIGNMENT);
+		    previewArea.setHorizontalAlignment(JTextField.CENTER);
+		    final String fontName = (String)ffList.getSelectedValue();
+		    final int size = (int)sizeList.getSelectedValue();
+		    final String style = (String)fsList.getSelectedValue();
+
+		    Font font;
+		    if (style.equals("Bold")) font = new Font(fontName, Font.BOLD, size);
+		    if (style.equals("Italic")) font = new Font(fontName, Font.ITALIC, size);
+		    if (style.equals("Bold Italic")) font = new Font(fontName, Font.ITALIC | Font.BOLD, size);
+		    else font = new Font(fontName, Font.PLAIN, size);
+
+		    previewArea.setFont(font);
+		    previewArea.setText("The quick brown fox jumps over the lazy dog");
+
+		    fontLayout.putConstraint(SpringLayout.NORTH, fontLabel, 0, SpringLayout.NORTH, fontDialog);
+		    fontLayout.putConstraint(SpringLayout.WEST, fontLabel, 10, SpringLayout.WEST, fontDialog);
+		    fontLayout.putConstraint(SpringLayout.NORTH, ffsp, 2, SpringLayout.SOUTH, fontLabel);
+		    fontLayout.putConstraint(SpringLayout.WEST, ffsp, 0, SpringLayout.WEST, fontLabel);
+
+		    fontLayout.putConstraint(SpringLayout.NORTH, fontStyleLabel, 0, SpringLayout.NORTH, fontDialog);
+		    fontLayout.putConstraint(SpringLayout.WEST, fontStyleLabel, 10, SpringLayout.EAST, ffsp);
+		    fontLayout.putConstraint(SpringLayout.NORTH, fssp, 2, SpringLayout.SOUTH, fontStyleLabel);
+		    fontLayout.putConstraint(SpringLayout.WEST, fssp, 10, SpringLayout.EAST, ffsp);
+
+		    fontLayout.putConstraint(SpringLayout.NORTH, fontSizeLabel, 0, SpringLayout.NORTH, fontDialog);
+		    fontLayout.putConstraint(SpringLayout.WEST, fontSizeLabel, 10, SpringLayout.EAST, fssp);
+		    fontLayout.putConstraint(SpringLayout.NORTH, sizesp, 2, SpringLayout.SOUTH, fontSizeLabel);
+		    fontLayout.putConstraint(SpringLayout.WEST, sizesp, 10, SpringLayout.EAST, fssp);
+
+		    fontLayout.putConstraint(SpringLayout.NORTH, fontPreview, 5, SpringLayout.SOUTH, ffsp);
+		    fontLayout.putConstraint(SpringLayout.WEST, fontPreview, 10, SpringLayout.WEST, fontDialog);
+		    fontLayout.putConstraint(SpringLayout.NORTH, previewArea, 2, SpringLayout.SOUTH, fontPreview);
+		    fontLayout.putConstraint(SpringLayout.WEST, previewArea, 0, SpringLayout.WEST, ffsp);
+
+		    fontLayout.putConstraint(SpringLayout.EAST, OKButton, -15, SpringLayout.EAST, fontDialog);
+		    fontLayout.putConstraint(SpringLayout.SOUTH, OKButton, -5, SpringLayout.SOUTH, fontDialog);
+		    fontLayout.putConstraint(SpringLayout.SOUTH, cancelButton, 0, SpringLayout.SOUTH, OKButton);
+		    fontLayout.putConstraint(SpringLayout.EAST, cancelButton, -5, SpringLayout.WEST, OKButton);
+
+		    fontDialog.getRootPane().setDefaultButton(OKButton);
+		    OKButton.requestFocus();	
+
+		    fontDialog.add(OKButton);
+		    fontDialog.add(cancelButton);
+		    fontDialog.add(fontLabel);
+		    fontDialog.add(fontStyleLabel);
+		    fontDialog.add(fontSizeLabel);
+		    fontDialog.add(fontPreview);
+		    fontDialog.add(previewArea);
+		    fontDialog.add(ffsp);
+		    fontDialog.add(fssp);
+		    fontDialog.add(sizesp);
+
+		    cancelButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+			    fontDialog.dispose();
+			}
+		    });
+		    cancelButton.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e)
+			{
+			    if (e.getKeyCode() == KeyEvent.VK_ENTER || e.getKeyCode() == KeyEvent.VK_ESCAPE)
+			    {
+				fontDialog.dispose();
 			    }
-			});			
-		    }
+			}
+		    });
+		    OKButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+			    ChannelPanel.font = (String) ffList.getSelectedValue();
+			    ChannelPanel.fontSize = (int) sizeList.getSelectedValue();
+			    ChannelPanel.fontStyle = (String)fsList.getSelectedValue();
+			    ChannelPanel.setStyles();
+			    fontDialog.dispose();					
+			}
+		    });
+		    OKButton.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e)
+			{
+			    if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
+			    {
+				fontDialog.dispose();
+			    }
+			    if (e.getKeyCode() == KeyEvent.VK_ENTER)
+			    {
+				OKButton.getActionListeners()[0].actionPerformed(null);
+			    }
+			}
+		    });
+		    ffList.addListSelectionListener(new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+			    final String fontName = (String)ffList.getSelectedValue();
+			    final int size = (int)sizeList.getSelectedValue();
+			    final String style = (String)fsList.getSelectedValue();
+
+			    Font font;
+			    switch (style) {
+				case "Bold":
+				    font = new Font(fontName, Font.BOLD, size);
+				    break;
+				case "Italic":
+				    font = new Font(fontName, Font.ITALIC, size);
+				    break;
+				case "Bold Italic":
+				    font = new Font(fontName, Font.ITALIC | Font.BOLD, size);
+				    break;
+				default:
+				    font = new Font(fontName, Font.PLAIN, size);
+				    break;
+			    }
+			    previewArea.setFont(font);
+			    String text = previewArea.getText();
+			    try {
+				previewArea.getDocument().remove(0, previewArea.getDocument().getLength());
+				previewArea.setText(text);
+				fontField.setText(text);
+			    } catch (BadLocationException ex) {
+				Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+			    }
+			}
+		    });
+		    fsList.addListSelectionListener(ffList.getListSelectionListeners()[0]);
+		    sizeList.addListSelectionListener(ffList.getListSelectionListeners()[0]);
+
+		    fontDialog.pack();
+		    fontDialog.setResizable(false);
+		    fontDialog.setLocationRelativeTo(dialog);
+		    fontDialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+		    fontDialog.setVisible(true);
 		}
-	    });
+	    });			
+		    	    
+	    
+	    	    
 	    dialog.pack();
 	    dialog.setResizable(false);
 	    dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -1288,15 +1322,6 @@ public class GUI extends JFrame {
 	    dialog.setVisible(true);
     	}
     }
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
     
     
@@ -1331,9 +1356,7 @@ public class GUI extends JFrame {
 			String[] msg = {null, "[Info] Disconnected from "+otherChannel.server+" (port "+otherChannel.connection.port+")"};
 			otherChannel.insertString(msg, ChannelPanel.serverStyle, false);
 			continue;
-		    } catch (BadLocationException ex) {
-			Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-		    } catch (IOException ex) {
+		    } catch (BadLocationException | IOException ex) {
 			Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
 		    }
 		}
@@ -1345,7 +1368,6 @@ public class GUI extends JFrame {
 
 	    }
 	    channel.updateTabInfo();
-	    return;
 	}
 
     }
@@ -1372,6 +1394,7 @@ public class GUI extends JFrame {
 		channel.lastSearchIndex = -1;
 	    }  
 	}
+	@Override
 	public void actionPerformed(ActionEvent e) { 
 	    if (isOpened) return;
 	    final JDialog dialog = new JDialog(frame, true);
@@ -1656,7 +1679,7 @@ public class GUI extends JFrame {
 		ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
 		String name = channel.name;
 		String server = channel.server;
-		String message = "";
+		String message;
 		if (name.equals(server))
 		{
 		    if (ChannelPanel.awayStatus == true){
@@ -1670,9 +1693,7 @@ public class GUI extends JFrame {
 		    }
 		    try {
 			channel.connection.send(message);
-		    } catch (IOException ex) {
-			Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-		    } catch (BadLocationException ex) {
+		    } catch (IOException | BadLocationException ex) {
 			Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
 		    }
 		}
@@ -1774,6 +1795,7 @@ public class GUI extends JFrame {
 		}
 	    });
 	    saveButton.addActionListener(new ActionListener(){
+		@Override
 		public void actionPerformed(ActionEvent e)
 		{
 		    try {
@@ -1885,6 +1907,7 @@ public class GUI extends JFrame {
 		}
 	    });
 	    cancel.addKeyListener(new KeyAdapter() {
+		 @Override
 		 public void keyPressed(KeyEvent evt)
 		 {
 		     if (evt.getKeyCode() == KeyEvent.VK_ENTER) dialog.dispose();  
@@ -1899,6 +1922,7 @@ public class GUI extends JFrame {
 		}
 	    });
 	    ok.addKeyListener(new KeyAdapter() {
+		@Override
 		public void keyPressed(KeyEvent evt)
 		{
 		    if (evt.getKeyCode() == KeyEvent.VK_ENTER)
@@ -1938,7 +1962,6 @@ public class GUI extends JFrame {
 	    tabbedPane.setTitleAt(index-1, label);
 	    tabbedPane.setSelectedComponent(moved);
 	    tabbedPane.setForegroundAt(index-1, c);
-	    return;
 	}  
     }    
     
@@ -1967,7 +1990,6 @@ public class GUI extends JFrame {
 	    tabbedPane.setTitleAt(index-1, label);
 	    tabbedPane.setSelectedIndex(index);
 	    tabbedPane.setForegroundAt(index-1, c);
-	    return;               
 	}   
     }
     
@@ -1988,7 +2010,6 @@ public class GUI extends JFrame {
 	public void actionPerformed(ActionEvent e) {
 	    int indexOfChannel = tabbedPane.getSelectedIndex();
 	    if (indexOfChannel < tabbedPane.getTabCount()-1) tabbedPane.setSelectedIndex(indexOfChannel+1);
-	    return;
 	}
     }
     
@@ -2009,7 +2030,6 @@ public class GUI extends JFrame {
 	public void actionPerformed(ActionEvent e) {
 	    int indexOfChannel = tabbedPane.getSelectedIndex();
 	    if (indexOfChannel > 0) tabbedPane.setSelectedIndex(indexOfChannel-1);
-	    return;
 	}
     }    
     
@@ -2107,6 +2127,7 @@ public class GUI extends JFrame {
 	    
 
 	    connectButton.addKeyListener(new KeyAdapter(){
+	    @Override
 	    public void keyPressed(KeyEvent evt)
 	    {
 		if (evt.getKeyCode() == KeyEvent.VK_ENTER)
@@ -2121,6 +2142,7 @@ public class GUI extends JFrame {
 	     });
 
 	    connectButton.addActionListener(new ActionListener(){
+		@Override
 		public void actionPerformed(ActionEvent e)
 		{
 		    String networkName = networkNameField.getText().trim();
@@ -2285,6 +2307,7 @@ public class GUI extends JFrame {
 
 
 	    final JTable table = new JTable(model){
+		@Override
 		public boolean isCellEditable(int row, int column){  
 		    return false;  
 		}  
@@ -2330,6 +2353,7 @@ public class GUI extends JFrame {
 
 	    add.addActionListener(new ActionListener()
 	    {
+		@Override
 		public void actionPerformed(ActionEvent e) 
 		{
 		    serverListAddButtonFunctionality(dialog, model);
@@ -2338,6 +2362,7 @@ public class GUI extends JFrame {
 
 	    add.addKeyListener(new KeyAdapter()
 	    {
+		@Override
 		public void keyPressed(KeyEvent evt)
 		{
 		    if (evt.getKeyCode() == KeyEvent.VK_ENTER)
@@ -2348,6 +2373,7 @@ public class GUI extends JFrame {
 	    });
 	    edit.addActionListener(new ActionListener()
 	    {
+		@Override
 		public void actionPerformed(ActionEvent e) 
 		{
 		    int rowIndex = table.getSelectedRow();
@@ -2377,7 +2403,7 @@ public class GUI extends JFrame {
 		    if (ex == JOptionPane.CLOSED_OPTION || ex == JOptionPane.CANCEL_OPTION) return;
 
 		    String[] es = echannels.getText().split(" ");
-		    ArrayList<String> echannelList = new ArrayList<String>(Arrays.asList(es));
+		    ArrayList<String> echannelList = new ArrayList<>(Arrays.asList(es));
 		    if (!StringUtils.isNumeric(eport.getText())){
 			JOptionPane.showMessageDialog(dialog, "Port must be an integer.");
 			return;
@@ -2388,12 +2414,12 @@ public class GUI extends JFrame {
 		    model.addRow(connection);
 		    savedConnections.add(connection);
 		    serializeSavedConnections();
-		    return;
 		}              
 	    });
 
 	    remove.addActionListener(new ActionListener()
 	    {
+		@Override
 		public void actionPerformed(ActionEvent e) 
 		{
 		    int rowIndex = table.getSelectedRow();
@@ -2408,6 +2434,7 @@ public class GUI extends JFrame {
 
 	    connect.addActionListener(new ActionListener()
 	    {
+		@Override
 		public void actionPerformed(ActionEvent e) 
 		{
 		    int rowIndex = table.getSelectedRow();
@@ -2425,9 +2452,7 @@ public class GUI extends JFrame {
 			    String[] msg = {null, "You are already connected to "+network+"."};
 			    try {
 				channel.insertString(msg, ChannelPanel.errorStyle, false);
-			    } catch (BadLocationException ex) {
-				Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-			    } catch (IOException ex) {
+			    } catch (BadLocationException | IOException ex) {
 				Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
 			    }
 			    dialog.dispose();
@@ -2436,7 +2461,6 @@ public class GUI extends JFrame {
 		    }
 		    new Connection(network, server, port);
 		    dialog.dispose();
-		    return;
 		}
 	    });
 	    dialog.pack();
