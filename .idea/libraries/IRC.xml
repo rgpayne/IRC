@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="IRC">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/dist/IRC.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

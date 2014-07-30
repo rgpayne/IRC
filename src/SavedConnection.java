@@ -1,17 +1,16 @@
-
 import java.io.Serializable;
 import java.util.ArrayList;
 
-class SavedConnection implements Serializable{
+class SavedConnection implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String name;
     private String server;
     private String password;
     private ArrayList<String> channels;
     private boolean autoConnect;
     private int port;
-    private static final long serialVersionUID = 1L;
-    
-    SavedConnection(String name, String server, String password, ArrayList<String> channels, boolean autoConnect, int port){
+
+    SavedConnection(String name, String server, String password, ArrayList<String> channels, boolean autoConnect, int port) {
         this.name = name;
         this.server = server;
         this.password = password;
@@ -19,8 +18,9 @@ class SavedConnection implements Serializable{
         this.autoConnect = autoConnect;
         this.port = port;
     }
-    SavedConnection(){
-        
+
+    SavedConnection() {
+
     }
 
     /**
@@ -44,44 +44,53 @@ class SavedConnection implements Serializable{
     public ArrayList<String> getChannels() {
         return channels;
     }
-    
-    
-    
-    
-    public String retrieveName(){
+
+
+    public String retrieveName() {
         return name;
     }
-    public void changeName(String name){
+
+    public void changeName(String name) {
         this.name = name;
     }
-    public String retrieveServer(){
+
+    public String retrieveServer() {
         return server;
     }
-    public void changeServer(String server){
+
+    public void changeServer(String server) {
         this.server = server;
     }
-    public String retrievePassword(){
+
+    public String retrievePassword() {
         return password;
     }
-    public void changePassword(String password){
+
+    public void changePassword(String password) {
         this.password = password;
     }
-    public ArrayList<String> retrieveChannels(){
+
+    public ArrayList<String> retrieveChannels() {
         return channels;
     }
-    public void changeChannels(ArrayList<String> channels){
+
+    public void changeChannels(ArrayList<String> channels) {
         this.channels = channels;
     }
-    public int retrievePort(){
+
+    public int retrievePort() {
         return port;
     }
-    public void changePort(int port){
+
+    public void changePort(int port) {
         this.port = port;
     }
-    public boolean retrieveAutoConnect(){
+
+    public boolean retrieveAutoConnect() {
         return autoConnect;
     }
-    public void changeAutoConnect(boolean autoConnect){
+
+    public void changeAutoConnect(boolean autoConnect) {
         this.autoConnect = autoConnect;
     }
 }
