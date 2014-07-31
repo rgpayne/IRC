@@ -960,6 +960,8 @@ public class ChannelPanel extends JSplitPane {
         }
     }
 
+
+
     public class NickComparator implements Comparator {
         @Override
         public int compare(Object o1, Object o2) {
@@ -1009,7 +1011,7 @@ class CustomRenderer extends JLabel implements ListCellRenderer {
 
 /** each channel has a JList of Users */
 class User extends JLabel implements Comparable {
-
+    public static Font font = Font.decode(GUI.userListFont+"-"+GUI.userListFontStyle+"-"+GUI.userListFontSize);
     final char mode;
     Color foreground = Color.black;
 
@@ -1017,7 +1019,7 @@ class User extends JLabel implements Comparable {
         super(nick.substring(1));
         setOpaque(true);
         mode = nick.charAt(0);
-        setFont(new Font("sans serif", Font.PLAIN, 12));
+        setFont(font);
         setForeground(foreground);
     }
 
@@ -1025,6 +1027,11 @@ class User extends JLabel implements Comparable {
     public int compareTo(Object o) {
         User u = (User) o;
         return this.getText().compareTo(u.getText());
+    }
+    public static void changeFont(Font f)
+    {
+        if (ChannelPanel.tabbedPane == null) return;
+        User.font = f;
     }
 
 }

@@ -704,10 +704,6 @@ public class Connection implements Runnable {
             channel.insertString(msg, GUI.connectStyle, ctcp);
             return;
         }
-        if (command.equals("262")) {
-            //ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
-            return;
-        }
         if (command.equals("263")) //server load too heavy. please try again (happens with /list)
         {
             ChannelPanel channel = (ChannelPanel) tabbedPane.getSelectedComponent();
@@ -1228,7 +1224,12 @@ public class Connection implements Runnable {
         }
         if (command.equals("437")) //cannot change nickname while banned or moderated on channel
         {
-
+            String[] s = parser.getParams().trim().split(" ");
+            String chan = s[1].trim();
+            ChannelPanel channel = ((ChannelPanel) tabbedPane.getSelectedComponent());
+            String[] msg = {null, chan + ": You have joined too many channels."};
+            channel.insertString(msg, GUI.errorStyle, false);
+            return;
         }
         if (command.equals("438")) {
             ChannelPanel channel = (ChannelPanel) tabbedPane.getSelectedComponent();
@@ -1332,6 +1333,14 @@ public class Connection implements Runnable {
             ChannelPanel channel = (ChannelPanel) tabbedPane.getSelectedComponent();
             String[] msg = {null, parser.getTrailing()};
             if (channel != null) channel.insertString(msg, GUI.errorStyle, false);
+            return;
+        }
+        if (command.equals("477")) //need to identify to a registered nick to join channel
+        {
+            String chan = parser.getMiddle().substring(parser.getMiddle().indexOf(" ")+1);
+            String[] msg = {null, chan+": "+parser.getTrailing()};
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+            channel.insertString(msg, GUI.errorStyle, false);
             return;
         }
         if (command.equals("478")) // ban list full
