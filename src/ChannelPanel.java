@@ -22,7 +22,6 @@ import java.util.regex.Pattern;
 public class ChannelPanel extends JSplitPane {
     final static Map<String, Color> userMap = new HashMap<>();
     static boolean awayStatus = false;
-    static String awayMessage = "Reason";
     static String CTCPFingerMessage = "this is the finger message", CTCPUserInfo = "user info string";
     static DnDTabbedPane tabbedPane;
     static JLabel tabInfo;

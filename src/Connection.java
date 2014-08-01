@@ -19,7 +19,7 @@ public class Connection implements Runnable {
     public static final String CTCP_DELIM = "\001", CTCP_BOLD_DELIM = "\002", CTCP_COLOR_DELIM = "\003",
             CTCP_UNDERLINE_DELIM = "\037", CTCP_RESET_DELIM = "\017", HTTP_DELIM = "\004";
     static String[] nicks = {"", "", ""};
-    static String currentNick = "", real = "", awayMessage = "";
+    static String currentNick = "", real = "";
     static DnDTabbedPane tabbedPane;
     static JLabel tabInfo;
     Thread thread;
@@ -78,7 +78,8 @@ public class Connection implements Runnable {
     /** Used when chat input begins with a forwardslash to send the message directly to the server */
     public void send(String line) throws IOException, BadLocationException {
         if (line.toUpperCase().equals("QUIT")) {
-            disconnect();
+            this.writer.write("QUIT :"+GUI.quitMessage+"\r\n");
+            this.writer.flush();
             return;
         }
         this.writer.write(line + "\r\n");
@@ -100,6 +101,7 @@ public class Connection implements Runnable {
     public void parseFromServer(String line) throws IOException, BadLocationException {
         final Parser parser = new Parser(line);
         String command = parser.getCommand();
+       // System.out.println(parser.toString());
 
         if (command.equals("AWAY")) {
             String channelName = parser.getTrailing();
@@ -554,11 +556,14 @@ public class Connection implements Runnable {
             String quitMessage = parser.getParams().substring(2); //fix so it only quits on connection user quit on?
             for (int i = 0; i < tabbedPane.getTabCount(); i++) {
                 ChannelPanel channel = (ChannelPanel) tabbedPane.getComponentAt(i);
-                boolean success = channel.removeFromUserList(quitter);
-                String[] msg = {null, "<-- " + quitter + " has left the server (" + quitMessage + ")"};
-                if (success) {
-                    channel.insertString(msg, GUI.disconnectStyle, ctcp);
+                int index  = findTab(channel.title, this);
+                if (index != -1) {
+                    boolean success = channel.removeFromUserList(quitter);
+                    String[] msg = {null, "<-- " + quitter + " has left the server (" + quitMessage + ")"};
+                    if (success) {
+                        channel.insertString(msg, GUI.disconnectStyle, ctcp);
 
+                    }
                 }
             }
             return;
@@ -756,7 +761,7 @@ public class Connection implements Runnable {
         {
             boolean ctcp = checkForCTCPDelims(line);
             ChannelPanel channel = (ChannelPanel) tabbedPane.getSelectedComponent();
-            String[] msg = {null, "You have been marked as away (Reason: " + ChannelPanel.awayMessage + ")"};
+            String[] msg = {null, "You have been marked as away (Reason: " + GUI.awayMessage + ")"};
             channel.insertString(msg, GUI.serverStyle, ctcp);
             return;
         }
@@ -1116,6 +1121,7 @@ public class Connection implements Runnable {
             ChannelPanel channel = ((ChannelPanel) tabbedPane.getSelectedComponent());
             String[] msg = {null, chan + ": No such channel. "};
             channel.insertString(msg, GUI.errorStyle, false);
+            return;
         }
         if (command.equals("404")) {
             String[] s = parser.getParams().split(" ");

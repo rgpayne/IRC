@@ -72,6 +72,12 @@ public class GUI extends JFrame {
     final static Map<Integer, Color> chatColorMap = new HashMap<>();
 
 
+    static String awayMessage = "Reason";
+    static String quitMessage = "Quitting";
+    static String leaveMessage = "Leaving";
+    static int tabPlacement = DnDTabbedPane.BOTTOM;
+
+
     final static String appName = "Alpha IRC";
     final static Properties prop = new Properties();
     public static JTextField chatInputPane;
@@ -397,7 +403,7 @@ public class GUI extends JFrame {
 
         tabbedPane.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
         tabbedPane.setTabLayoutPolicy(DnDTabbedPane.SCROLL_TAB_LAYOUT);
-        tabbedPane.setTabPlacement(DnDTabbedPane.BOTTOM);
+        tabbedPane.setTabPlacement(tabPlacement);
         tabbedPane.setCursor(new java.awt.Cursor(Cursor.DEFAULT_CURSOR)); //cursor necessary?
         tabbedPane.setFocusable(false);
         tabbedPane.setPreferredSize(new Dimension(600, 450));
@@ -1145,12 +1151,12 @@ public class GUI extends JFrame {
             final JDialog dialog = new JDialog(frame, "Configure", true);
             final SpringLayout layout = new SpringLayout();
 
-            dialog.setPreferredSize(new Dimension(500, 400));
+            dialog.setPreferredSize(new Dimension(400, 550));
 
             Container contentpane = dialog.getContentPane();
             contentpane.setLayout(layout);
 
-            final JLabel chatFontLabel = new JLabel("Chat Font");
+            final JLabel chatFontLabel = new JLabel("Chat text");
 
             final JTextField chatFontField = new JTextField(chatFont + " " + chatFontSize);
             chatFontField.setFont(Font.decode(chatFont+"-"+chatFontStyle+"-"+chatFontSize));
@@ -1158,7 +1164,7 @@ public class GUI extends JFrame {
             chatFontField.setPreferredSize(new Dimension(200, 25));
             final JButton chatFontButton = new JButton("Choose");
 
-            final JLabel userListFontLabel = new JLabel("Nick List Font");
+            final JLabel userListFontLabel = new JLabel("Nick list text");
             final JTextField userListFontField = new JTextField(userListFont + " " + userListFontSize);
             userListFontField.setFont(Font.decode(userListFont+"-"+userListFontStyle+"-"+userListFontSize));
             userListFontField.setEditable(false);
@@ -1175,14 +1181,14 @@ public class GUI extends JFrame {
             layout.putConstraint(SpringLayout.WEST, chatFontField, 33, SpringLayout.EAST, chatFontLabel);
             layout.putConstraint(SpringLayout.NORTH, chatFontField, 10, SpringLayout.NORTH, dialog);
             layout.putConstraint(SpringLayout.NORTH, chatFontButton, 8, SpringLayout.NORTH, dialog);
-            layout.putConstraint(SpringLayout.WEST, chatFontButton, 10, SpringLayout.EAST, chatFontField);
+            layout.putConstraint(SpringLayout.WEST, chatFontButton, 5, SpringLayout.EAST, chatFontField);
 
             layout.putConstraint(SpringLayout.WEST, userListFontLabel, 10, SpringLayout.WEST, dialog);
             layout.putConstraint(SpringLayout.NORTH, userListFontLabel, 20, SpringLayout.SOUTH, chatFontLabel);
-            layout.putConstraint(SpringLayout.WEST, userListFontField, 10, SpringLayout.EAST, userListFontLabel);
+            layout.putConstraint(SpringLayout.WEST, userListFontField, 14, SpringLayout.EAST, userListFontLabel);
             layout.putConstraint(SpringLayout.NORTH, userListFontField, 15, SpringLayout.SOUTH, chatFontLabel);
             layout.putConstraint(SpringLayout.NORTH, userListFontButton, 13, SpringLayout.SOUTH, chatFontLabel);
-            layout.putConstraint(SpringLayout.WEST, userListFontButton, 10, SpringLayout.EAST, userListFontField);
+            layout.putConstraint(SpringLayout.WEST, userListFontButton, 5, SpringLayout.EAST, userListFontField);
 
 
 
@@ -1231,13 +1237,96 @@ public class GUI extends JFrame {
             /** Chat Font settings */
             chatFontButton.addActionListener(new FontMenuAction(chatFontField, dialog, FontMenuAction.CHATFONT));
             userListFontButton.addActionListener(new FontMenuAction(userListFontField, dialog, FontMenuAction.NICKLISTFONT));
+            //End of chat Font settings
+
+
+            JCheckBox coloredNicksOption = new JCheckBox("Use colored nicks in chat");
+            JCheckBox hideMessagesOption = new JCheckBox("Hide join/part/nick messages");
+            JCheckBox showTimestampsOption = new JCheckBox("Show Timestamps");
+            JCheckBox enableChatNotificationsOption = new JCheckBox("Enable chat notifications");
+            JCheckBox focusNewTabOption = new JCheckBox("Focus new tabs");
+            JCheckBox sortTabsAlphabeticallyOption = new JCheckBox("Sort tabs alphabetically");
+
+            JLabel tabPlacementOptionLabel = new JLabel("Tab placement");
+            Object[] things = {"Top", "Bottom"};
+            JComboBox tabPlacementOption = new JComboBox(things);
+            if (tabPlacement == DnDTabbedPane.BOTTOM) tabPlacementOption.setSelectedItem("Bottom");
+            else tabPlacementOption.setSelectedItem("Top");
+
+
+            layout.putConstraint(SpringLayout.NORTH, coloredNicksOption, 35, SpringLayout.SOUTH, nickColorsLabel);
+            layout.putConstraint(SpringLayout.WEST, coloredNicksOption, 10, SpringLayout.WEST, dialog);
+
+            layout.putConstraint(SpringLayout.NORTH, hideMessagesOption, 5, SpringLayout.SOUTH, coloredNicksOption);
+            layout.putConstraint(SpringLayout.WEST, hideMessagesOption, 10, SpringLayout.WEST, dialog);
+
+            layout.putConstraint(SpringLayout.NORTH, showTimestampsOption, 5, SpringLayout.SOUTH, hideMessagesOption);
+            layout.putConstraint(SpringLayout.WEST, showTimestampsOption, 10, SpringLayout.WEST, dialog);
+
+            layout.putConstraint(SpringLayout.NORTH, enableChatNotificationsOption, 5, SpringLayout.SOUTH, showTimestampsOption);
+            layout.putConstraint(SpringLayout.WEST, enableChatNotificationsOption, 10, SpringLayout.WEST, dialog);
+
+            layout.putConstraint(SpringLayout.NORTH, focusNewTabOption, 5, SpringLayout.SOUTH, enableChatNotificationsOption);
+            layout.putConstraint(SpringLayout.WEST, focusNewTabOption, 10, SpringLayout.WEST, dialog);
+
+            layout.putConstraint(SpringLayout.NORTH, sortTabsAlphabeticallyOption, 5, SpringLayout.SOUTH, focusNewTabOption);
+            layout.putConstraint(SpringLayout.WEST, sortTabsAlphabeticallyOption, 10, SpringLayout.WEST, dialog);
+
+            layout.putConstraint(SpringLayout.NORTH, tabPlacementOptionLabel, 13, SpringLayout.SOUTH, sortTabsAlphabeticallyOption);
+            layout.putConstraint(SpringLayout.WEST, tabPlacementOptionLabel, 10, SpringLayout.WEST, dialog);
+
+            layout.putConstraint(SpringLayout.NORTH, tabPlacementOption, 8, SpringLayout.SOUTH, sortTabsAlphabeticallyOption);
+            layout.putConstraint(SpringLayout.WEST, tabPlacementOption, 10, SpringLayout.EAST, tabPlacementOptionLabel);
+
+            dialog.add(coloredNicksOption);
+            dialog.add(hideMessagesOption);
+            dialog.add(showTimestampsOption);
+            dialog.add(enableChatNotificationsOption);
+            dialog.add(focusNewTabOption);
+            dialog.add(sortTabsAlphabeticallyOption);
+            dialog.add(tabPlacementOptionLabel);
+            dialog.add(tabPlacementOption);
 
 
 
+            JLabel quitMessageLabel = new JLabel("Quit");
+            JTextField quitMessageText = new JTextField();
+            quitMessageText.setText(quitMessage);
+            quitMessageText.setPreferredSize(new Dimension(200, 25));
+            JLabel leaveMessageLabel = new JLabel("Leave channel");
+            JTextField leaveMessageText = new JTextField(leaveMessage);
+            leaveMessageText.setPreferredSize(new Dimension(200, 25));
+            JLabel awayMessageLabel = new JLabel("Away message");
+            JTextField awayMessageText = new JTextField(awayMessage);
+            awayMessageText.setPreferredSize(new Dimension(200, 25));
+
+
+            layout.putConstraint(SpringLayout.NORTH, quitMessageLabel, 18, SpringLayout.SOUTH, tabPlacementOptionLabel);
+            layout.putConstraint(SpringLayout.WEST, quitMessageLabel, 10, SpringLayout.WEST, dialog);
+            layout.putConstraint(SpringLayout.NORTH, quitMessageText, 13, SpringLayout.SOUTH, tabPlacementOptionLabel);
+            //layout.putConstraint(SpringLayout.WEST, quitMessageText, 5, SpringLayout.EAST, quitMessageLabel);
+
+            layout.putConstraint(SpringLayout.NORTH, leaveMessageLabel, 18, SpringLayout.SOUTH, quitMessageLabel);
+            layout.putConstraint(SpringLayout.WEST, leaveMessageLabel, 10, SpringLayout.WEST, dialog);
+            layout.putConstraint(SpringLayout.NORTH, leaveMessageText, 13, SpringLayout.SOUTH, quitMessageLabel);
+            //layout.putConstraint(SpringLayout.WEST, leaveMessageText, 0, SpringLayout.EAST, leaveMessageLabel);
+
+            layout.putConstraint(SpringLayout.NORTH, awayMessageLabel, 18, SpringLayout.SOUTH, leaveMessageLabel);
+            layout.putConstraint(SpringLayout.WEST, awayMessageLabel, 10, SpringLayout.WEST, dialog);
+            layout.putConstraint(SpringLayout.NORTH, awayMessageText, 13, SpringLayout.SOUTH, leaveMessageLabel);
+            layout.putConstraint(SpringLayout.WEST, awayMessageText, 5, SpringLayout.EAST, awayMessageLabel);
+
+            layout.putConstraint(SpringLayout.WEST, leaveMessageText, 0, SpringLayout.WEST, awayMessageText);
+            layout.putConstraint(SpringLayout.WEST, quitMessageText, 0, SpringLayout.WEST, awayMessageText);
 
 
 
-
+            dialog.add(quitMessageLabel);
+            dialog.add(quitMessageText);
+            dialog.add(leaveMessageLabel);
+            dialog.add(leaveMessageText);
+            dialog.add(awayMessageLabel);
+            dialog.add(awayMessageText);
 
             dialog.pack();
             dialog.setResizable(false);
@@ -1806,7 +1895,7 @@ public class GUI extends JFrame {
                         message = "AWAY";
                         ChannelPanel.awayStatus = false;
                     } else {
-                        message = "AWAY " + ChannelPanel.awayMessage;
+                        message = "AWAY " + awayMessage;
                         ChannelPanel.awayStatus = true;
                     }
                     try {
