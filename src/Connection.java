@@ -78,8 +78,7 @@ public class Connection implements Runnable {
     /** Used when chat input begins with a forwardslash to send the message directly to the server */
     public void send(String line) throws IOException, BadLocationException {
         if (line.toUpperCase().equals("QUIT")) {
-            this.writer.write("QUIT :"+GUI.quitMessage+"\r\n");
-            this.writer.flush();
+            GUI.DisconnectAction.getInstance().actionPerformed(null);
             return;
         }
         this.writer.write(line + "\r\n");
@@ -101,7 +100,8 @@ public class Connection implements Runnable {
     public void parseFromServer(String line) throws IOException, BadLocationException {
         final Parser parser = new Parser(line);
         String command = parser.getCommand();
-       // System.out.println(parser.toString());
+        //System.out.println(parser.toString());
+        //System.out.println(line);
 
         if (command.equals("AWAY")) {
             String channelName = parser.getTrailing();
@@ -174,14 +174,21 @@ public class Connection implements Runnable {
                 }
             } else //if joined isn't me
             {
+                System.out.println(parser.line);
+                System.out.println(parser.toString());
                 String channelName = parser.getTrailing();
+                if (channelName.isEmpty()) channelName = parser.getParams().trim();
+                channelName = channelName.replace(':',' ');
+                System.out.println(channelName);
                 if (channelName.startsWith("#")) {
                     int indexOfChannel = findTab(channelName, this);
                     if (indexOfChannel != -1) {
                         ChannelPanel channel = (ChannelPanel) tabbedPane.getComponentAt(indexOfChannel);
                         channel.addToUserList(parser.getNick());
-                        String[] msg = {null, "--> " + parser.getNick() + " (" + parser.getUser() + "@" + parser.getHost() + ") has joined the channel."};
-                        channel.insertString(msg, GUI.joinStyle, false);
+                        if (!GUI.hideJoinPartQuitNotifications) {
+                            String[] msg = {null, "--> " + parser.getNick() + " (" + parser.getUser() + "@" + parser.getHost() + ") has joined the channel."};
+                            channel.insertString(msg, GUI.joinStyle, false);
+                        }
                         return;
                     }
                 }
@@ -386,8 +393,10 @@ public class Connection implements Runnable {
                 return;
             } else {
                 ChannelPanel channel = (ChannelPanel) tabbedPane.getComponentAt(indexOfChannel);
-                String[] msg = {null, "<-- " + parser.getNick() + " (" + parser.getUser() + "@" + parser.getHost() + ") has left the channel (" + parser.getTrailing() + ")"};
-                channel.insertString(msg, GUI.disconnectStyle, false);
+                if (!GUI.hideJoinPartQuitNotifications) {
+                    String[] msg = {null, "<-- " + parser.getNick() + " (" + parser.getUser() + "@" + parser.getHost() + ") has left the channel (" + parser.getTrailing() + ")"};
+                    channel.insertString(msg, GUI.disconnectStyle, false);
+                }
                 channel.removeFromUserList(parser.getNick());
                 return;
             }
@@ -553,16 +562,19 @@ public class Connection implements Runnable {
         if (command.equals("QUIT")) {
             boolean ctcp = checkForCTCPDelims(line);
             String quitter = parser.getNick().trim();
-            String quitMessage = parser.getParams().substring(2); //fix so it only quits on connection user quit on?
+            String quitMessage = parser.getParams().substring(2);
+
             for (int i = 0; i < tabbedPane.getTabCount(); i++) {
                 ChannelPanel channel = (ChannelPanel) tabbedPane.getComponentAt(i);
-                int index  = findTab(channel.title, this);
-                if (index != -1) {
-                    boolean success = channel.removeFromUserList(quitter);
-                    String[] msg = {null, "<-- " + quitter + " has left the server (" + quitMessage + ")"};
-                    if (success) {
-                        channel.insertString(msg, GUI.disconnectStyle, ctcp);
-
+                if (channel.connection == this) {
+                    int index = findTab(channel.title, this);
+                    if (index != -1)
+                    {
+                        boolean success = channel.removeFromUserList(quitter);
+                        if (success && !GUI.hideJoinPartQuitNotifications) {
+                            String[] msg = {null, "<-- " + quitter + " has left the server (" + quitMessage + ")"};
+                            channel.insertString(msg, GUI.disconnectStyle, ctcp);
+                        }
                     }
                 }
             }
@@ -1213,7 +1225,7 @@ public class Connection implements Runnable {
                 ChannelPanel channel = ((ChannelPanel) tabbedPane.getSelectedComponent());
                 String[] msg = {null, "All your nicks are taken"};
                 channel.insertString(msg, GUI.errorStyle, false);
-                channel.connection.send("quit");
+                channel.connection.disconnect();
                 return;
             }
             ChannelPanel channel = ((ChannelPanel) tabbedPane.getSelectedComponent());

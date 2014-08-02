@@ -71,6 +71,9 @@ public class GUI extends JFrame {
     final static Map<Integer, Color> CTCPMap = new HashMap<>();
     final static Map<Integer, Color> chatColorMap = new HashMap<>();
 
+    static boolean showTimestamp = true, chatNameColors = true, disableTabNotificationsGlobally = true, sortTabsAlphabetically = true,
+            hideJoinPartQuitNotifications = false;
+
 
     static String awayMessage = "Reason";
     static String quitMessage = "Quitting";
@@ -1151,7 +1154,7 @@ public class GUI extends JFrame {
             final JDialog dialog = new JDialog(frame, "Configure", true);
             final SpringLayout layout = new SpringLayout();
 
-            dialog.setPreferredSize(new Dimension(400, 550));
+            dialog.setPreferredSize(new Dimension(380, 550));
 
             Container contentpane = dialog.getContentPane();
             contentpane.setLayout(layout);
@@ -1241,11 +1244,26 @@ public class GUI extends JFrame {
 
 
             JCheckBox coloredNicksOption = new JCheckBox("Use colored nicks in chat");
+            if (chatNameColors) coloredNicksOption.setSelected(true);
+            else coloredNicksOption.setSelected(false);
+
             JCheckBox hideMessagesOption = new JCheckBox("Hide join/part/nick messages");
+            if (hideJoinPartQuitNotifications) hideMessagesOption.setSelected(true);
+            else hideMessagesOption.setSelected(false);
+
             JCheckBox showTimestampsOption = new JCheckBox("Show Timestamps");
-            JCheckBox enableChatNotificationsOption = new JCheckBox("Enable chat notifications");
+            if (showTimestamp) showTimestampsOption.setSelected(true);
+            else showTimestampsOption.setSelected(false);
+
+            JCheckBox enableChatNotificationsOption = new JCheckBox("Disable chat notifications");
+            if (disableTabNotificationsGlobally) enableChatNotificationsOption.setSelected(false);
+            else enableChatNotificationsOption.setSelected(true);
+
             JCheckBox focusNewTabOption = new JCheckBox("Focus new tabs");
+
             JCheckBox sortTabsAlphabeticallyOption = new JCheckBox("Sort tabs alphabetically");
+            if (sortTabsAlphabetically) sortTabsAlphabeticallyOption.setSelected(true);
+            else sortTabsAlphabeticallyOption.setSelected(false);
 
             JLabel tabPlacementOptionLabel = new JLabel("Tab placement");
             Object[] things = {"Top", "Bottom"};
@@ -1292,13 +1310,13 @@ public class GUI extends JFrame {
             JLabel quitMessageLabel = new JLabel("Quit");
             JTextField quitMessageText = new JTextField();
             quitMessageText.setText(quitMessage);
-            quitMessageText.setPreferredSize(new Dimension(200, 25));
+            quitMessageText.setPreferredSize(new Dimension(253, 25));
             JLabel leaveMessageLabel = new JLabel("Leave channel");
             JTextField leaveMessageText = new JTextField(leaveMessage);
-            leaveMessageText.setPreferredSize(new Dimension(200, 25));
+            leaveMessageText.setPreferredSize(new Dimension(253, 25));
             JLabel awayMessageLabel = new JLabel("Away message");
             JTextField awayMessageText = new JTextField(awayMessage);
-            awayMessageText.setPreferredSize(new Dimension(200, 25));
+            awayMessageText.setPreferredSize(new Dimension(253, 25));
 
 
             layout.putConstraint(SpringLayout.NORTH, quitMessageLabel, 18, SpringLayout.SOUTH, tabPlacementOptionLabel);
@@ -1327,6 +1345,21 @@ public class GUI extends JFrame {
             dialog.add(leaveMessageText);
             dialog.add(awayMessageLabel);
             dialog.add(awayMessageText);
+
+
+            JButton cancelButton = new JButton("Cancel");
+            cancelButton.setPreferredSize(new Dimension(70,30));
+            JButton OKButton = new JButton("OK");
+            OKButton.setPreferredSize(new Dimension(70, 30));
+
+            layout.putConstraint(SpringLayout.EAST, OKButton, -15, SpringLayout.EAST, dialog);
+            layout.putConstraint(SpringLayout.SOUTH, OKButton, -35, SpringLayout.SOUTH, dialog);
+            layout.putConstraint(SpringLayout.EAST, cancelButton, -5, SpringLayout.WEST, OKButton);
+            layout.putConstraint(SpringLayout.SOUTH, cancelButton, 0, SpringLayout.SOUTH, OKButton);
+
+            dialog.add(OKButton);
+            dialog.add(cancelButton);
+
 
             dialog.pack();
             dialog.setResizable(false);

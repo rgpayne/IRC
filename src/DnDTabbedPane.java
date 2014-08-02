@@ -165,7 +165,7 @@ class DnDTabbedPane extends JTabbedPane {
                 {
                     JPopupMenu popupMenu = new JPopupMenu();
                     JMenuItem enableNotificationsButton = new JMenuItem("Enable Notifications");
-                    if (channel.enableNotifications) {
+                    if (GUI.disableTabNotificationsGlobally && channel.enableNotifications) {
                         enableNotificationsButton.setIcon(GUI.checkedBoxIcon);
                     }
                     JMenuItem closeButton = new JMenuItem("Close", GUI.closeTabIcon);
