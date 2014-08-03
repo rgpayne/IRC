@@ -59,9 +59,11 @@ public class ChannelPanel extends JSplitPane {
 
         PlainTextHyperlinkListener hyperlinkListener = new PlainTextHyperlinkListener(chatPane);
         chatPane.addHyperlinkListener(hyperlinkListener);
+        chatPane.getStyledDocument().addDocumentListener(new LimitLinesDocumentListener(1000));
+
 
         userListPane = new JList(model);
-        if (GUI.showTimestamp) history = new ArrayList<>();
+        history = new ArrayList<>();
 
         makePanel();
         GUI.loadKeyBinds(chatPane.getActionMap(), chatPane.getInputMap());
@@ -365,6 +367,7 @@ public class ChannelPanel extends JSplitPane {
             }
             tabbedPane.remove(this);
             this.connection.disconnect();
+            this.updateTabInfo();
         }
     }
 
@@ -401,6 +404,7 @@ public class ChannelPanel extends JSplitPane {
                 tabbedPane.setTitleAt(selection, title);
             }
         }
+        if (GUI.focusNewTab) tabbedPane.setSelectedComponent(this);
     }
 
 
@@ -408,6 +412,9 @@ public class ChannelPanel extends JSplitPane {
 
     /** Retrieves a user's chat font color from the userMap */
     private Color getUserColor(String user) {
+        if (!GUI.chatNameColors) {
+            return StyleConstants.getForeground(GUI.chatStyle);
+        }
         if (userMap.containsKey(user)) return userMap.get(user);
         else {
             int random = (int) (Math.random() * 8);
@@ -421,12 +428,13 @@ public class ChannelPanel extends JSplitPane {
 
     /** Updates the active component with info such as population, number of ops, etc */
     public void updateTabInfo() {
+
         if (tabbedPane.getTabCount() == 0) {
             GUI.frame.setTitle(GUI.appName);
             tabInfo.setText("Disconnected    ");
             return;
         }
-        if (connection.socket.isClosed()) {
+        if (!connection.isConnected) {
             tabInfo.setText("Disconnected    ");
             return;
         }
@@ -452,7 +460,7 @@ public class ChannelPanel extends JSplitPane {
 
     /** Inserts str to chatPane at given offset using AttributeSet */
       public void insertString(String[] line, Style givenStyle, boolean isCTCP) throws BadLocationException, IOException {
-        if (ignoreList.contains(line[0])) return; //change ignorelist to just hold strings and not users?
+        if (ignoreList.contains(line[0])) return;
         if (line[1].contains("http://") || line[1].contains("https://") || line[1].contains("www.") || line[1].contains("#")) {
             line[1] = line[1].replaceAll("http://", Connection.HTTP_DELIM + "http://");
             line[1] = line[1].replaceAll("https://", Connection.HTTP_DELIM + "https://");
@@ -470,8 +478,8 @@ public class ChannelPanel extends JSplitPane {
             String timestamp = makeTimestamp();
             this.insertString(doc.getLength(), "\n[" + timestamp + "] ", GUI.timestampStyle);
         } else this.insertString(doc.getLength(), "\n", GUI.style);
-        if (!GUI.chatNameColors && line[0] != null) this.insertString(doc.getLength(), "<" + line[0] + ">: ", GUI.chatStyle);
-        if (GUI.chatNameColors && line[0] != null) {
+        //if (!GUI.chatNameColors && line[0] != null) this.insertString(doc.getLength(), "<" + line[0] + ">: ", GUI.chatStyle);
+        if (line[0] != null) {
             Color c = getUserColor(line[0]);
             this.insertString(doc.getLength(), "<", GUI.style);
             StyleConstants.setForeground(GUI.userNameStyle, c);
@@ -486,7 +494,7 @@ public class ChannelPanel extends JSplitPane {
 
 
     /** Called internally by the other insertString method. Controls the scrolling behavior */
-    private void insertString(int offset, String str, AttributeSet a) throws BadLocationException {
+    private void insertString(int offset, String str, AttributeSet a) {
         if (doc.getLength() == 0) str = str.trim() + " "; //removes \n at start of document
 
         int extent = chatScrollPane.getVerticalScrollBar().getModel().getExtent();
@@ -494,7 +502,10 @@ public class ChannelPanel extends JSplitPane {
         int val = chatScrollPane.getVerticalScrollBar().getModel().getValue();
         boolean end = ((val + extent == max) || val + extent > max - 50);
 
-        doc.insertString(offset, str, a);
+        try {
+            doc.insertString(offset, str, a);
+        }
+        catch (BadLocationException ignored){}
 
 
         //controls autoscrolling -- if scrolled to bottom then scroll to end, otherwise don't
@@ -528,12 +539,12 @@ public class ChannelPanel extends JSplitPane {
         if (GUI.showTimestamp) this.insertString(doc.getLength(), "\n[" + timestamp + "] ", GUI.timestampStyle);
         else this.insertString(doc.getLength(), "\n", GUI.style);
         this.insertString(doc.getLength(), "* ", GUI.actionStyle);
-        if (!GUI.chatNameColors) this.insertString(doc.getLength(), nick + " ", GUI.style);
-        else {
+        //if (!GUI.chatNameColors) this.insertString(doc.getLength(), nick + " ", GUI.style);
+        //if (GUI.chatNameColors) {
             Color c = getUserColor(nick);
             StyleConstants.setForeground(GUI.userNameStyle, c);
             this.insertString(doc.getLength(), nick + " ", GUI.userNameStyle);
-        }
+        //}
         this.insertString(doc.getLength(), msg, GUI.actionStyle);
         checkForActiveTab();
     }
@@ -548,8 +559,8 @@ public class ChannelPanel extends JSplitPane {
             String timestamp = makeTimestamp();
             this.insertString(doc.getLength(), "\n[" + timestamp + "] ", GUI.timestampStyle);
         } else this.insertString(doc.getLength(), "\n", GUI.style);
-        if (!GUI.chatNameColors && line[0] != null) this.insertString(doc.getLength(), "<" + line[0] + ">: ", GUI.chatStyle);
-        if (GUI.chatNameColors && line[0] != null) {
+        //if (!GUI.chatNameColors && line[0] != null) this.insertString(doc.getLength(), "<" + line[0] + ">: ", GUI.chatStyle);
+        if (line[0] != null) {
             Color c = getUserColor(line[0]);
             this.insertString(doc.getLength(), "<", GUI.style);
             StyleConstants.setForeground(GUI.userNameStyle, c);
@@ -1169,6 +1180,153 @@ class URLLinkAction extends AbstractAction {
             execute();
         } catch (IOException e1) {
             e1.printStackTrace();
+        }
+    }
+}
+
+
+
+
+
+
+/*
+ *  A class to control the maximum number of lines to be stored in a Document
+ *
+ *  Excess lines can be removed from the start or end of the Document
+ *  depending on your requirement.
+ *
+ *  a) if you append text to the Document, then you would want to remove lines
+ *     from the start.
+ *  b) if you insert text at the beginning of the Document, then you would
+ *     want to remove lines from the end.
+ */
+class LimitLinesDocumentListener implements DocumentListener
+{
+    private int maximumLines;
+    private boolean isRemoveFromStart;
+
+    /*
+     *  Specify the number of lines to be stored in the Document.
+     *  Extra lines will be removed from the start of the Document.
+     */
+    public LimitLinesDocumentListener(int maximumLines)
+    {
+        this(maximumLines, true);
+    }
+
+    /*
+     *  Specify the number of lines to be stored in the Document.
+     *  Extra lines will be removed from the start or end of the Document,
+     *  depending on the boolean value specified.
+     */
+    public LimitLinesDocumentListener(int maximumLines, boolean isRemoveFromStart)
+    {
+        setLimitLines(maximumLines);
+        this.isRemoveFromStart = isRemoveFromStart;
+    }
+
+    /*
+     *  Return the maximum number of lines to be stored in the Document
+     */
+    public int getLimitLines()
+    {
+        return maximumLines;
+    }
+
+    /*
+     *  Set the maximum number of lines to be stored in the Document
+     */
+    public void setLimitLines(int maximumLines)
+    {
+        if (maximumLines < 1)
+        {
+            String message = "Maximum lines must be greater than 0";
+            throw new IllegalArgumentException(message);
+        }
+
+        this.maximumLines = maximumLines;
+    }
+
+    //  Handle insertion of new text into the Document
+
+    public void insertUpdate(final DocumentEvent e)
+    {
+        //  Changes to the Document can not be done within the listener
+        //  so we need to add the processing to the end of the EDT
+
+        SwingUtilities.invokeLater( new Runnable()
+        {
+            public void run()
+            {
+                removeLines(e);
+            }
+        });
+    }
+
+    public void removeUpdate(DocumentEvent e) {}
+    public void changedUpdate(DocumentEvent e) {}
+
+    /*
+     *  Remove lines from the Document when necessary
+     */
+    private void removeLines(DocumentEvent e)
+    {
+        //  The root Element of the Document will tell us the total number
+        //  of line in the Document.
+
+        Document document = e.getDocument();
+        Element root = document.getDefaultRootElement();
+
+        while (root.getElementCount() > maximumLines)
+        {
+            if (isRemoveFromStart)
+            {
+                removeFromStart(document, root);
+            }
+            else
+            {
+                removeFromEnd(document, root);
+            }
+        }
+    }
+
+    /*
+     *  Remove lines from the start of the Document
+     */
+    private void removeFromStart(Document document, Element root)
+    {
+        Element line = root.getElement(0);
+        int end = line.getEndOffset();
+
+        try
+        {
+            document.remove(0, end);
+        }
+        catch(BadLocationException ble)
+        {
+            System.out.println(ble);
+        }
+    }
+
+    /*
+     *  Remove lines from the end of the Document
+     */
+    private void removeFromEnd(Document document, Element root)
+    {
+        //  We use start minus 1 to make sure we remove the newline
+        //  character of the previous line
+
+        Element line = root.getElement(root.getElementCount() - 1);
+        int start = line.getStartOffset();
+        int end = line.getEndOffset();
+
+        try
+        {
+            document.remove(start - 1, end - start);
+        }
+        catch(BadLocationException ble)
+        {
+            System.out.println(ble);
         }
     }
 }

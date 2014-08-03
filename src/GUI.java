@@ -71,8 +71,8 @@ public class GUI extends JFrame {
     final static Map<Integer, Color> CTCPMap = new HashMap<>();
     final static Map<Integer, Color> chatColorMap = new HashMap<>();
 
-    static boolean showTimestamp = true, chatNameColors = true, disableTabNotificationsGlobally = true, sortTabsAlphabetically = true,
-            hideJoinPartQuitNotifications = false;
+    static boolean showTimestamp = true, chatNameColors = true, disableTabNotificationsGlobally = false, sortTabsAlphabetically = false,
+            hideJoinPartQuitNotifications = false, focusNewTab = true;
 
 
     static String awayMessage = "Reason";
@@ -513,6 +513,7 @@ public class GUI extends JFrame {
                     try {
                         String msg = chatInputPane.getText();
                         String target = channel.name;
+
                         channel.history.add(msg);
                         String output = "PRIVMSG " + target + " :" + msg;
                         channel.historyCounter = channel.history.size();
@@ -563,7 +564,6 @@ public class GUI extends JFrame {
                     int lastSpace = a.lastIndexOf(" ") + 1;
                     if (lastSpace == -1) lastSpace = 0;
                     String nickStart = a.substring(lastSpace);
-                    System.out.println(nickStart);
 
                     if (ChannelPanel.tabNicks == null || ChannelPanel.tabNicks.isEmpty())
                         ChannelPanel.tabNicks = channel.getMatchingUsers(nickStart);
@@ -624,6 +624,7 @@ public class GUI extends JFrame {
                 if (index == -1) return;
 
                 ChannelPanel channel = (ChannelPanel) tabbedPane.getComponentAt(index);
+
 
                 if (index == 0) {
                     moveTabLeft.setForeground(Color.gray);
@@ -702,13 +703,6 @@ public class GUI extends JFrame {
         else StyleConstants.setItalic(style, false);
 
         User.changeFont(Font.decode(GUI.userListFont+"-"+GUI.userListFontStyle+"-"+GUI.userListFontSize));
-        /*StyleConstants.setFontFamily(chatListStyle, userListFont);
-        StyleConstants.setFontSize(chatListStyle, userListFontSize);
-        if (userListFontStyle.contains("BOLD")) StyleConstants.setBold(style, true);
-        else StyleConstants.setBold(style, false);
-        if (userListFontStyle.contains("ITALIC")) StyleConstants.setItalic(style, true);
-        else StyleConstants.setItalic(style, false);*/
-
 
         StyleConstants.setForeground(chatStyle, Color.decode(chatColor));
         StyleConstants.setForeground(timestampStyle, Color.decode(timestampColor));
@@ -1260,6 +1254,8 @@ public class GUI extends JFrame {
             else enableChatNotificationsOption.setSelected(true);
 
             JCheckBox focusNewTabOption = new JCheckBox("Focus new tabs");
+            if (focusNewTab) focusNewTabOption.setSelected(true);
+            else focusNewTabOption.setSelected(false);
 
             JCheckBox sortTabsAlphabeticallyOption = new JCheckBox("Sort tabs alphabetically");
             if (sortTabsAlphabetically) sortTabsAlphabeticallyOption.setSelected(true);
@@ -1394,6 +1390,7 @@ public class GUI extends JFrame {
             ChannelPanel channel = (ChannelPanel) tabbedPane.getSelectedComponent();
             if (!channel.connection.isConnected) return;
             channel.model.removeAll();
+            channel.connection.isConnected = false;
             channel.connection.disconnect();
             for (int i = 0; i < tabbedPane.getTabCount(); i++) {
                 ChannelPanel otherChannel = (ChannelPanel) tabbedPane.getComponentAt(i);
@@ -2536,8 +2533,8 @@ public class GUI extends JFrame {
         @Override
         public void actionPerformed(ActionEvent e) {
             ChannelPanel selected = (ChannelPanel) tabbedPane.getSelectedComponent();
+            if (selected == null) return;
             if (selected.connection.isConnected) {
-                System.out.println("disconnecting");
                 selected.connection.disconnect();
             }
 
@@ -2547,12 +2544,6 @@ public class GUI extends JFrame {
                 if (selected.connection == otherChannel.connection) {
                     selected.connection.thread = new Thread(selected.connection);
                     selected.connection.thread.start();
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e1) {
-                        e1.printStackTrace();
-                    }
-
                     break;
                 }
             }
@@ -2564,7 +2555,6 @@ public class GUI extends JFrame {
                     if (channel.title.startsWith("#")) {
                         try {
                             selected.connection.send("JOIN " + channel.title);
-                            System.out.println("asdfasdf");
                         } catch (IOException ex) {
                             System.out.println("io");
                         } catch (BadLocationException ex) {

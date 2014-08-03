@@ -78,7 +78,9 @@ public class Connection implements Runnable {
     /** Used when chat input begins with a forwardslash to send the message directly to the server */
     public void send(String line) throws IOException, BadLocationException {
         if (line.toUpperCase().equals("QUIT")) {
-            GUI.DisconnectAction.getInstance().actionPerformed(null);
+            //GUI.DisconnectAction.getInstance().actionPerformed(null);
+            this.writer.write(line + "\r\n");
+            this.writer.flush();
             return;
         }
         this.writer.write(line + "\r\n");
@@ -174,12 +176,11 @@ public class Connection implements Runnable {
                 }
             } else //if joined isn't me
             {
-                System.out.println(parser.line);
-                System.out.println(parser.toString());
+                //System.out.println(parser.line);
+                //System.out.println(parser.toString());
                 String channelName = parser.getTrailing();
                 if (channelName.isEmpty()) channelName = parser.getParams().trim();
-                channelName = channelName.replace(':',' ');
-                System.out.println(channelName);
+                channelName = channelName.replace(":","");
                 if (channelName.startsWith("#")) {
                     int indexOfChannel = findTab(channelName, this);
                     if (indexOfChannel != -1) {
@@ -1435,11 +1436,14 @@ public class Connection implements Runnable {
     /** Closes socket */
     public void disconnect() {
         try {
-            this.socket.close();
+            //this.socket.close();
+            this.send("QUIT");
             this.isConnected = false;
             Thread.currentThread().interrupt();
         } catch (IOException ex) {
             //do nothing
+        } catch (BadLocationException e) {
+            e.printStackTrace();
         }
     }
 
@@ -1454,11 +1458,12 @@ public class Connection implements Runnable {
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             String line;
-            while (socket.isConnected()) {
+            if (socket.isConnected()) {
                 isConnected = true;
                 send("NICK " + nicks[0]);
                 send("USER " + nicks[0] + "123" + " 8 * : " + real);
                 while ((line = reader.readLine()) != null) {
+                    if (!isConnected) break;
                     parseFromServer(line);
                 }
 
