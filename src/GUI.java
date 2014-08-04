@@ -1390,14 +1390,13 @@ public class GUI extends JFrame {
             ChannelPanel channel = (ChannelPanel) tabbedPane.getSelectedComponent();
             if (!channel.connection.isConnected) return;
             channel.model.removeAll();
-            channel.connection.isConnected = false;
             channel.connection.disconnect();
             for (int i = 0; i < tabbedPane.getTabCount(); i++) {
                 ChannelPanel otherChannel = (ChannelPanel) tabbedPane.getComponentAt(i);
 
                 if (otherChannel.name.equals(channel.server)) {
                     try {
-                        String[] msg = {null, "[Info] Disconnected from " + otherChannel.server + " (port " + otherChannel.connection.port + ")"};
+                        String[] msg = {null, "Disconnected from " + otherChannel.server + " (port " + otherChannel.connection.port + ")"};
                         otherChannel.insertString(msg, serverStyle, false);
                         continue;
                     } catch (BadLocationException | IOException ex) {
@@ -2548,6 +2547,17 @@ public class GUI extends JFrame {
                 }
             }
             selected.connection.autoconnect = false;
+
+            //because we can't rejoin channels until the connection is established
+            //ths should check for the connection and not just blindly wait
+
+            while (!selected.connection.isConnected){
+                try {
+                    selected.connection.thread.sleep(1000);
+                } catch (InterruptedException e1) {
+                    System.out.println("interrupted sleep");
+                }
+            }
 
             for (int i = 0; i < tabbedPane.getTabCount(); i++) {
                 ChannelPanel channel = (ChannelPanel) tabbedPane.getComponentAt(i);

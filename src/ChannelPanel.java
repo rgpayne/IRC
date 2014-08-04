@@ -737,24 +737,18 @@ public class ChannelPanel extends JSplitPane {
     /** Updates tab icon based on channel status (unselected new message, disconnected, etc) */
     public void checkForActiveTab() {
         if (!this.connection.isConnected) {
-            int totalTabs = tabbedPane.getTabCount();
-            int indexOfTab = -1;
-            for (int i = 0; i < totalTabs; i++) {
-                ChannelPanel channel = (ChannelPanel) tabbedPane.getComponentAt(i);
-
-                String channelName = channel.name;
-                if (channelName.equalsIgnoreCase(this.name)) {
-                    indexOfTab = i;
-                    break;
+            for (int i = 0; i < tabbedPane.getTabCount(); i++) {
+                ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
+                if (channel.connection == this.connection) {
+                    final int finalI = i;
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            tabbedPane.setIconAt(finalI, GUI.notConnectedIcon);
+                        }
+                    });
                 }
             }
-            final int ind = indexOfTab;
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    tabbedPane.setIconAt(ind, GUI.notConnectedIcon);
-                }
-            });
             return;
         }
         if (!this.isShowing() && GUI.disableTabNotificationsGlobally && enableNotifications) {

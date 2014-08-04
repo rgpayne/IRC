@@ -121,6 +121,9 @@ public class Connection implements Runnable {
                 cp.insertString(msg, GUI.connectStyle, false);
                 return;
             }
+            if (!this.isConnected && line.startsWith("ERROR :Closing Link")) return; //standard disconnection message when we /quit
+
+            System.out.println(line);
             String[] msg = {null, parser.getTrailing()};
             channel.insertString(msg, GUI.errorStyle, false);
             return;
@@ -622,6 +625,7 @@ public class Connection implements Runnable {
             }
             indexOfChannel = findTab(Connection.this.title, this);
             ChannelPanel channel = (ChannelPanel) tabbedPane.getComponentAt(indexOfChannel);
+            if (command.equals("001")) channel.connection.isConnected = true;
             if (channel.name.equals("")) channel.name = host;
             String text = parser.getTrailing();
             if (text.equals("")) text = parser.getParams().trim().substring(currentNick.length()).trim();
@@ -1436,12 +1440,11 @@ public class Connection implements Runnable {
     /** Closes socket */
     public void disconnect() {
         try {
-            //this.socket.close();
-            this.send("QUIT");
+            this.send("QUIT :"+GUI.quitMessage);
             this.isConnected = false;
             Thread.currentThread().interrupt();
         } catch (IOException ex) {
-            //do nothing
+            System.out.println("disconnect() io exception");
         } catch (BadLocationException e) {
             e.printStackTrace();
         }
@@ -1459,17 +1462,16 @@ public class Connection implements Runnable {
             writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             String line;
             if (socket.isConnected()) {
-                isConnected = true;
                 send("NICK " + nicks[0]);
                 send("USER " + nicks[0] + "123" + " 8 * : " + real);
                 while ((line = reader.readLine()) != null) {
-                    if (!isConnected) break;
+                    //if (!this.isConnected) break;
                     parseFromServer(line);
                 }
 
             }
         } catch (IOException ex) {
-            //do nothing
+            System.out.println("socket io exception");
         } catch (BadLocationException ex) {
             Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
         }
