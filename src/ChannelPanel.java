@@ -31,7 +31,7 @@ public class ChannelPanel extends JSplitPane {
     final JTextPane chatPane = new JTextPane();
     final JList<User> userListPane;
     final JScrollPane userListScrollPane = new JScrollPane(), chatScrollPane = new JScrollPane();
-    public ArrayList<String> ignoreList = new ArrayList<>();
+    static ArrayList<String> ignoreList = new ArrayList<>();
     String name;
     String topic = "", signOnTime, server;
     int population, ops = 0;
@@ -172,14 +172,13 @@ public class ChannelPanel extends JSplitPane {
                 String nickname = nick.getText();
                 if (nickname.equals(Connection.currentNick)) return;
                 if (ignoreList.contains(nick.getText())) {
-                    String[] msg = {null, "*** Removed " + nickname + " from ignore list."};
+                    ignoreList.remove(nick.getText());
+                    String[] msg = {null, "*** "+ nickname +" removed from ignore list."};
                     try {
                         insertString(msg, GUI.serverStyle, false);
                     } catch (BadLocationException | IOException ex) {
                         Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                    nick.foreground = Color.black;
-                    nick.setForeground(nick.foreground);
                 } else {
                     ignoreList.add(nick.getText());
                     String[] msg = {null, "*** " + nickname + " added to ignore list."};
@@ -188,8 +187,6 @@ public class ChannelPanel extends JSplitPane {
                     } catch (BadLocationException | IOException ex) {
                         Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                    nick.foreground = Color.LIGHT_GRAY;
-                    nick.setForeground(nick.foreground);
                 }
             }
         });
@@ -487,7 +484,6 @@ public class ChannelPanel extends JSplitPane {
             this.insertString(doc.getLength(), ">: ", GUI.style);
         }
         this.insertString(doc.getLength(), line[1], givenStyle);
-        checkForActiveTab();
     }
 
 
@@ -504,6 +500,7 @@ public class ChannelPanel extends JSplitPane {
 
         try {
             doc.insertString(offset, str, a);
+            if (!GUI.disableTabNotificationsGlobally) checkForActiveTab();
         }
         catch (BadLocationException ignored){}
 
@@ -546,7 +543,6 @@ public class ChannelPanel extends JSplitPane {
             this.insertString(doc.getLength(), nick + " ", GUI.userNameStyle);
         //}
         this.insertString(doc.getLength(), msg, GUI.actionStyle);
-        checkForActiveTab();
     }
 
 
@@ -719,7 +715,6 @@ public class ChannelPanel extends JSplitPane {
                 this.insertString(doc.getLength(), token, GUI.ctcpStyle);
             }
         }
-        checkForActiveTab();
     }
 
 
@@ -736,46 +731,52 @@ public class ChannelPanel extends JSplitPane {
 
     /** Updates tab icon based on channel status (unselected new message, disconnected, etc) */
     public void checkForActiveTab() {
+
+
         if (!this.connection.isConnected) {
             for (int i = 0; i < tabbedPane.getTabCount(); i++) {
                 ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
                 if (channel.connection == this.connection) {
-                    final int finalI = i;
-                    SwingUtilities.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            tabbedPane.setIconAt(finalI, GUI.notConnectedIcon);
-                        }
-                    });
+                    if (!channel.enableNotifications || GUI.disableTabNotificationsGlobally) break;
+                    else {
+                        final int finalI = i;
+                        SwingUtilities.invokeLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                tabbedPane.setIconAt(finalI, GUI.notConnectedIcon);
+                            }
+                        });
+                    }
                 }
             }
             return;
         }
+
+
         if (!this.isShowing() && GUI.disableTabNotificationsGlobally && enableNotifications) {
-            int totalTabs = tabbedPane.getTabCount();
-            int indexOfTab = -1;
-            for (int i = 0; i < totalTabs; i++) {
+            for (int i = 0; i < tabbedPane.getTabCount(); i++) {
                 ChannelPanel channel = (ChannelPanel) tabbedPane.getComponentAt(i);
 
-                String channelName = channel.name;
-                if (channelName.equalsIgnoreCase(this.name)) {
-                    indexOfTab = i;
-                    break;
+                if (channel.title.equals(this.title)) {
+                    final int finalI = i;
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            tabbedPane.setIconAt(finalI, GUI.newMessageIcon);
+                        }
+                    });
+                    break; //a PM only goes to one window so we can stop looking
                 }
             }
-            final int ind = indexOfTab;
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    tabbedPane.setIconAt(ind, GUI.newMessageIcon);
-                }
-            });
+
+
+
         } else {
             ChannelPanel channel = (ChannelPanel) tabbedPane.getSelectedComponent();
             if (channel == null) return;
-            final int index = Connection.findTab(channel.name, connection);
+            final int index = Connection.findTab(channel.title, connection);
             if (index == -1) return;
-            SwingUtilities.invokeLater(new Runnable() {
+            else SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
                     tabbedPane.setIconAt(index, null);
@@ -1016,7 +1017,7 @@ class CustomRenderer extends JLabel implements ListCellRenderer {
 
 /** each channel has a JList of Users */
 class User extends JLabel implements Comparable {
-    public static Font font = Font.decode(GUI.userListFont+"-"+GUI.userListFontStyle+"-"+GUI.userListFontSize);
+    static Font font = Font.decode(GUI.userListFont+"-"+GUI.userListFontStyle+"-"+GUI.userListFontSize);
     final char mode;
     Color foreground = Color.black;
 

@@ -77,10 +77,39 @@ public class Connection implements Runnable {
 
     /** Used when chat input begins with a forwardslash to send the message directly to the server */
     public void send(String line) throws IOException, BadLocationException {
-        if (line.toUpperCase().equals("QUIT")) {
-            //GUI.DisconnectAction.getInstance().actionPerformed(null);
-            this.writer.write(line + "\r\n");
-            this.writer.flush();
+        if (line.equalsIgnoreCase("QUIT")) line = "QUIT :"+GUI.quitMessage;
+        if (line.equalsIgnoreCase("PART")) line = "PART :"+GUI.leaveMessage;
+        if (line.equalsIgnoreCase("AWAY")) line = "AWAY :"+GUI.awayMessage;
+
+        if (line.toUpperCase().startsWith("IGNORE ") || line.toUpperCase().startsWith("UNIGNORE ")) {
+            String nickname = line.substring(line.indexOf(" ")+1);
+            System.out.println(nickname);
+            ChannelPanel channel = (ChannelPanel)tabbedPane.getSelectedComponent();
+            if (channel == null) return;
+            if (nickname.equals(Connection.currentNick)) return;
+            if (ChannelPanel.ignoreList.contains(nickname)) {
+                ChannelPanel.ignoreList.remove(nickname);
+                String[] msg = {null, "*** "+ nickname +" removed from ignore list."};
+                try {
+                    channel.insertString(msg, GUI.serverStyle, false);
+                } catch (BadLocationException | IOException ex) {
+                    Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            else {
+                if (line.toUpperCase().startsWith("UNIGNORE ")) {
+                    String[] msg = {null, "*** " + nickname + " was not on the ignore list."};
+                    channel.insertString(msg, GUI.serverStyle, false);
+                    return;
+                }
+                ChannelPanel.ignoreList.add(nickname);
+                String[] msg = {null, "*** " + nickname + " added to ignore list."};
+                try {
+                    channel.insertString(msg, GUI.serverStyle, false);
+                } catch (BadLocationException | IOException ex) {
+                    Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
             return;
         }
         this.writer.write(line + "\r\n");
@@ -102,7 +131,7 @@ public class Connection implements Runnable {
     public void parseFromServer(String line) throws IOException, BadLocationException {
         final Parser parser = new Parser(line);
         String command = parser.getCommand();
-        //System.out.println(parser.toString());
+        System.out.println(parser.toString());
         //System.out.println(line);
 
         if (command.equals("AWAY")) {
@@ -122,18 +151,6 @@ public class Connection implements Runnable {
                 return;
             }
             if (!this.isConnected && line.startsWith("ERROR :Closing Link")) return; //standard disconnection message when we /quit
-
-            System.out.println(line);
-            String[] msg = {null, parser.getTrailing()};
-            channel.insertString(msg, GUI.errorStyle, false);
-            return;
-        }
-        if (command.equals("INVITE")) {
-            String nick = parser.getNick();
-            String chan = parser.getTrailing();
-            ChannelPanel channel = (ChannelPanel) tabbedPane.getSelectedComponent();
-            String[] msg = {null, nick + " has invited you to " + chan + "."};
-            channel.insertString(msg, GUI.serverStyle, false);
             return;
         }
         if (command.equals("JOIN")) {
@@ -197,6 +214,7 @@ public class Connection implements Runnable {
                     }
                 }
             }
+            return;
         }
         if (command.equals("KICK")) {
             String middle = parser.getMiddle();
@@ -496,8 +514,6 @@ public class Connection implements Runnable {
                 final String channelName2 = channelName;
                 int indexOfChannel = findTab(channelName, this);
                 if (indexOfChannel == -1) {
-
-
                     try {
                         SwingUtilities.invokeAndWait(new Runnable() {
 
@@ -528,6 +544,7 @@ public class Connection implements Runnable {
                     }
                 }
                 ChannelPanel channel = (ChannelPanel) tabbedPane.getComponentAt(indexOfChannel);
+
                 String[] msg = {parser.getNick(), parser.getTrailing()};
                 channel.insertString(msg, GUI.chatStyle, ctcp);
                 return;
