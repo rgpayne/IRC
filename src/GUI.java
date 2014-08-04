@@ -49,16 +49,9 @@ public class GUI extends JFrame {
     final static ImageIcon newMessageIcon = new ImageIcon("src/icons/emblem-important.png");
     final static ImageIcon notConnectedIcon = new ImageIcon("src/icons/notConnectedIcon.png");
 
-
-    static Color CTCP0 = Color.decode("#FAFAF8"), CTCP1 = Color.decode("#000000"), CTCP2 = Color.decode("#000080"), CTCP3 = Color.decode("#008000"), CTCP4 = Color.decode("#FF0000"),
-            CTCP5 = Color.decode("#A52A2A"), CTCP6 = Color.decode("#800080"), CTCP7 = Color.decode("#FF8000"), CTCP8 = Color.decode("#808000"),
-            CTCP9 = Color.decode("#00FF00"), CTCP10 = Color.decode("#008080"), CTCP11 = Color.decode("#00FFFF"), CTCP12 = Color.decode("#0000FF"),
-            CTCP13 = Color.decode("#FFC0CB"), CTCP14 = Color.decode("#A0A0A0"), CTCP15 = Color.decode("#C0C0C0"),
-            highlightColor = Color.pink;
-    static Color chatColor0 = Color.decode("#E90E7F"), chatColor1 = Color.decode("#B30E0E"), chatColor2 = Color.decode("#8E55E9"), chatColor3 = Color.decode("#18B33C"),
-            chatColor4 = Color.decode("#58ADB3"), chatColor5 = Color.decode("#9E54B3"), chatColor6 = Color.decode("#B39875"), chatColor7 = Color.decode("#3465A4"),
-            chatColor8 = Color.decode("#CE5C00"), chatColor9 = Color.decode("#555753");
-
+    static Color CTCP0, CTCP1, CTCP2, CTCP3, CTCP4, CTCP5, CTCP6, CTCP7, CTCP8, CTCP9, CTCP10, CTCP11, CTCP12, CTCP13, CTCP14, CTCP15;
+    static Color highlightColor = Color.pink;
+    static Color chatColor0, chatColor1, chatColor2, chatColor3, chatColor4, chatColor5, chatColor6, chatColor7, chatColor8, chatColor9;
     static StyleContext sc;
     static Style style, chatStyle, timestampStyle, actionStyle, errorStyle, serverStyle, connectStyle, ctcpStyle, userNameStyle,
             disconnectStyle, joinStyle, hyperlinkUnclickedStyle, highlightStyle, chatListStyle;
@@ -66,19 +59,18 @@ public class GUI extends JFrame {
     static String chatFont = "Courier New", userListFont = "Courier New";
     static String chatFontStyle = "Plain", userListFontStyle = "Plain";
     static int chatFontSize = 12, userListFontSize = 12;
+
     final static String errorColor = "#FF0000", chatColor = "#000000", serverColor = "#960096", connectColor = "#993300", timestampColor = "#909090";
     final static String actionColor = "#0000FF", disconnectColor = "#CAA234", joinColor = "#D46942";
     final static Map<Integer, Color> CTCPMap = new HashMap<>();
     final static Map<Integer, Color> chatColorMap = new HashMap<>();
 
-    static boolean showTimestamp = true, chatNameColors = true, disableTabNotificationsGlobally = false, sortTabsAlphabetically = false,
-            hideJoinPartQuitNotifications = false, focusNewTab = true;
+    static boolean showTimestamp, chatNameColors, disableTabNotificationsGlobally, sortTabsAlphabetically,
+            hideJoinPartQuitNotifications, focusNewTab;
 
+    static String awayMessage, quitMessage, leaveMessage;
 
-    static String awayMessage = "Reason";
-    static String quitMessage = "Quitting";
-    static String leaveMessage = "Leaving";
-    static int tabPlacement = DnDTabbedPane.BOTTOM;
+    static int tabPlacement;
 
 
     final static String appName = "Alpha IRC";
@@ -122,9 +114,8 @@ public class GUI extends JFrame {
     public GUI() {
         super(appName);
         setIconImage(mainIcon.getImage());
-        setStyles();
-        makeHashMaps();
         loadProperties();
+        setStyles();
         initComponents();
 
         initActions();
@@ -765,7 +756,7 @@ public class GUI extends JFrame {
 
 
     /** Loads the settings file and initializes the values  */
-    private void loadProperties() {
+    private static void loadProperties() {
         Properties prop = new Properties();
         InputStream input = null;
 
@@ -773,11 +764,62 @@ public class GUI extends JFrame {
             input = new FileInputStream("config.properties");
             prop.load(input);
 
-            Connection.real = prop.getProperty("Real");
-            Connection.nicks[0] = prop.getProperty("Nick");
+            Connection.real = prop.getProperty("Real", "user81940");
+            Connection.nicks[0] = prop.getProperty("Nick", "user199403");
             Connection.currentNick = Connection.nicks[0];
-            Connection.nicks[1] = prop.getProperty("Second");
-            Connection.nicks[2] = prop.getProperty("Third");
+            Connection.nicks[1] = prop.getProperty("Second", "user4ijo4i");
+            Connection.nicks[2] = prop.getProperty("Third", "user9fj94j");
+
+            GUI.userListFont = prop.getProperty("userListFont", "Courier New");
+            GUI.userListFontSize = Integer.valueOf(prop.getProperty("userListFontSize", "12"));
+            GUI.userListFontStyle = prop.getProperty("userListFontStyle", "Plain");
+            GUI.chatFont = prop.getProperty("chatFont", "Courier New");
+            GUI.chatFontSize = Integer.valueOf(prop.getProperty("chatFontSize", "12"));
+            GUI.chatFontStyle = prop.getProperty("chatFontStyle", "Plain");
+
+            GUI.CTCP0 = Color.decode(prop.getProperty("CTCP0", "#fafaf8"));
+            GUI.CTCP1 = Color.decode(prop.getProperty("CTCP1", "#000000"));
+            GUI.CTCP2 = Color.decode(prop.getProperty("CTCP2", "#000080"));
+            GUI.CTCP3 = Color.decode(prop.getProperty("CTCP3", "#008000"));
+            GUI.CTCP4 = Color.decode(prop.getProperty("CTCP4", "#ff0000"));
+            GUI.CTCP5 = Color.decode(prop.getProperty("CTCP5", "#a52a2a"));
+            GUI.CTCP6 = Color.decode(prop.getProperty("CTCP6", "#800080"));
+            GUI.CTCP7 = Color.decode(prop.getProperty("CTCP7", "#ff8000"));
+            GUI.CTCP8 = Color.decode(prop.getProperty("CTCP8", "#80800"));
+            GUI.CTCP9 = Color.decode(prop.getProperty("CTCP9", "#00ff00"));
+            GUI.CTCP10 = Color.decode(prop.getProperty("CTCP10", "#008080"));
+            GUI.CTCP11 = Color.decode(prop.getProperty("CTCP11", "#00ffff"));
+            GUI.CTCP12 = Color.decode(prop.getProperty("CTCP12", "#0000ff"));
+            GUI.CTCP13 = Color.decode(prop.getProperty("CTCP13", "#ffc0cb"));
+            GUI.CTCP14 = Color.decode(prop.getProperty("CTCP14", "#a0a0a0"));
+            GUI.CTCP15 = Color.decode(prop.getProperty("CTCP15", "#c0c0c0"));
+
+            GUI.chatColor0 = Color.decode(prop.getProperty("chatColor0", "#e90e7f"));
+            GUI.chatColor1 = Color.decode(prop.getProperty("chatColor1", "#b30e0e"));
+            GUI.chatColor2 = Color.decode(prop.getProperty("chatColor2", "#8e55e9"));
+            GUI.chatColor3 = Color.decode(prop.getProperty("chatColor3", "#18b33c"));
+            GUI.chatColor4 = Color.decode(prop.getProperty("chatColor4", "#58adb3"));
+            GUI.chatColor5 = Color.decode(prop.getProperty("chatColor5", "#9e54b3"));
+            GUI.chatColor6 = Color.decode(prop.getProperty("chatColor6", "#b39875"));
+            GUI.chatColor7 = Color.decode(prop.getProperty("chatColor7", "#3465a4"));
+            GUI.chatColor8 = Color.decode(prop.getProperty("chatColor8", "#ce5c00"));
+            GUI.chatColor9 = Color.decode(prop.getProperty("chatColor9", "#555753"));
+
+            GUI.awayMessage = prop.getProperty("awayMessage", "Pooping");
+            GUI.quitMessage = prop.getProperty("quitMessage", "Eating");
+            GUI.leaveMessage = prop.getProperty("leaveMessage", "Leaving");
+
+            GUI.tabPlacement = Integer.valueOf(prop.getProperty("tabPlacement", "Bottom"));
+
+            GUI.chatNameColors = Boolean.valueOf(prop.getProperty("chatNameColors", "true"));
+            GUI.hideJoinPartQuitNotifications = Boolean.valueOf(prop.getProperty("hideJoinPartQuitNotifications", "false"));
+            GUI.showTimestamp = Boolean.valueOf(prop.getProperty("showTimestamp", "true"));
+            GUI.disableTabNotificationsGlobally = Boolean.valueOf(prop.getProperty("disableTabNotificationsGlobally", "disable"));
+            GUI.focusNewTab = Boolean.valueOf(prop.getProperty("focusNewTab", "false"));
+            GUI.sortTabsAlphabetically = Boolean.valueOf(prop.getProperty("sortTabsAlphabetically", "false"));
+
+            makeHashMaps();
+
             deserializeSavedConnections();
         } catch (IOException ex) {
         } finally {
@@ -1192,6 +1234,7 @@ public class GUI extends JFrame {
             layout.putConstraint(SpringLayout.WEST, colorsLabel, 10, SpringLayout.WEST, dialog);
             layout.putConstraint(SpringLayout.NORTH, colorsLabel, 15, SpringLayout.SOUTH, userListFontLabel);
 
+            final Button[] ct = new Button[CTCPMap.size()];
             for (int i = 0; i < CTCPMap.size(); i++) {
                 Color c = CTCPMap.get(i);
                 Button colorsButton = new Button();
@@ -1199,6 +1242,7 @@ public class GUI extends JFrame {
                 colorsButton.addActionListener(ColorChooseAction.getInstance());
                 colorsButton.setPreferredSize(new Dimension(16, 16));
                 dialog.add(colorsButton);
+                ct[i] = colorsButton;
 
                 layout.putConstraint(SpringLayout.WEST, colorsButton, 30 + 20 * i, SpringLayout.WEST, dialog);
                 layout.putConstraint(SpringLayout.NORTH, colorsButton, 20, SpringLayout.NORTH, colorsLabel);
@@ -1208,6 +1252,8 @@ public class GUI extends JFrame {
             layout.putConstraint(SpringLayout.WEST, nickColorsLabel, 10, SpringLayout.WEST, dialog);
             layout.putConstraint(SpringLayout.NORTH, nickColorsLabel, 30, SpringLayout.SOUTH, colorsLabel);
 
+            final Button[] cb = new Button[chatColorMap.size()];
+
             for (int i = 0; i < chatColorMap.size(); i++) {
                 Color c = chatColorMap.get(i);
                 Button colorsButton = new Button();
@@ -1215,6 +1261,7 @@ public class GUI extends JFrame {
                 colorsButton.addActionListener(ColorChooseAction.getInstance());
                 colorsButton.setPreferredSize(new Dimension(16, 16));
                 dialog.add(colorsButton);
+                cb[i] = colorsButton;
 
                 layout.putConstraint(SpringLayout.WEST, colorsButton, 30 + 20 * i, SpringLayout.WEST, dialog);
                 layout.putConstraint(SpringLayout.NORTH, colorsButton, 20, SpringLayout.NORTH, nickColorsLabel);
@@ -1237,33 +1284,33 @@ public class GUI extends JFrame {
             //End of chat Font settings
 
 
-            JCheckBox coloredNicksOption = new JCheckBox("Use colored nicks in chat");
+            final JCheckBox coloredNicksOption = new JCheckBox("Use colored nicks in chat");
             if (chatNameColors) coloredNicksOption.setSelected(true);
             else coloredNicksOption.setSelected(false);
 
-            JCheckBox hideMessagesOption = new JCheckBox("Hide join/part/nick messages");
+            final JCheckBox hideMessagesOption = new JCheckBox("Hide join/part/nick messages");
             if (hideJoinPartQuitNotifications) hideMessagesOption.setSelected(true);
             else hideMessagesOption.setSelected(false);
 
-            JCheckBox showTimestampsOption = new JCheckBox("Show Timestamps");
+            final JCheckBox showTimestampsOption = new JCheckBox("Show Timestamps");
             if (showTimestamp) showTimestampsOption.setSelected(true);
             else showTimestampsOption.setSelected(false);
 
-            JCheckBox enableChatNotificationsOption = new JCheckBox("Disable chat notifications");
-            if (disableTabNotificationsGlobally) enableChatNotificationsOption.setSelected(false);
-            else enableChatNotificationsOption.setSelected(true);
+            final JCheckBox disableChatNotificationsOption = new JCheckBox("Disable chat notifications");
+            if (disableTabNotificationsGlobally) disableChatNotificationsOption.setSelected(true);
+            else disableChatNotificationsOption.setSelected(false);
 
-            JCheckBox focusNewTabOption = new JCheckBox("Focus new tabs");
+            final JCheckBox focusNewTabOption = new JCheckBox("Focus new tabs");
             if (focusNewTab) focusNewTabOption.setSelected(true);
             else focusNewTabOption.setSelected(false);
 
-            JCheckBox sortTabsAlphabeticallyOption = new JCheckBox("Sort tabs alphabetically");
+            final JCheckBox sortTabsAlphabeticallyOption = new JCheckBox("Sort tabs alphabetically");
             if (sortTabsAlphabetically) sortTabsAlphabeticallyOption.setSelected(true);
             else sortTabsAlphabeticallyOption.setSelected(false);
 
             JLabel tabPlacementOptionLabel = new JLabel("Tab placement");
             Object[] things = {"Top", "Bottom"};
-            JComboBox tabPlacementOption = new JComboBox(things);
+            final JComboBox tabPlacementOption = new JComboBox(things);
             if (tabPlacement == DnDTabbedPane.BOTTOM) tabPlacementOption.setSelectedItem("Bottom");
             else tabPlacementOption.setSelectedItem("Top");
 
@@ -1277,10 +1324,10 @@ public class GUI extends JFrame {
             layout.putConstraint(SpringLayout.NORTH, showTimestampsOption, 5, SpringLayout.SOUTH, hideMessagesOption);
             layout.putConstraint(SpringLayout.WEST, showTimestampsOption, 10, SpringLayout.WEST, dialog);
 
-            layout.putConstraint(SpringLayout.NORTH, enableChatNotificationsOption, 5, SpringLayout.SOUTH, showTimestampsOption);
-            layout.putConstraint(SpringLayout.WEST, enableChatNotificationsOption, 10, SpringLayout.WEST, dialog);
+            layout.putConstraint(SpringLayout.NORTH, disableChatNotificationsOption, 5, SpringLayout.SOUTH, showTimestampsOption);
+            layout.putConstraint(SpringLayout.WEST, disableChatNotificationsOption, 10, SpringLayout.WEST, dialog);
 
-            layout.putConstraint(SpringLayout.NORTH, focusNewTabOption, 5, SpringLayout.SOUTH, enableChatNotificationsOption);
+            layout.putConstraint(SpringLayout.NORTH, focusNewTabOption, 5, SpringLayout.SOUTH, disableChatNotificationsOption);
             layout.putConstraint(SpringLayout.WEST, focusNewTabOption, 10, SpringLayout.WEST, dialog);
 
             layout.putConstraint(SpringLayout.NORTH, sortTabsAlphabeticallyOption, 5, SpringLayout.SOUTH, focusNewTabOption);
@@ -1295,7 +1342,7 @@ public class GUI extends JFrame {
             dialog.add(coloredNicksOption);
             dialog.add(hideMessagesOption);
             dialog.add(showTimestampsOption);
-            dialog.add(enableChatNotificationsOption);
+            dialog.add(disableChatNotificationsOption);
             dialog.add(focusNewTabOption);
             dialog.add(sortTabsAlphabeticallyOption);
             dialog.add(tabPlacementOptionLabel);
@@ -1304,14 +1351,14 @@ public class GUI extends JFrame {
 
 
             JLabel quitMessageLabel = new JLabel("Quit");
-            JTextField quitMessageText = new JTextField();
+            final JTextField quitMessageText = new JTextField();
             quitMessageText.setText(quitMessage);
             quitMessageText.setPreferredSize(new Dimension(253, 25));
             JLabel leaveMessageLabel = new JLabel("Leave channel");
-            JTextField leaveMessageText = new JTextField(leaveMessage);
+            final JTextField leaveMessageText = new JTextField(leaveMessage);
             leaveMessageText.setPreferredSize(new Dimension(253, 25));
             JLabel awayMessageLabel = new JLabel("Away message");
-            JTextField awayMessageText = new JTextField(awayMessage);
+            final JTextField awayMessageText = new JTextField(awayMessage);
             awayMessageText.setPreferredSize(new Dimension(253, 25));
 
 
@@ -1354,7 +1401,58 @@ public class GUI extends JFrame {
             layout.putConstraint(SpringLayout.SOUTH, cancelButton, 0, SpringLayout.SOUTH, OKButton);
 
             dialog.add(OKButton);
+            OKButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    try {
+                        prop.load(new FileInputStream("config.properties"));
+
+
+                        for (int i = 0; i < ct.length; i++) {
+                            String rgb = Integer.toHexString(ct[i].getBackground().getRGB()).substring(1);
+                            prop.setProperty("CTCP"+String.valueOf(i), "#"+rgb);
+                        }
+
+                        for (int i = 0; i < cb.length; i++) {
+                            String rgb = Integer.toHexString(cb[i].getBackground().getRGB()).substring(1);
+                            prop.setProperty("chatColor"+String.valueOf(i), "#"+rgb);
+                        }
+
+                        prop.setProperty("awayMessage", awayMessageText.getText());
+                        prop.setProperty("quitMessage", quitMessageText.getText());
+                        prop.setProperty("leaveMessage", leaveMessageText.getText());
+
+                        if (tabPlacementOption.getSelectedItem().equals("Bottom")) prop.setProperty("tabPlacement", String.valueOf(DnDTabbedPane.BOTTOM));
+                        else prop.setProperty("tabPlacement", String.valueOf(DnDTabbedPane.TOP));
+
+                        prop.setProperty("chatNameColors", String.valueOf(coloredNicksOption.isSelected()));
+                        prop.setProperty("hideJoinPartQuitNotifications", String.valueOf(hideMessagesOption.isSelected()));
+                        prop.setProperty("showTimestamp", String.valueOf(showTimestampsOption.isSelected()));
+                        prop.setProperty("disableTabNotificationsGlobally", String.valueOf(disableChatNotificationsOption.isSelected()));
+                        prop.setProperty("focusNewTab", String.valueOf(focusNewTabOption.isSelected()));
+                        prop.setProperty("sortTabsAlphabetically", String.valueOf(sortTabsAlphabeticallyOption.isSelected()));
+
+                        prop.store(new FileOutputStream("config.properties"), null);
+
+                        dialog.dispose();
+                    } catch (FileNotFoundException e1) {
+                        e1.printStackTrace();
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+
+                }
+            });
+
+
+
             dialog.add(cancelButton);
+            cancelButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    dialog.dispose();
+                }
+            });
 
 
             dialog.pack();
@@ -1826,6 +1924,17 @@ public class GUI extends JFrame {
                         chatFont = ffList.getSelectedValue();
                         chatFontSize = sizeList.getSelectedValue();
                         chatFontStyle = fsList.getSelectedValue();
+
+                        try {
+                            prop.load(new FileInputStream("config.properties"));
+                            prop.setProperty("chatFont", chatFont);
+                            prop.setProperty("chatFontSize", String.valueOf(chatFontSize));
+                            prop.setProperty("chatFontStyle", chatFontStyle);
+                            prop.store(new FileOutputStream("config.properties"), null);
+                        } catch (IOException e1) {
+                            e1.printStackTrace();
+                        }
+
                         setStyles();
                     }
                     else //choice == NICKLISTFONT
@@ -1833,6 +1942,17 @@ public class GUI extends JFrame {
                         userListFont = ffList.getSelectedValue();
                         userListFontSize = sizeList.getSelectedValue();
                         userListFontStyle = fsList.getSelectedValue();
+
+                        try {
+                            prop.load(new FileInputStream("config.properties"));
+                            prop.setProperty("userListFont", userListFont);
+                            prop.setProperty("userListFontSize", String.valueOf(userListFontSize));
+                            prop.setProperty("userListFontStyle", userListFontStyle);
+                            prop.store(new FileOutputStream("config.properties"), null);
+                        } catch (IOException e1) {
+                            e1.printStackTrace();
+                        }
+
                         setStyles();
                     }
                     fontDialog.dispose();

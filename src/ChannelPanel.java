@@ -343,7 +343,7 @@ public class ChannelPanel extends JSplitPane {
         if (name.startsWith("#")) //closing channel
         {
             try {
-                this.connection.send("PART " + name+" "+GUI.leaveMessage);
+                this.connection.send("PART " + name+" :"+GUI.leaveMessage);
                 return;
             } catch (IOException | BadLocationException ex) {
                 Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);

@@ -131,7 +131,7 @@ public class Connection implements Runnable {
     public void parseFromServer(String line) throws IOException, BadLocationException {
         final Parser parser = new Parser(line);
         String command = parser.getCommand();
-        System.out.println(parser.toString());
+        //System.out.println(parser.toString());
         //System.out.println(line);
 
         if (command.equals("AWAY")) {
@@ -1480,7 +1480,7 @@ public class Connection implements Runnable {
             String line;
             if (socket.isConnected()) {
                 send("NICK " + nicks[0]);
-                send("USER " + nicks[0] + "123" + " 8 * : " + real);
+                send("USER " + nicks[0] + " 8 * :" + real);
                 while ((line = reader.readLine()) != null) {
                     //if (!this.isConnected) break;
                     parseFromServer(line);
