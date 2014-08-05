@@ -53,17 +53,19 @@ public class GUI extends JFrame {
     static Color highlightColor = Color.pink;
     static Color chatColor0, chatColor1, chatColor2, chatColor3, chatColor4, chatColor5, chatColor6, chatColor7, chatColor8, chatColor9;
     static StyleContext sc;
-    static Style style, chatStyle, timestampStyle, actionStyle, errorStyle, serverStyle, connectStyle, ctcpStyle, userNameStyle,
+    static Style chatStyle, timestampStyle, actionStyle, errorStyle, serverStyle, connectStyle, ctcpStyle, userNameStyle,
             disconnectStyle, joinStyle, hyperlinkUnclickedStyle, highlightStyle, chatListStyle;
 
-    static String chatFont = "Courier New", userListFont = "Courier New";
-    static String chatFontStyle = "Plain", userListFontStyle = "Plain";
-    static int chatFontSize = 12, userListFontSize = 12;
+    static Style style;
+
+    static String chatFont, userListFont;
+    static String chatFontStyle, userListFontStyle;
+    static int chatFontSize, userListFontSize;
 
     final static String errorColor = "#FF0000", chatColor = "#000000", serverColor = "#960096", connectColor = "#993300", timestampColor = "#909090";
     final static String actionColor = "#0000FF", disconnectColor = "#CAA234", joinColor = "#D46942";
-    final static Map<Integer, Color> CTCPMap = new HashMap<>();
-    final static Map<Integer, Color> chatColorMap = new HashMap<>();
+    final static ColorHashMap<Integer, Color> CTCPMap = new ColorHashMap<>(Color.black);
+    final static ColorHashMap<Integer, Color> chatColorMap = new ColorHashMap<>(Color.black);
 
     static boolean showTimestamp, chatNameColors, disableTabNotificationsGlobally, sortTabsAlphabetically,
             hideJoinPartQuitNotifications, focusNewTab;
@@ -73,9 +75,11 @@ public class GUI extends JFrame {
     static int tabPlacement;
 
 
+
     final static String appName = "Alpha IRC";
     final static Properties prop = new Properties();
-    public static JTextField chatInputPane;
+
+    private static JTextField chatInputPane;
     static ArrayList<SavedConnection> savedConnections = new ArrayList<>();
     static JFrame frame;
     private static JLabel tabInfo;
@@ -102,12 +106,11 @@ public class GUI extends JFrame {
     private static JMenuItem joinChannel;
     private static JMenuItem quitProgram;
     private static JMenuItem configure;
-    private JMenu fileMenu;
-    private JMenu editMenu;
-    private JMenu settingsMenu;
-    private JMenu windowMenu;
-    private JMenuBar menuBar;
-    private JTextPane userListPane;
+    private static JMenu fileMenu;
+    private static JMenu editMenu;
+    private static JMenu settingsMenu;
+    private static JMenu windowMenu;
+    private static JMenuBar menuBar;
 
 
 
@@ -117,15 +120,9 @@ public class GUI extends JFrame {
         loadProperties();
         setStyles();
         initComponents();
-
         initActions();
         initMainwindowListeners();
-
         loadKeyBinds(chatInputPane.getActionMap(), chatInputPane.getInputMap());
-        ChannelPanel.tabbedPane = tabbedPane;
-        Connection.tabbedPane = tabbedPane;
-        ChannelPanel.tabInfo = tabInfo;
-        Connection.tabInfo = tabInfo;
         autoConnect();
         frame = GUI.this;
     }
@@ -319,7 +316,7 @@ public class GUI extends JFrame {
     private void initComponents() {
         chatInputPane = new JTextField();
         tabbedPane = new DnDTabbedPane();
-        userListPane = new JTextPane();
+        //userListPane = new JTextPane();
         tabInfo = new JLabel();
         menuBar = new JMenuBar();
         fileMenu = new JMenu("File");
@@ -401,11 +398,6 @@ public class GUI extends JFrame {
         tabbedPane.setCursor(new java.awt.Cursor(Cursor.DEFAULT_CURSOR)); //cursor necessary?
         tabbedPane.setFocusable(false);
         tabbedPane.setPreferredSize(new Dimension(600, 450));
-
-        userListPane.setEditable(false);
-        userListPane.setAutoscrolls(false);
-        userListPane.setFocusable(false);
-        userListPane.setMaximumSize(new Dimension(25, 25));
 
         tabInfo.setHorizontalAlignment(SwingConstants.RIGHT);
 
@@ -664,17 +656,30 @@ public class GUI extends JFrame {
     }
 
 
+    public static DnDTabbedPane getTabbedPane() {
+        return tabbedPane;
+    }
 
+    public static JLabel getTabInfo() {
+        return tabInfo;
+    }
 
+    public static JTextField getChatInputPane() {
+        return chatInputPane;
+    }
+
+    public static JFrame getFrame() {
+        return GUI.frame;
+    }
 
     /** Sets up the text styles used by the chatPane */
     public static void setStyles() {
         sc = StyleContext.getDefaultStyleContext();
-        style = sc.addStyle("DefaultStyle", null);
-        chatStyle = sc.addStyle("DefaultStyle", style);
-        timestampStyle = sc.addStyle("DefaultStyle", style);
+        style = sc.getStyle(StyleContext.DEFAULT_STYLE);
+        chatStyle = sc.addStyle("Defaultstyle", style);
+        timestampStyle = sc.addStyle("Defaultstyle", style);
         actionStyle = sc.addStyle("Defaultstyle", style);
-        errorStyle = sc.addStyle("DefaultStyle", style);
+        errorStyle = sc.addStyle("Defaultstyle", style);
         serverStyle = sc.addStyle("Defaultstyle", style);
         connectStyle = sc.addStyle("Defaultstyle", style);
         ctcpStyle = sc.addStyle("Defaultstyle", style);
@@ -814,7 +819,7 @@ public class GUI extends JFrame {
             GUI.chatNameColors = Boolean.valueOf(prop.getProperty("chatNameColors", "true"));
             GUI.hideJoinPartQuitNotifications = Boolean.valueOf(prop.getProperty("hideJoinPartQuitNotifications", "false"));
             GUI.showTimestamp = Boolean.valueOf(prop.getProperty("showTimestamp", "true"));
-            GUI.disableTabNotificationsGlobally = Boolean.valueOf(prop.getProperty("disableTabNotificationsGlobally", "disable"));
+            GUI.disableTabNotificationsGlobally = Boolean.valueOf(prop.getProperty("disableTabNotificationsGlobally", "false"));
             GUI.focusNewTab = Boolean.valueOf(prop.getProperty("focusNewTab", "false"));
             GUI.sortTabsAlphabetically = Boolean.valueOf(prop.getProperty("sortTabsAlphabetically", "false"));
 
@@ -1454,7 +1459,8 @@ public class GUI extends JFrame {
                 }
             });
 
-
+            OKButton.getRootPane().setDefaultButton(OKButton);
+            OKButton.requestFocus();
             dialog.pack();
             dialog.setResizable(false);
             dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -2955,6 +2961,16 @@ public class GUI extends JFrame {
                     }
                 }
             }
+        }
+    }
+    static class ColorHashMap<K,V> extends HashMap<K,V> {
+        protected V defaultValue;
+        public ColorHashMap(V defaultValue) {
+            this.defaultValue = defaultValue;
+        }
+        @Override
+        public V get(Object k) {
+            return containsKey(k) ? super.get(k) : defaultValue;
         }
     }
 }

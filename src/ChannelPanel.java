@@ -23,8 +23,8 @@ public class ChannelPanel extends JSplitPane {
     final static Map<String, Color> userMap = new HashMap<>();
     static boolean awayStatus = false;
     static String CTCPFingerMessage = "this is the finger message", CTCPUserInfo = "user info string";
-    static DnDTabbedPane tabbedPane;
-    static JLabel tabInfo;
+    
+    
     static ArrayList<String> tabNicks;
 
     final String title;
@@ -37,12 +37,11 @@ public class ChannelPanel extends JSplitPane {
     int population, ops = 0;
     int listSelectedIndex = -1;
 
-    boolean enableNotifications;
+    boolean enableNotifications = true;
 
     Connection connection;
     SortedListModel<User> model = new SortedListModel<>();
     ArrayList<String> list = new ArrayList<>();
-    StyledDocument doc;
     int lastSearchIndex = -1;
 
     ArrayList<String> history;
@@ -55,18 +54,15 @@ public class ChannelPanel extends JSplitPane {
         this.title = title; //this is what is shown on a tab
         this.name = name;
         this.connection = c;
-        doc = chatPane.getStyledDocument();
 
         PlainTextHyperlinkListener hyperlinkListener = new PlainTextHyperlinkListener(chatPane);
         chatPane.addHyperlinkListener(hyperlinkListener);
         chatPane.getStyledDocument().addDocumentListener(new LimitLinesDocumentListener(1000));
 
-
         userListPane = new JList(model);
         history = new ArrayList<>();
 
         makePanel();
-        GUI.loadKeyBinds(chatPane.getActionMap(), chatPane.getInputMap());
 
 
         TextClickListener tcl = new TextClickListener(chatPane, this.connection);
@@ -114,7 +110,7 @@ public class ChannelPanel extends JSplitPane {
                     ChannelPanel channel = new ChannelPanel(nickname, nickname, ChannelPanel.this.connection);
                     channel.setRightComponent(null);
                     channel.setDividerSize(0);
-                    tabbedPane.setSelectedComponent(channel);
+                    GUI.getTabbedPane().setSelectedComponent(channel);
 
                 } catch (BadLocationException | IOException ex) {
                     Logger.getLogger(ChannelPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -242,7 +238,7 @@ public class ChannelPanel extends JSplitPane {
         CIPpopup.add(new JSeparator());
         CIPpopup.add(CIPClear);
         CIPpopup.add(CIPSelectAll);
-        GUI.chatInputPane.setComponentPopupMenu(CIPpopup);
+        GUI.getChatInputPane().setComponentPopupMenu(CIPpopup);
 
         CIPCopy.addActionListener(new DefaultEditorKit.CopyAction());
         CIPCut.addActionListener(new DefaultEditorKit.CutAction());
@@ -253,7 +249,7 @@ public class ChannelPanel extends JSplitPane {
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
-                        GUI.chatInputPane.setText(null);
+                        GUI.getChatInputPane().setText(null);
                     }
                 });
             }
@@ -265,7 +261,7 @@ public class ChannelPanel extends JSplitPane {
 
                     @Override
                     public void run() {
-                        GUI.chatInputPane.selectAll();
+                        GUI.getChatInputPane().selectAll();
                     }
                 });
             }
@@ -273,7 +269,7 @@ public class ChannelPanel extends JSplitPane {
         CIPpopup.addPopupMenuListener(new PopupMenuListener() {
             @Override
             public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
-                if (GUI.chatInputPane.getText().isEmpty()) {
+                if (GUI.getChatInputPane().getText().isEmpty()) {
                     CIPCut.setForeground(Color.gray);
                     CIPPaste.setForeground(Color.black);
                     CIPCopy.setForeground(Color.gray);
@@ -313,7 +309,7 @@ public class ChannelPanel extends JSplitPane {
         setLeftComponent(chatScrollPane);
         if (name.startsWith("#")) {
             setRightComponent(userListScrollPane);
-            setDividerLocation(GUI.frame.getWidth() - 160);
+            setDividerLocation(GUI.getFrame().getWidth() - 160);
         } else {
             setRightComponent(null);
             setDividerSize(0);
@@ -337,7 +333,7 @@ public class ChannelPanel extends JSplitPane {
 
         if (!name.startsWith("#") && !name.equals(this.server)) //closing IM
         {
-            tabbedPane.remove(this);
+            GUI.getTabbedPane().remove(this);
         }
 
         if (name.startsWith("#")) //closing channel
@@ -355,14 +351,14 @@ public class ChannelPanel extends JSplitPane {
                 int warning = JOptionPane.showConfirmDialog(null, "Do you wish to disconnect from " + this.server + "? All tabs will be closed.", "Are you sure?", JOptionPane.WARNING_MESSAGE);
                 if (warning == JOptionPane.CANCEL_OPTION || warning == JOptionPane.CLOSED_OPTION) return;
             }
-            for (int i = 0; i < tabbedPane.getTabCount(); i++) {
-                ChannelPanel c = (ChannelPanel) tabbedPane.getComponentAt(i);
+            for (int i = 0; i < GUI.getTabbedPane().getTabCount(); i++) {
+                ChannelPanel c = (ChannelPanel) GUI.getTabbedPane().getComponentAt(i);
                 if (c.server.equals(this.server)) {
-                    tabbedPane.remove(i);
+                    GUI.getTabbedPane().remove(i);
                     i--;
                 }
             }
-            tabbedPane.remove(this);
+            GUI.getTabbedPane().remove(this);
             this.connection.disconnect();
             this.updateTabInfo();
         }
@@ -380,14 +376,15 @@ public class ChannelPanel extends JSplitPane {
 
 
 
-    /** adds this ChannelPanel to tabbedPane */
+    /** adds this ChannelPanel to GUI.getTabbedPane() */
     private void addTab() {
-        if (!GUI.sortTabsAlphabetically) tabbedPane.add(this, this.title);
+        System.out.println("addTab");
+        if (!GUI.sortTabsAlphabetically) GUI.getTabbedPane().add(this, this.title);
         else {
             int selection = -1;
-            for (int i = 0; i < tabbedPane.getTabCount(); i++) {
-                if (tabbedPane.getTabCount() == 1) break;
-                ChannelPanel c = (ChannelPanel) tabbedPane.getComponentAt(i);
+            for (int i = 0; i < GUI.getTabbedPane().getTabCount(); i++) {
+                if (GUI.getTabbedPane().getTabCount() == 1) break;
+                ChannelPanel c = (ChannelPanel) GUI.getTabbedPane().getComponentAt(i);
                 if ((c.title.equals(c.connection.title))) continue;
                 if (this.title.compareTo(c.title) <= 0) {
                     selection = i;
@@ -395,26 +392,28 @@ public class ChannelPanel extends JSplitPane {
                 }
             }
             if (selection == -1) {
-                tabbedPane.add(this, this.title);
+                GUI.getTabbedPane().add(this, this.title);
             } else {
-                tabbedPane.add(this, selection);
-                tabbedPane.setTitleAt(selection, title);
+                GUI.getTabbedPane().add(this, selection);
+                GUI.getTabbedPane().setTitleAt(selection, title);
             }
         }
-        if (GUI.focusNewTab) tabbedPane.setSelectedComponent(this);
+        if (GUI.focusNewTab) GUI.getTabbedPane().setSelectedComponent(this);
     }
 
 
 
 
-    /** Retrieves a user's chat font color from the userMap */
+    /** Retrieves a user's chat font color from the userMap
+        Assigns color randomly if user does not have one */
+
     private Color getUserColor(String user) {
         if (!GUI.chatNameColors) {
             return StyleConstants.getForeground(GUI.chatStyle);
         }
         if (userMap.containsKey(user)) return userMap.get(user);
         else {
-            int random = (int) (Math.random() * 8);
+            int random = (int) (Math.random() * 9);
             userMap.put(user, GUI.chatColorMap.get(random));
             return userMap.get(user);
         }
@@ -426,30 +425,34 @@ public class ChannelPanel extends JSplitPane {
     /** Updates the active component with info such as population, number of ops, etc */
     public void updateTabInfo() {
 
-        if (tabbedPane.getTabCount() == 0) {
-            GUI.frame.setTitle(GUI.appName);
-            tabInfo.setText("Disconnected    ");
+        if (GUI.getTabbedPane().getTabCount() == 0) {
+            GUI.getFrame().setTitle(GUI.appName);
+            GUI.getTabInfo().setText("Disconnected    ");
             return;
         }
         if (!connection.isConnected) {
-            tabInfo.setText("Disconnected    ");
+            GUI.getTabInfo().setText("Disconnected    ");
             return;
         }
-        ChannelPanel cc = (ChannelPanel) tabbedPane.getSelectedComponent();
-        int sel = tabbedPane.getSelectedIndex();
-        tabbedPane.setIconAt(sel, null);
+        ChannelPanel cc = (ChannelPanel) GUI.getTabbedPane().getSelectedComponent();
+        int sel = GUI.getTabbedPane().getSelectedIndex();
+        GUI.getTabbedPane().setIconAt(sel, null);
 
         if (this.isShowing()) {
             String text = "";
             if (ops != 1) text = " ops) ";
             if (ops == 1) text = " op) ";
 
+            String text2 = "";
+            if (population == 1) text2 = "nick";
+            else text2 = "nicks";
+
             if (!cc.name.startsWith("#")) {
-                GUI.frame.setTitle(name + " - " + GUI.appName);
-                tabInfo.setText(name + "  ");
-            } else tabInfo.setText(name + " - " + population + " nicks (" + ops + text + server + "  ");
+                GUI.getFrame().setTitle(name + " - " + GUI.appName);
+                GUI.getTabInfo().setText(name + "  ");
+            } else GUI.getTabInfo().setText(name + " - " + population + " "+text2+" (" + ops + text + server + "  ");
         }
-        GUI.frame.setTitle(cc.title + " - " + GUI.appName);
+        GUI.getFrame().setTitle(cc.title + " - " + GUI.appName);
     }
 
 
@@ -473,17 +476,17 @@ public class ChannelPanel extends JSplitPane {
         }
         if (GUI.showTimestamp) {
             String timestamp = makeTimestamp();
-            this.insertString(doc.getLength(), "\n[" + timestamp + "] ", GUI.timestampStyle);
-        } else this.insertString(doc.getLength(), "\n", GUI.style);
-        //if (!GUI.chatNameColors && line[0] != null) this.insertString(doc.getLength(), "<" + line[0] + ">: ", GUI.chatStyle);
+            this.insertString(chatPane.getStyledDocument().getLength(), "\n[" + timestamp + "] ", GUI.timestampStyle);
+        } else this.insertString(chatPane.getStyledDocument().getLength(), "\n", GUI.style);
+        //if (!GUI.chatNameColors && line[0] != null) this.insertString(chatPane.getStyledDocument().getLength(), "<" + line[0] + ">: ", GUI.chatStyle);
         if (line[0] != null) {
             Color c = getUserColor(line[0]);
-            this.insertString(doc.getLength(), "<", GUI.style);
+            this.insertString(chatPane.getStyledDocument().getLength(), "<", GUI.style);
             StyleConstants.setForeground(GUI.userNameStyle, c);
-            this.insertString(doc.getLength(), line[0], GUI.userNameStyle);
-            this.insertString(doc.getLength(), ">: ", GUI.style);
+            this.insertString(chatPane.getStyledDocument().getLength(), line[0], GUI.userNameStyle);
+            this.insertString(chatPane.getStyledDocument().getLength(), ">: ", GUI.style);
         }
-        this.insertString(doc.getLength(), line[1], givenStyle);
+        this.insertString(chatPane.getStyledDocument().getLength(), line[1], givenStyle);
     }
 
 
@@ -491,7 +494,7 @@ public class ChannelPanel extends JSplitPane {
 
     /** Called internally by the other insertString method. Controls the scrolling behavior */
     private void insertString(int offset, String str, AttributeSet a) {
-        if (doc.getLength() == 0) str = str.trim() + " "; //removes \n at start of document
+        if (chatPane.getStyledDocument().getLength() == 0) str = str.trim() + " "; //removes \n at start of document
 
         int extent = chatScrollPane.getVerticalScrollBar().getModel().getExtent();
         int max = chatScrollPane.getVerticalScrollBar().getModel().getMaximum();
@@ -499,7 +502,7 @@ public class ChannelPanel extends JSplitPane {
         boolean end = ((val + extent == max) || val + extent > max - 50);
 
         try {
-            doc.insertString(offset, str, a);
+            chatPane.getStyledDocument().insertString(offset, str, a);
             if (!GUI.disableTabNotificationsGlobally) checkForActiveTab();
         }
         catch (BadLocationException ignored){}
@@ -516,7 +519,7 @@ public class ChannelPanel extends JSplitPane {
                         public void run() {
                             if (chatPane.getDocument().getLength() == 0) return;
                             try {
-                                chatPane.getCaret().setDot(doc.getLength());
+                                chatPane.getCaret().setDot(chatPane.getStyledDocument().getLength());
                             } catch (Exception ignored) {}
                         }
                     });
@@ -533,16 +536,16 @@ public class ChannelPanel extends JSplitPane {
         String nick = line[0];
         String msg = line[1].trim();
         String timestamp = makeTimestamp();
-        if (GUI.showTimestamp) this.insertString(doc.getLength(), "\n[" + timestamp + "] ", GUI.timestampStyle);
-        else this.insertString(doc.getLength(), "\n", GUI.style);
-        this.insertString(doc.getLength(), "* ", GUI.actionStyle);
-        //if (!GUI.chatNameColors) this.insertString(doc.getLength(), nick + " ", GUI.style);
+        if (GUI.showTimestamp) this.insertString(chatPane.getStyledDocument().getLength(), "\n[" + timestamp + "] ", GUI.timestampStyle);
+        else this.insertString(chatPane.getStyledDocument().getLength(), "\n", GUI.style);
+        this.insertString(chatPane.getStyledDocument().getLength(), "* ", GUI.actionStyle);
+        //if (!GUI.chatNameColors) this.insertString(chatPane.getStyledDocument().getLength(), nick + " ", GUI.style);
         //if (GUI.chatNameColors) {
             Color c = getUserColor(nick);
             StyleConstants.setForeground(GUI.userNameStyle, c);
-            this.insertString(doc.getLength(), nick + " ", GUI.userNameStyle);
+            this.insertString(chatPane.getStyledDocument().getLength(), nick + " ", GUI.userNameStyle);
         //}
-        this.insertString(doc.getLength(), msg, GUI.actionStyle);
+        this.insertString(chatPane.getStyledDocument().getLength(), msg, GUI.actionStyle);
     }
 
 
@@ -553,15 +556,15 @@ public class ChannelPanel extends JSplitPane {
         GUI.ctcpStyle = GUI.sc.addStyle("Defaultstyle", givenStyle);
         if (GUI.showTimestamp) {
             String timestamp = makeTimestamp();
-            this.insertString(doc.getLength(), "\n[" + timestamp + "] ", GUI.timestampStyle);
-        } else this.insertString(doc.getLength(), "\n", GUI.style);
-        //if (!GUI.chatNameColors && line[0] != null) this.insertString(doc.getLength(), "<" + line[0] + ">: ", GUI.chatStyle);
+            this.insertString(chatPane.getStyledDocument().getLength(), "\n[" + timestamp + "] ", GUI.timestampStyle);
+        } else this.insertString(chatPane.getStyledDocument().getLength(), "\n", GUI.style);
+        //if (!GUI.chatNameColors && line[0] != null) this.insertString(chatPane.getStyledDocument().getLength(), "<" + line[0] + ">: ", GUI.chatStyle);
         if (line[0] != null) {
             Color c = getUserColor(line[0]);
-            this.insertString(doc.getLength(), "<", GUI.style);
+            this.insertString(chatPane.getStyledDocument().getLength(), "<", GUI.style);
             StyleConstants.setForeground(GUI.userNameStyle, c);
-            this.insertString(doc.getLength(), line[0], GUI.userNameStyle);
-            this.insertString(doc.getLength(), ">: ", GUI.style);
+            this.insertString(chatPane.getStyledDocument().getLength(), line[0], GUI.userNameStyle);
+            this.insertString(chatPane.getStyledDocument().getLength(), ">: ", GUI.style);
         }
 
         Pattern pattern;
@@ -611,13 +614,13 @@ public class ChannelPanel extends JSplitPane {
                         min = Math.min(anInd, min);
                     }
                     if (min == Integer.MAX_VALUE) {
-                        this.insertString(doc.getLength(), token, GUI.hyperlinkUnclickedStyle);
+                        this.insertString(chatPane.getStyledDocument().getLength(), token, GUI.hyperlinkUnclickedStyle);
                         continue;
                     }
                     String channel = token.substring(0, min);
-                    this.insertString(doc.getLength(), channel, GUI.hyperlinkUnclickedStyle);
+                    this.insertString(chatPane.getStyledDocument().getLength(), channel, GUI.hyperlinkUnclickedStyle);
                     String rest = token.substring(min);
-                    this.insertString(doc.getLength(), rest, GUI.ctcpStyle);
+                    this.insertString(chatPane.getStyledDocument().getLength(), rest, GUI.ctcpStyle);
                     continue;
                 } else //hyperlinking a URL
                 {
@@ -641,13 +644,13 @@ public class ChannelPanel extends JSplitPane {
                         min = Math.min(anInd, min);
                     }
                     if (min == Integer.MAX_VALUE) {
-                        this.insertString(doc.getLength(), token, GUI.hyperlinkUnclickedStyle);
+                        this.insertString(chatPane.getStyledDocument().getLength(), token, GUI.hyperlinkUnclickedStyle);
                         continue;
                     }
                     String url = token.substring(0, min);
-                    this.insertString(doc.getLength(), url, GUI.hyperlinkUnclickedStyle);
+                    this.insertString(chatPane.getStyledDocument().getLength(), url, GUI.hyperlinkUnclickedStyle);
                     String rest = token.substring(min);
-                    this.insertString(doc.getLength(), rest, GUI.ctcpStyle);
+                    this.insertString(chatPane.getStyledDocument().getLength(), rest, GUI.ctcpStyle);
                     continue;
                 }
             }
@@ -661,14 +664,14 @@ public class ChannelPanel extends JSplitPane {
                     String message;
 
                     if (!StringUtils.isNumeric(token.substring(0, 1)) && !token.startsWith(",")) {
-                        this.insertString(doc.getLength(), token, GUI.chatStyle);
+                        this.insertString(chatPane.getStyledDocument().getLength(), token, GUI.chatStyle);
                         continue;
                     }
                     while (matcher.find()) {
                         if (matcher.group(8) != null && matcher.group(8).equals(",")) //invalid (ex. ,5this is a message) prints plain
                         {
                             message = matcher.group(10);
-                            this.insertString(doc.getLength(), message, GUI.ctcpStyle);
+                            this.insertString(chatPane.getStyledDocument().getLength(), message, GUI.ctcpStyle);
                             continue;
                         }
                         if (matcher.group(6) != null && matcher.group(6).equals(",")) //foreground color, no bg color (ex. 5,this is a message)
@@ -677,7 +680,7 @@ public class ChannelPanel extends JSplitPane {
                             message = matcher.group(7);
                             Color f = GUI.CTCPMap.get(Integer.valueOf(foreground));
                             StyleConstants.setForeground(GUI.ctcpStyle, f);
-                            this.insertString(doc.getLength(), message, GUI.ctcpStyle);
+                            this.insertString(chatPane.getStyledDocument().getLength(), message, GUI.ctcpStyle);
                             continue;
                         }
                         if (matcher.group(8) != null && matcher.group(8).equals("")) //foreground color, no bg color (ex. 5this is a message)
@@ -686,7 +689,7 @@ public class ChannelPanel extends JSplitPane {
                             message = matcher.group(10);
                             Color f = GUI.CTCPMap.get(Integer.valueOf(foreground));
                             StyleConstants.setForeground(GUI.ctcpStyle, f);
-                            this.insertString(doc.getLength(), message, GUI.ctcpStyle);
+                            this.insertString(chatPane.getStyledDocument().getLength(), message, GUI.ctcpStyle);
                             continue;
                         }
                         if (matcher.group(2) != null && matcher.group(2).equals("")) //foreground color, no bg color, but followed by a number, ie 53 blind mice
@@ -695,7 +698,7 @@ public class ChannelPanel extends JSplitPane {
                             message = matcher.group(3) + matcher.group(4);
                             Color f = GUI.CTCPMap.get(Integer.valueOf(foreground));
                             StyleConstants.setForeground(GUI.ctcpStyle, f);
-                            this.insertString(doc.getLength(), message, GUI.ctcpStyle);
+                            this.insertString(chatPane.getStyledDocument().getLength(), message, GUI.ctcpStyle);
                             continue;
                         }
                         if (matcher.group(2) != null && matcher.group(2).equals(",")) //foreground and background (ex. 5,5this is a message)
@@ -707,12 +710,12 @@ public class ChannelPanel extends JSplitPane {
                             Color b = GUI.CTCPMap.get(Integer.valueOf(background));
                             StyleConstants.setForeground(GUI.ctcpStyle, f);
                             StyleConstants.setBackground(GUI.ctcpStyle, b);
-                            this.insertString(doc.getLength(), message, GUI.ctcpStyle);
+                            this.insertString(chatPane.getStyledDocument().getLength(), message, GUI.ctcpStyle);
                         }
                     }
                 }
             } else {
-                this.insertString(doc.getLength(), token, GUI.ctcpStyle);
+                this.insertString(chatPane.getStyledDocument().getLength(), token, GUI.ctcpStyle);
             }
         }
     }
@@ -734,8 +737,8 @@ public class ChannelPanel extends JSplitPane {
 
 
         if (!this.connection.isConnected) {
-            for (int i = 0; i < tabbedPane.getTabCount(); i++) {
-                ChannelPanel channel = (ChannelPanel)tabbedPane.getComponentAt(i);
+            for (int i = 0; i < GUI.getTabbedPane().getTabCount(); i++) {
+                ChannelPanel channel = (ChannelPanel)GUI.getTabbedPane().getComponentAt(i);
                 if (channel.connection == this.connection) {
                     if (!channel.enableNotifications || GUI.disableTabNotificationsGlobally) break;
                     else {
@@ -743,7 +746,7 @@ public class ChannelPanel extends JSplitPane {
                         SwingUtilities.invokeLater(new Runnable() {
                             @Override
                             public void run() {
-                                tabbedPane.setIconAt(finalI, GUI.notConnectedIcon);
+                                GUI.getTabbedPane().setIconAt(finalI, GUI.notConnectedIcon);
                             }
                         });
                     }
@@ -752,17 +755,16 @@ public class ChannelPanel extends JSplitPane {
             return;
         }
 
-
-        if (!this.isShowing() && GUI.disableTabNotificationsGlobally && enableNotifications) {
-            for (int i = 0; i < tabbedPane.getTabCount(); i++) {
-                ChannelPanel channel = (ChannelPanel) tabbedPane.getComponentAt(i);
+        if (!this.isShowing() && !GUI.disableTabNotificationsGlobally && enableNotifications) {
+            for (int i = 0; i < GUI.getTabbedPane().getTabCount(); i++) {
+                ChannelPanel channel = (ChannelPanel) GUI.getTabbedPane().getComponentAt(i);
 
                 if (channel.title.equals(this.title)) {
                     final int finalI = i;
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
-                            tabbedPane.setIconAt(finalI, GUI.newMessageIcon);
+                            GUI.getTabbedPane().setIconAt(finalI, GUI.newMessageIcon);
                         }
                     });
                     break; //a PM only goes to one window so we can stop looking
@@ -772,14 +774,14 @@ public class ChannelPanel extends JSplitPane {
 
 
         } else {
-            ChannelPanel channel = (ChannelPanel) tabbedPane.getSelectedComponent();
+            ChannelPanel channel = (ChannelPanel) GUI.getTabbedPane().getSelectedComponent();
             if (channel == null) return;
             final int index = Connection.findTab(channel.title, connection);
             if (index == -1) return;
             else SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    tabbedPane.setIconAt(index, null);
+                    GUI.getTabbedPane().setIconAt(index, null);
 
                 }
             });
@@ -1036,7 +1038,7 @@ class User extends JLabel implements Comparable {
     }
     public static void changeFont(Font f)
     {
-        if (ChannelPanel.tabbedPane == null) return;
+        if (GUI.getTabbedPane() == null) return;
         User.font = f;
     }
 
