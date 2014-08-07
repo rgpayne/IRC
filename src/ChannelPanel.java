@@ -47,6 +47,7 @@ public class ChannelPanel extends JSplitPane {
     int historyCounter = 0;
 
     public ChannelPanel(String title, String name, Connection c) throws BadLocationException, IOException {
+        System.out.println(SwingUtilities.isEventDispatchThread());
         this.title = title; //this is what is shown on a tab
         this.name = name;
         this.connection = c;
@@ -194,13 +195,7 @@ public class ChannelPanel extends JSplitPane {
         CPSelectAll.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                SwingUtilities.invokeLater(new Runnable() {
-
-                    @Override
-                    public void run() {
                         chatPane.selectAll();
-                    }
-                });
             }
         });
         CPpopup.addPopupMenuListener(new PopupMenuListener() {
@@ -240,24 +235,13 @@ public class ChannelPanel extends JSplitPane {
         CIPClear.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        GUI.getChatInputPane().setText(null);
-                    }
-                });
+                GUI.getChatInputPane().setText(null);
             }
         });
         CIPSelectAll.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                SwingUtilities.invokeLater(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        GUI.getChatInputPane().selectAll();
-                    }
-                });
+                GUI.getChatInputPane().selectAll();
             }
         });
         CIPpopup.addPopupMenuListener(new PopupMenuListener() {
@@ -525,7 +509,7 @@ public class ChannelPanel extends JSplitPane {
         int extent = chatScrollPane.getVerticalScrollBar().getModel().getExtent();
         int max = chatScrollPane.getVerticalScrollBar().getModel().getMaximum();
         int val = chatScrollPane.getVerticalScrollBar().getModel().getValue();
-        boolean end = ((val + extent == max) || val + extent > max - 50);
+        boolean end = ((val + extent == max) || val + extent > max - 10);
 
         try {
             chatPane.getStyledDocument().insertString(offset, str, a);
@@ -543,19 +527,13 @@ public class ChannelPanel extends JSplitPane {
 
         //controls autoscrolling -- if scrolled to bottom then scroll to end, otherwise don't
         if (end) {
-
+            if (chatPane.getDocument().getLength() == 0) return;
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    SwingUtilities.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (chatPane.getDocument().getLength() == 0) return;
-                            try {
-                                chatPane.getCaret().setDot(chatPane.getStyledDocument().getLength());
-                            } catch (Exception ignored) {}
-                        }
-                    });
+                    try {
+                        chatPane.getCaret().setDot(chatPane.getStyledDocument().getLength());
+                    } catch (Exception ignored) {}
                 }
             });
         }
@@ -775,13 +753,7 @@ public class ChannelPanel extends JSplitPane {
                 if (channel.connection == this.connection) {
                     if (!channel.enableNotifications || GUI.disableTabNotificationsGlobally) break;
                     else {
-                        final int finalI = i;
-                        SwingUtilities.invokeLater(new Runnable() {
-                            @Override
-                            public void run() {
-                                GUI.getTabbedPane().setIconAt(finalI, GUI.notConnectedIcon);
-                            }
-                        });
+                                GUI.getTabbedPane().setIconAt(i, GUI.notConnectedIcon);
                     }
                 }
             }
@@ -793,31 +765,18 @@ public class ChannelPanel extends JSplitPane {
                 ChannelPanel channel = (ChannelPanel) GUI.getTabbedPane().getComponentAt(i);
 
                 if (channel.title.equals(this.title)) {
-                    final int finalI = i;
-                    SwingUtilities.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            GUI.getTabbedPane().setIconAt(finalI, GUI.newMessageIcon);
-                        }
-                    });
+                    GUI.getTabbedPane().setIconAt(i, GUI.newMessageIcon);
                     break; //a PM only goes to one window so we can stop looking
                 }
             }
-
-
 
         } else {
             ChannelPanel channel = (ChannelPanel) GUI.getTabbedPane().getSelectedComponent();
             if (channel == null) return;
             final int index = Connection.findTab(channel.title, connection);
             if (index == -1) return;
-            else SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    GUI.getTabbedPane().setIconAt(index, null);
+            else GUI.getTabbedPane().setIconAt(index, null);
 
-                }
-            });
         }
     }
 

@@ -310,8 +310,6 @@ public class GUI extends JFrame {
 
 
 
-
-
     private void initComponents() {
         chatInputPane = new JTextField();
         tabbedPane = new DnDTabbedPane();
@@ -2952,8 +2950,6 @@ public class GUI extends JFrame {
             dialog.setVisible(true);
         }
     }
-
-
 
 
 
