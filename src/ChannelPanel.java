@@ -1,4 +1,6 @@
 import org.apache.commons.lang3.StringUtils;
+import org.aspectj.lang.annotation.Pointcut;
+
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.text.*;
@@ -15,9 +17,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-
-
 
 public class ChannelPanel extends JSplitPane {
     final static Map<String, Color> userMap = new HashMap<>();
@@ -47,9 +46,6 @@ public class ChannelPanel extends JSplitPane {
     ArrayList<String> history;
     int historyCounter = 0;
 
-
-
-
     public ChannelPanel(String title, String name, Connection c) throws BadLocationException, IOException {
         this.title = title; //this is what is shown on a tab
         this.name = name;
@@ -63,14 +59,12 @@ public class ChannelPanel extends JSplitPane {
         history = new ArrayList<>();
 
         makePanel();
-
+        addTab();
 
         TextClickListener tcl = new TextClickListener(chatPane, this.connection);
         TextMotionListener tml = new TextMotionListener(chatPane);
         chatPane.addMouseMotionListener(tml);
         chatPane.addMouseListener(tcl);
-
-        addTab();
     }
 
 
@@ -305,7 +299,6 @@ public class ChannelPanel extends JSplitPane {
         userListScrollPane.setViewportView(userListPane);
         chatScrollPane.setViewportView(chatPane);
 
-
         setLeftComponent(chatScrollPane);
         if (name.startsWith("#")) {
             setRightComponent(userListScrollPane);
@@ -378,28 +371,61 @@ public class ChannelPanel extends JSplitPane {
 
     /** adds this ChannelPanel to GUI.getTabbedPane() */
     private void addTab() {
-        System.out.println("addTab");
-        if (!GUI.sortTabsAlphabetically) GUI.getTabbedPane().add(this, this.title);
+        /*try {
+            SwingUtilities.invokeAndWait(new Runnable() {
+                @Override
+                public void run() {
+                    if (!GUI.sortTabsAlphabetically)
+                        GUI.getTabbedPane().add(ChannelPanel.this, ChannelPanel.this.title);
+                    else {
+                        int selection = -1;
+                        for (int i = 0; i < GUI.getTabbedPane().getTabCount(); i++) {
+                            if (GUI.getTabbedPane().getTabCount() == 1) break;
+                            ChannelPanel c = (ChannelPanel) GUI.getTabbedPane().getComponentAt(i);
+                            if ((c.title.equals(c.connection.title))) continue;
+                            if (ChannelPanel.this.title.compareTo(c.title) <= 0) {
+                                selection = i;
+                                break;
+                            }
+                        }
+                        if (selection == -1) {
+                            GUI.getTabbedPane().add(ChannelPanel.this, ChannelPanel.this.title);
+                        } else {
+                            GUI.getTabbedPane().add(ChannelPanel.this, selection);
+                            GUI.getTabbedPane().setTitleAt(selection, title);
+                        }
+                    }
+                    if (GUI.focusNewTab) GUI.getTabbedPane().setSelectedComponent(ChannelPanel.this);
+                }
+            });
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }*/
+        if (!GUI.sortTabsAlphabetically)
+            GUI.getTabbedPane().add(ChannelPanel.this, ChannelPanel.this.title);
         else {
             int selection = -1;
             for (int i = 0; i < GUI.getTabbedPane().getTabCount(); i++) {
                 if (GUI.getTabbedPane().getTabCount() == 1) break;
                 ChannelPanel c = (ChannelPanel) GUI.getTabbedPane().getComponentAt(i);
                 if ((c.title.equals(c.connection.title))) continue;
-                if (this.title.compareTo(c.title) <= 0) {
+                if (ChannelPanel.this.title.compareTo(c.title) <= 0) {
                     selection = i;
                     break;
                 }
             }
             if (selection == -1) {
-                GUI.getTabbedPane().add(this, this.title);
+                GUI.getTabbedPane().add(ChannelPanel.this, ChannelPanel.this.title);
             } else {
-                GUI.getTabbedPane().add(this, selection);
+                GUI.getTabbedPane().add(ChannelPanel.this, selection);
                 GUI.getTabbedPane().setTitleAt(selection, title);
             }
         }
-        if (GUI.focusNewTab) GUI.getTabbedPane().setSelectedComponent(this);
+        if (GUI.focusNewTab) GUI.getTabbedPane().setSelectedComponent(ChannelPanel.this);
     }
+
 
 
 
@@ -450,7 +476,7 @@ public class ChannelPanel extends JSplitPane {
             if (!cc.name.startsWith("#")) {
                 GUI.getFrame().setTitle(name + " - " + GUI.appName);
                 GUI.getTabInfo().setText(name + "  ");
-            } else GUI.getTabInfo().setText(name + " - " + population + " "+text2+" (" + ops + text + server + "  ");
+            } else GUI.getTabInfo().setText(name + " - " + population + " " + text2 + " (" + ops + text + server + "  ");
         }
         GUI.getFrame().setTitle(cc.title + " - " + GUI.appName);
     }
@@ -507,6 +533,13 @@ public class ChannelPanel extends JSplitPane {
         }
         catch (BadLocationException ignored){}
 
+        try {
+            if (chatPane.getStyledDocument().getText(0,chatPane.getStyledDocument().getLength()).equals(" ")){
+                chatPane.getStyledDocument().remove(0, chatPane.getStyledDocument().getLength());
+            }
+        } catch (BadLocationException e) {
+            e.printStackTrace();
+        }
 
         //controls autoscrolling -- if scrolled to bottom then scroll to end, otherwise don't
         if (end) {

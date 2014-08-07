@@ -32,8 +32,6 @@ public class Connection implements Runnable {
     ArrayList<ListChannel> channelList = new ArrayList<>();
     boolean isConnected;
 
-
-
     public Connection(String title, String server, int port) {
         this.title = title;
         this.server = server;
@@ -82,7 +80,6 @@ public class Connection implements Runnable {
 
         if (line.toUpperCase().startsWith("IGNORE ") || line.toUpperCase().startsWith("UNIGNORE ")) {
             String nickname = line.substring(line.indexOf(" ")+1);
-            System.out.println(nickname);
             ChannelPanel channel = (ChannelPanel)GUI.getTabbedPane().getSelectedComponent();
             if (channel == null) return;
             if (nickname.equals(Connection.currentNick)) return;
@@ -131,7 +128,7 @@ public class Connection implements Runnable {
         final Parser parser = new Parser(line);
         String command = parser.getCommand();
         //System.out.println(parser.toString());
-        System.out.println(line);
+        //System.out.println(line);
 
         if (command.equals("AWAY")) {
             String channelName = parser.getTrailing();
@@ -162,30 +159,11 @@ public class Connection implements Runnable {
                 if (channelName.startsWith("#")) {
                     int indexOfChannel = findTab(channelName, this);
                     if (indexOfChannel == -1) {
+                        ChannelPanel channel = new ChannelPanel(channelName, channelName, Connection.this);
+                        String[] msg = {null, "You (" + parser.getPrefix() + ") have joined " + parser.getParams().trim().substring(1) + "."};
+                        channel.insertString(msg, GUI.connectStyle, false);
+                        return;
 
-
-                        final String channelName2 = channelName;
-
-                        try {
-                            SwingUtilities.invokeAndWait(new Runnable() {
-
-                                @Override
-                                public void run() {
-
-                                    try {
-                                        ChannelPanel channel = new ChannelPanel(channelName2, channelName2, Connection.this);
-                                        String[] msg = {null, "You (" + parser.getPrefix() + ") have joined " + parser.getParams().trim().substring(1) + "."};
-                                        channel.insertString(msg, GUI.connectStyle, false);
-                                    } catch (BadLocationException | IOException ex) {
-                                        Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
-                                    }
-
-                                }
-                            });
-                            return;
-                        } catch (InterruptedException | InvocationTargetException ex) {
-                            Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
-                        }
                     } else { //joining a room for which you already have a tab (i.e. you were kicked or lost connection or something)
 
                         ChannelPanel channel = (ChannelPanel) GUI.getTabbedPane().getComponentAt(indexOfChannel);
@@ -370,11 +348,17 @@ public class Connection implements Runnable {
             boolean ctcp = checkForCTCPDelims(line);
             String h = parser.getPrefix();
             int indexOfChannel = findTab(Connection.this.title, this);
-            ChannelPanel channel;
 
             if (indexOfChannel == -1) {
-                channel = new ChannelPanel(title, "", Connection.this);
-            } else channel = (ChannelPanel) GUI.getTabbedPane().getComponentAt(indexOfChannel);
+                new ChannelPanel(title, "", Connection.this);
+            }
+
+            ChannelPanel channel = (ChannelPanel) GUI.getTabbedPane().getSelectedComponent();
+            if (channel.connection != this) {
+                indexOfChannel = findTab(title, this);
+                if (indexOfChannel == -1) System.out.println("-NOTICE- error");
+                channel = (ChannelPanel) GUI.getTabbedPane().getComponentAt(indexOfChannel);
+            }
 
             String nick = parser.getNick();
 
@@ -510,68 +494,24 @@ public class Connection implements Runnable {
             String channelName = parser.getMiddle();
             if (channelName.equals(currentNick)) {
                 channelName = parser.getNick();
-                final String channelName2 = channelName;
                 int indexOfChannel = findTab(channelName, this);
+                ChannelPanel channel;
                 if (indexOfChannel == -1) {
-                    try {
-                        SwingUtilities.invokeAndWait(new Runnable() {
-
-                            @Override
-                            public void run() {
-
-                                ChannelPanel channel = null;
-                                try {
-                                    channel = new ChannelPanel(channelName2, channelName2, Connection.this);
-                                } catch (BadLocationException | IOException ex) {
-                                    Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
-                                }
-                                channel.setRightComponent(null);
-                                channel.setDividerSize(0);
-                                String[] msg = {channelName2, parser.getTrailing()};
-                                try {
-                                    channel.insertString(msg, GUI.chatStyle, ctcp);
-                                } catch (BadLocationException | IOException ex) {
-                                    Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
-                                }
-                            }
-                        });
-
-
-                        return;
-                    } catch (InterruptedException | InvocationTargetException ex) {
-                        Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+                    channel = new ChannelPanel(channelName, channelName, Connection.this);
                 }
-                ChannelPanel channel = (ChannelPanel) GUI.getTabbedPane().getComponentAt(indexOfChannel);
+                else channel = (ChannelPanel) GUI.getTabbedPane().getComponentAt(indexOfChannel);
 
                 String[] msg = {parser.getNick(), parser.getTrailing()};
                 channel.insertString(msg, GUI.chatStyle, ctcp);
                 return;
             }
+
+
             int indexOfChannel = findTab(channelName, this);
             if (indexOfChannel == -1) {
-                final String channelName2 = channelName;
-                try {
-                    SwingUtilities.invokeAndWait(new Runnable() {
-
-                        @Override
-                        public void run() {
-
-                            try {
-                                ChannelPanel channel = new ChannelPanel(channelName2, channelName2, Connection.this);
-                                String[] msg = {channelName2, parser.getTrailing()};
-                                channel.insertString(msg, GUI.chatStyle, ctcp);
-                            } catch (BadLocationException | IOException ex) {
-                                Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
-                            }
-
-                        }
-
-                    });
-                } catch (InterruptedException | InvocationTargetException ex) {
-                    Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
-                }
-
+                ChannelPanel channel = new ChannelPanel(channelName, channelName, Connection.this);
+                String[] msg = {channelName, parser.getTrailing()};
+                channel.insertString(msg, GUI.chatStyle, ctcp);
                 return;
             }
             ChannelPanel channel = (ChannelPanel) GUI.getTabbedPane().getComponentAt(indexOfChannel);
@@ -622,22 +562,10 @@ public class Connection implements Runnable {
             final String host = parser.getPrefix();
             int indexOfChannel = findTab(Connection.this.title, this);
             if (indexOfChannel == -1) {
-                try {
-                    SwingUtilities.invokeAndWait(new Runnable() {
-                        @Override
-                        public void run() {
 
-                            try {
-                                ChannelPanel c = new ChannelPanel(Connection.this.title, host, Connection.this);
-                                c.server = parser.getPrefix();
-                            } catch (BadLocationException | IOException ex) {
-                                Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
-                            }
-                        }
-                    });
-                } catch (InterruptedException | InvocationTargetException ex) {
-                    Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                ChannelPanel c = new ChannelPanel(Connection.this.title, host, Connection.this);
+                c.server = parser.getPrefix();
+
             }
             indexOfChannel = findTab(Connection.this.title, this);
             ChannelPanel channel = (ChannelPanel) GUI.getTabbedPane().getComponentAt(indexOfChannel);
@@ -1280,21 +1208,8 @@ public class Connection implements Runnable {
         {
             int indexOfChannel = findTab(Connection.this.title, this);
             if (indexOfChannel == -1) {
-                try {
-                    SwingUtilities.invokeAndWait(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                new ChannelPanel(title, parser.getPrefix(), Connection.this);
-                            } catch (BadLocationException | IOException ex) {
-                                Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
-                            }
-                        }
-                    });
-                    indexOfChannel = findTab(Connection.this.title, this);
-                } catch (InterruptedException | InvocationTargetException ex) {
-                    Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                new ChannelPanel(title, parser.getPrefix(), Connection.this);
+                indexOfChannel = findTab(Connection.this.title, this);
             }
             ChannelPanel channel = ((ChannelPanel) GUI.getTabbedPane().getComponentAt(indexOfChannel));
             channel.server = parser.getPrefix();

@@ -15,7 +15,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
-
 public class GUI extends JFrame {
     final static ImageIcon mainIcon = new ImageIcon("src/icons/weather-sun.png");
     final static ImageIcon quickConnectIcon = new ImageIcon("src/icons/connect.png");
@@ -316,7 +315,6 @@ public class GUI extends JFrame {
     private void initComponents() {
         chatInputPane = new JTextField();
         tabbedPane = new DnDTabbedPane();
-        //userListPane = new JTextPane();
         tabInfo = new JLabel();
         menuBar = new JMenuBar();
         fileMenu = new JMenu("File");
@@ -394,10 +392,9 @@ public class GUI extends JFrame {
 
         tabbedPane.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
         tabbedPane.setTabLayoutPolicy(DnDTabbedPane.SCROLL_TAB_LAYOUT);
-        tabbedPane.setTabPlacement(tabPlacement);
-        tabbedPane.setCursor(new java.awt.Cursor(Cursor.DEFAULT_CURSOR)); //cursor necessary?
         tabbedPane.setFocusable(false);
         tabbedPane.setPreferredSize(new Dimension(600, 450));
+        tabbedPane.setTabPlacement(GUI.tabPlacement);
 
         tabInfo.setHorizontalAlignment(SwingConstants.RIGHT);
 
@@ -769,11 +766,11 @@ public class GUI extends JFrame {
             input = new FileInputStream("config.properties");
             prop.load(input);
 
-            Connection.real = prop.getProperty("Real", "user81940");
-            Connection.nicks[0] = prop.getProperty("Nick", "user199403");
+            Connection.real = prop.getProperty("Real", GUI.makeRandomNick());
+            Connection.nicks[0] = prop.getProperty("Nick", GUI.makeRandomNick());
             Connection.currentNick = Connection.nicks[0];
-            Connection.nicks[1] = prop.getProperty("Second", "user4ijo4i");
-            Connection.nicks[2] = prop.getProperty("Third", "user9fj94j");
+            Connection.nicks[1] = prop.getProperty("Second", GUI.makeRandomNick());
+            Connection.nicks[2] = prop.getProperty("Third", GUI.makeRandomNick());
 
             GUI.userListFont = prop.getProperty("userListFont", "Courier New");
             GUI.userListFontSize = Integer.valueOf(prop.getProperty("userListFontSize", "12"));
@@ -814,7 +811,13 @@ public class GUI extends JFrame {
             GUI.quitMessage = prop.getProperty("quitMessage", "Eating");
             GUI.leaveMessage = prop.getProperty("leaveMessage", "Leaving");
 
-            GUI.tabPlacement = Integer.valueOf(prop.getProperty("tabPlacement", "Bottom"));
+            String t = prop.getProperty("tabPlacement", "3");
+            if (t.equals(String.valueOf(DnDTabbedPane.BOTTOM))) GUI.tabPlacement = DnDTabbedPane.BOTTOM;
+            else GUI.tabPlacement = DnDTabbedPane.TOP;
+
+            if (GUI.tabbedPane != null){
+                tabbedPane.setTabPlacement(GUI.tabPlacement);
+            }
 
             GUI.chatNameColors = Boolean.valueOf(prop.getProperty("chatNameColors", "true"));
             GUI.hideJoinPartQuitNotifications = Boolean.valueOf(prop.getProperty("hideJoinPartQuitNotifications", "false"));
@@ -848,7 +851,10 @@ public class GUI extends JFrame {
             }
         }
     }
-
+    private static String makeRandomNick() {
+        int random = (int) (Math.random() * 10000);
+        return "user"+random;
+    }
 
 
     /** Creates a dialog that shows a list of all channels on currently selected tab's server*/
@@ -1439,7 +1445,11 @@ public class GUI extends JFrame {
 
                         prop.store(new FileOutputStream("config.properties"), null);
 
+                        loadProperties();
+                        setStyles();
+
                         dialog.dispose();
+
                     } catch (FileNotFoundException e1) {
                         e1.printStackTrace();
                     } catch (IOException e1) {
@@ -1794,7 +1804,6 @@ public class GUI extends JFrame {
         final JTextField fontField;
         final JDialog dialog;
         final int choice;
-        private static FontMenuAction ref = null;
 
         private FontMenuAction(JTextField f, JDialog d, int j) {
             fontField = f;
@@ -1825,7 +1834,8 @@ public class GUI extends JFrame {
             ffList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             JScrollPane ffsp = new JScrollPane(ffList);
             ffsp.setPreferredSize(new Dimension(200, 200));
-            ffList.setSelectedValue(chatFont, true);
+            if (choice == CHATFONT) ffList.setSelectedValue(chatFont, true);
+            else ffList.setSelectedValue(userListFont, true);
 
 
             String fontStyles[] = {"Plain", "Bold", "Italic", "Bold Italic"};
@@ -1834,14 +1844,17 @@ public class GUI extends JFrame {
 
             JScrollPane fssp = new JScrollPane(fsList);
             fssp.setPreferredSize(new Dimension(100, 200));
-            fsList.setSelectedValue(chatFontStyle, true);
+            if (choice == CHATFONT) fsList.setSelectedValue(chatFontStyle, true);
+            else fsList.setSelectedValue(userListFontStyle, true);
 
             Integer[] fontSizes = {6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 24, 26, 28, 30, 32};
             final JList<Integer> sizeList = new JList<>(fontSizes);
             sizeList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             JScrollPane sizesp = new JScrollPane(sizeList);
             sizesp.setPreferredSize(new Dimension(50, 200));
-            sizeList.setSelectedValue(chatFontSize, true);
+
+            if (choice == CHATFONT) sizeList.setSelectedValue(chatFontSize, true);
+            else sizeList.setSelectedValue(userListFontSize, true);
 
             final JTextField previewArea = new JTextField();
             previewArea.setPreferredSize(new Dimension(370, 70));
@@ -1958,6 +1971,23 @@ public class GUI extends JFrame {
                         } catch (IOException e1) {
                             e1.printStackTrace();
                         }
+                        Font font;
+                        switch (style) {
+                            case "Bold":
+                                font = new Font(fontName, Font.BOLD, size);
+                                break;
+                            case "Italic":
+                                font = new Font(fontName, Font.ITALIC, size);
+                                break;
+                            case "Bold Italic":
+                                font = new Font(fontName, Font.ITALIC | Font.BOLD, size);
+                                break;
+                            default:
+                                font = new Font(fontName, Font.PLAIN, size);
+                                break;
+                        }
+                        fontField.setFont(font);
+                        fontField.setText(font.getFamily()+" "+font.getSize());
 
                         setStyles();
                     }
@@ -2002,9 +2032,6 @@ public class GUI extends JFrame {
                     try {
                         previewArea.getDocument().remove(0, previewArea.getDocument().getLength());
                         previewArea.setText(text);
-
-                        fontField.setFont(font);
-                        fontField.setText(font.getFamily()+" "+font.getSize());
 
                     } catch (BadLocationException ex) {
                         Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
@@ -2234,10 +2261,10 @@ public class GUI extends JFrame {
 
             JLabel pwLabel = new JLabel("Password");
             final JTextField channelField = new JTextField();
-            channelField.setPreferredSize(new Dimension(180, 20));
+            channelField.setPreferredSize(new Dimension(180, 21));
             JTextField pwField = new JTextField();
-            pwField.setPreferredSize(new Dimension(180, 20));
-            combobox.setPreferredSize(new Dimension(180, 20));
+            pwField.setPreferredSize(new Dimension(180, 21));
+            combobox.setPreferredSize(new Dimension(180, 21));
             JButton cancel = new JButton("Cancel");
             final JButton ok = new JButton("Join");
 
@@ -2289,10 +2316,10 @@ public class GUI extends JFrame {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     String choice = (String) combobox.getSelectedItem();
-                    String server = channelField.getText();
+                    String chan = channelField.getText();
 
 
-                    if (!server.startsWith("#")) server = "#" + server;
+                    if (!chan.startsWith("#")) chan = "#" + chan;
                     if (choice == null) {
                         JOptionPane.showConfirmDialog(dialog, "Please choose a connection.", "No connection chosen", JOptionPane.WARNING_MESSAGE);
                         return;
@@ -2300,13 +2327,13 @@ public class GUI extends JFrame {
                     ChannelPanel channel = null;
                     for (int i = 0; i < tabbedPane.getTabCount(); i++) {
                         channel = ((ChannelPanel) tabbedPane.getComponentAt(i));
-                        if (channel.server.equals(choice)) {
+                        if (channel.connection.title.equals(choice)) {
                             break;
                         }
                     }
                     try {
                         if (channel != null) {
-                            channel.connection.send("JOIN " + server);
+                            channel.connection.send("JOIN " + chan);
                         }
                         dialog.dispose();
                     } catch (IOException | BadLocationException ex) {

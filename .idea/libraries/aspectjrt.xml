@@ -1,7 +1,7 @@
 <component name="libraryTable">
-  <library name="IRC">
+  <library name="aspectjrt">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/dist/IRC.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../aspectjrt.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
