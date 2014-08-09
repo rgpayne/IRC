@@ -385,7 +385,6 @@ public class GUI extends JFrame {
 
         chatInputPane.setFocusTraversalKeysEnabled(false);
 
-
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         tabbedPane.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));

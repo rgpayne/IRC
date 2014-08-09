@@ -66,6 +66,7 @@ public class ChannelPanel extends JSplitPane {
         TextMotionListener tml = new TextMotionListener(chatPane);
         chatPane.addMouseMotionListener(tml);
         chatPane.addMouseListener(tcl);
+
     }
 
 
@@ -282,6 +283,9 @@ public class ChannelPanel extends JSplitPane {
         chatPane.setAutoscrolls(true);
         userListScrollPane.setViewportView(userListPane);
         chatScrollPane.setViewportView(chatPane);
+        chatScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+
+        chatPane.setEditorKit(new WrapEditorKit());
 
         setLeftComponent(chatScrollPane);
         if (name.startsWith("#")) {
@@ -355,38 +359,6 @@ public class ChannelPanel extends JSplitPane {
 
     /** adds this ChannelPanel to GUI.getTabbedPane() */
     private void addTab() {
-        /*try {
-            SwingUtilities.invokeAndWait(new Runnable() {
-                @Override
-                public void run() {
-                    if (!GUI.sortTabsAlphabetically)
-                        GUI.getTabbedPane().add(ChannelPanel.this, ChannelPanel.this.title);
-                    else {
-                        int selection = -1;
-                        for (int i = 0; i < GUI.getTabbedPane().getTabCount(); i++) {
-                            if (GUI.getTabbedPane().getTabCount() == 1) break;
-                            ChannelPanel c = (ChannelPanel) GUI.getTabbedPane().getComponentAt(i);
-                            if ((c.title.equals(c.connection.title))) continue;
-                            if (ChannelPanel.this.title.compareTo(c.title) <= 0) {
-                                selection = i;
-                                break;
-                            }
-                        }
-                        if (selection == -1) {
-                            GUI.getTabbedPane().add(ChannelPanel.this, ChannelPanel.this.title);
-                        } else {
-                            GUI.getTabbedPane().add(ChannelPanel.this, selection);
-                            GUI.getTabbedPane().setTitleAt(selection, title);
-                        }
-                    }
-                    if (GUI.focusNewTab) GUI.getTabbedPane().setSelectedComponent(ChannelPanel.this);
-                }
-            });
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }*/
         if (!GUI.sortTabsAlphabetically)
             GUI.getTabbedPane().add(ChannelPanel.this, ChannelPanel.this.title);
         else {
@@ -434,7 +406,9 @@ public class ChannelPanel extends JSplitPane {
 
     /** Updates the active component with info such as population, number of ops, etc */
     public void updateTabInfo() {
-
+        //System.out.println("Height : " + chatScrollPane.getViewport().getSize().height + "\nWidth :" + chatScrollPane.getViewport().getSize().width);
+        //Rectangle r = chatScrollPane.getVisibleRect();
+        //chatScrollPane.scrollRectToVisible(r);
         if (GUI.getTabbedPane().getTabCount() == 0) {
             GUI.getFrame().setTitle(GUI.appName);
             GUI.getTabInfo().setText("Disconnected    ");
@@ -1318,4 +1292,51 @@ class LimitLinesDocumentListener implements DocumentListener
             System.out.println(ble);
         }
     }
+}
+class WrapEditorKit extends StyledEditorKit {
+    ViewFactory defaultFactory=new WrapColumnFactory();
+    public ViewFactory getViewFactory() {
+        return defaultFactory;
+    }
+
+}
+
+class WrapColumnFactory implements ViewFactory {
+    public View create(Element elem) {
+        String kind = elem.getName();
+        if (kind != null) {
+            if (kind.equals(AbstractDocument.ContentElementName)) {
+                return new WrapLabelView(elem);
+            } else if (kind.equals(AbstractDocument.ParagraphElementName)) {
+                return new ParagraphView(elem);
+            } else if (kind.equals(AbstractDocument.SectionElementName)) {
+                return new BoxView(elem, View.Y_AXIS);
+            } else if (kind.equals(StyleConstants.ComponentElementName)) {
+                return new ComponentView(elem);
+            } else if (kind.equals(StyleConstants.IconElementName)) {
+                return new IconView(elem);
+            }
+        }
+
+        // default to text display
+        return new LabelView(elem);
+    }
+}
+
+class WrapLabelView extends LabelView {
+    public WrapLabelView(Element elem) {
+        super(elem);
+    }
+
+    public float getMinimumSpan(int axis) {
+        switch (axis) {
+            case View.X_AXIS:
+                return 0;
+            case View.Y_AXIS:
+                return super.getMinimumSpan(axis);
+            default:
+                throw new IllegalArgumentException("Invalid axis: " + axis);
+        }
+    }
+
 }
