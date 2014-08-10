@@ -120,7 +120,7 @@ public class Connection implements Runnable {
                     try {
                         final Parser parser = new Parser(line);
                         String command = parser.getCommand();
-                        //System.out.println(parser.toString());
+                        System.out.println(parser.toString());
                         //System.out.println(line);
 
                         if (command.equals("AWAY")) {
@@ -900,7 +900,9 @@ public class Connection implements Runnable {
                             else channelName = channelName.substring(index);
 
                             int indexOfChannel = findTab(channelName, Connection.this);
-                            ChannelPanel channel = (ChannelPanel) GUI.getTabbedPane().getComponentAt(indexOfChannel);
+                            ChannelPanel channel;
+                            if (indexOfChannel != -1) channel = (ChannelPanel) GUI.getTabbedPane().getComponentAt(indexOfChannel);
+                            else channel = (ChannelPanel) GUI.getTabbedPane().getSelectedComponent();
                             channel.topic = parser.getTrailing();
                             channel.server = parser.getPrefix();
                             String[] msg = {null, "Current Topic: " + channel.topic};
@@ -921,8 +923,9 @@ public class Connection implements Runnable {
                             String formattedDate = sdf.format(date);
                             String[] msg = {null, "The topic was set by " + setter + " on " + formattedDate + "."};
                             int indexOfChannel = findTab(channelName, Connection.this);
-                            ChannelPanel channel = (ChannelPanel) GUI.getTabbedPane().getComponentAt(indexOfChannel);
-                            channel.insertString(msg, GUI.serverStyle, false);
+                            ChannelPanel channel;
+                            if (indexOfChannel != -1) channel = (ChannelPanel) GUI.getTabbedPane().getComponentAt(indexOfChannel);
+                            else channel = (ChannelPanel) GUI.getTabbedPane().getSelectedComponent();
                             return;
                         }
                         if (command.equals("338")) //whois actually

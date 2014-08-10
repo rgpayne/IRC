@@ -1,14 +1,12 @@
 import org.apache.commons.lang3.StringUtils;
-import org.aspectj.lang.annotation.Pointcut;
 
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.text.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -22,7 +20,7 @@ public class ChannelPanel extends JSplitPane {
     final static Map<String, Color> userMap = new HashMap<>();
     static boolean awayStatus = false;
     static String CTCPFingerMessage = "this is the finger message", CTCPUserInfo = "user info string";
-    
+    int dividerLocation = 160;
     
     static ArrayList<String> tabNicks;
 
@@ -47,7 +45,6 @@ public class ChannelPanel extends JSplitPane {
     int historyCounter = 0;
 
     public ChannelPanel(String title, String name, Connection c) throws BadLocationException, IOException {
-        System.out.println(SwingUtilities.isEventDispatchThread());
         this.title = title; //this is what is shown on a tab
         this.name = name;
         this.connection = c;
@@ -290,11 +287,32 @@ public class ChannelPanel extends JSplitPane {
         setLeftComponent(chatScrollPane);
         if (name.startsWith("#")) {
             setRightComponent(userListScrollPane);
+
             setDividerLocation(GUI.getFrame().getWidth() - 160);
+
+
+            //setDividerLocation(dividerLocation);
         } else {
             setRightComponent(null);
             setDividerSize(0);
         }
+
+        addPropertyChangeListener(new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent e) {
+                JSplitPane sourcePane = (JSplitPane) e.getSource();
+                if (e.getPropertyName().equals(JSplitPane.LAST_DIVIDER_LOCATION_PROPERTY)) {
+                    dividerLocation = GUI.getFrame().getWidth() - sourcePane.getDividerLocation();
+
+                }
+            }
+        });
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                setDividerLocation(GUI.getFrame().getWidth() - dividerLocation);
+            }
+        });
 
     }
 
@@ -406,9 +424,6 @@ public class ChannelPanel extends JSplitPane {
 
     /** Updates the active component with info such as population, number of ops, etc */
     public void updateTabInfo() {
-        //System.out.println("Height : " + chatScrollPane.getViewport().getSize().height + "\nWidth :" + chatScrollPane.getViewport().getSize().width);
-        //Rectangle r = chatScrollPane.getVisibleRect();
-        //chatScrollPane.scrollRectToVisible(r);
         if (GUI.getTabbedPane().getTabCount() == 0) {
             GUI.getFrame().setTitle(GUI.appName);
             GUI.getTabInfo().setText("Disconnected    ");
@@ -483,7 +498,7 @@ public class ChannelPanel extends JSplitPane {
         int extent = chatScrollPane.getVerticalScrollBar().getModel().getExtent();
         int max = chatScrollPane.getVerticalScrollBar().getModel().getMaximum();
         int val = chatScrollPane.getVerticalScrollBar().getModel().getValue();
-        boolean end = ((val + extent == max) || val + extent > max - 10);
+        boolean end = ((val + extent == max) || val + extent > max - 15);
 
         try {
             chatPane.getStyledDocument().insertString(offset, str, a);
