@@ -2889,7 +2889,7 @@ public class GUI extends JFrame {
                     int ex = JOptionPane.showConfirmDialog(dialog, efields, "Edit Server", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
                     if (ex == JOptionPane.CLOSED_OPTION || ex == JOptionPane.CANCEL_OPTION) return;
 
-                    String[] es = echannels.getText().split(" ");
+                    String[] es = echannels.getText().replace(",", "").split(" ");
                     ArrayList<String> echannelList = new ArrayList<>(Arrays.asList(es));
                     if (!StringUtils.isNumeric(eport.getText())) {
                         JOptionPane.showMessageDialog(dialog, "Port must be an integer.");

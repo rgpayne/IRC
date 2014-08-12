@@ -51,7 +51,6 @@ public class ChannelPanel extends JSplitPane {
 
         PlainTextHyperlinkListener hyperlinkListener = new PlainTextHyperlinkListener(chatPane);
         chatPane.addHyperlinkListener(hyperlinkListener);
-        chatPane.getStyledDocument().addDocumentListener(new LimitLinesDocumentListener(1000));
 
         userListPane = new JList(model);
         history = new ArrayList<>();
@@ -63,6 +62,8 @@ public class ChannelPanel extends JSplitPane {
         TextMotionListener tml = new TextMotionListener(chatPane);
         chatPane.addMouseMotionListener(tml);
         chatPane.addMouseListener(tcl);
+        chatPane.getStyledDocument().addDocumentListener(new LimitLinesDocumentListener(20));
+
 
     }
 
@@ -1308,6 +1309,11 @@ class LimitLinesDocumentListener implements DocumentListener
         }
     }
 }
+
+
+/**
+ * From http://stackoverflow.com/questions/8666727/wrap-long-words-in-jtextpane-java-7
+ */
 class WrapEditorKit extends StyledEditorKit {
     ViewFactory defaultFactory=new WrapColumnFactory();
     public ViewFactory getViewFactory() {

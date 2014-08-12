@@ -120,7 +120,7 @@ public class Connection implements Runnable {
                     try {
                         final Parser parser = new Parser(line);
                         String command = parser.getCommand();
-                        System.out.println(parser.toString());
+                        //System.out.println(parser.toString());
                         //System.out.println(line);
 
                         if (command.equals("AWAY")) {
