@@ -200,109 +200,15 @@ public class GUI extends JFrame {
 
 
 
-    /**
-     * Swing menus are looking pretty bad on Linux when the GTK LaF is used (See
-     * bug #6925412). It will most likely never be fixed anytime soon so this
-     * method provides a workaround for it. It uses reflection to change the GTK
-     * style objects of Swing so popup menu borders have a minimum thickness of
-     * 1 and menu separators have a minimum vertical thickness of 1.
-     */
-    public static void installGtkPopupBugWorkaround() {
-        // Get current look-and-feel implementation class
-        LookAndFeel laf = UIManager.getLookAndFeel();
-        Class<?> lafClass = laf.getClass();
-
-        // Do nothing when not using the problematic LaF
-        if (!lafClass.getName().equals(
-                "com.sun.java.swing.plaf.gtk.GTKLookAndFeel")) return;
-
-        // We do reflection from here on. Failure is silently ignored. The
-        // workaround is simply not installed when something goes wrong here
-        try {
-            // Access the GTK style factory
-            Field field = lafClass.getDeclaredField("styleFactory");
-            boolean accessible = field.isAccessible();
-            field.setAccessible(true);
-            Object styleFactory = field.get(laf);
-            field.setAccessible(accessible);
-
-            // Fix the horizontal and vertical thickness of popup menu style
-            Object style = getGtkStyle(styleFactory, new JPopupMenu(),
-                    "POPUP_MENU");
-            fixGtkThickness(style, "yThickness");
-            fixGtkThickness(style, "xThickness");
-
-            // Fix the vertical thickness of the popup menu separator style
-            style = getGtkStyle(styleFactory, new JSeparator(),
-                    "POPUP_MENU_SEPARATOR");
-            fixGtkThickness(style, "yThickness");
-        } catch (Exception e) {
-            // Silently ignored. Workaround can't be applied.
-        }
-    }
-
-
-
-    /**
-     * Called internally by installGtkPopupBugWorkaround to fix the thickness
-     * of a GTK style field by setting it to a minimum value of 1.
-     *
-     * @param style     The GTK style object.
-     * @param fieldName The field name.
-     * @throws Exception When reflection fails.
-     */
-    private static void fixGtkThickness(Object style, String fieldName) throws Exception {
-        Field field = style.getClass().getDeclaredField(fieldName);
-        boolean accessible = field.isAccessible();
-        field.setAccessible(true);
-        field.setInt(style, Math.max(1, field.getInt(style)));
-        field.setAccessible(accessible);
-    }
-
-
-
-
-    /**
-     * Called internally by installGtkPopupBugWorkaround. Returns a specific
-     * GTK style object.
-     *
-     * @param styleFactory The GTK style factory.
-     * @param component    The target component of the style.
-     * @param regionName   The name of the target region of the style.
-     * @return The GTK style.
-     * @throws Exception When reflection fails.
-     */
-    private static Object getGtkStyle(Object styleFactory,
-                                      JComponent component, String regionName) throws Exception {
-        // Create the region object
-        Class<?> regionClass = Class.forName("javax.swing.plaf.synth.Region");
-        Field field = regionClass.getField(regionName);
-        Object region = field.get(regionClass);
-
-        // Get and return the style
-        Class<?> styleFactoryClass = styleFactory.getClass();
-        Method method = styleFactoryClass.getMethod("getStyle",
-                new Class<?>[]{JComponent.class, regionClass});
-        boolean accessible = method.isAccessible();
-        method.setAccessible(true);
-        Object style = method.invoke(styleFactory, component, region);
-        method.setAccessible(accessible);
-        return style;
-    }
-
-
-
-
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
                 try {
-                    UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
+                    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                 } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
                     Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                installGtkPopupBugWorkaround();
                 new GUI().setVisible(true);
             }
         });
@@ -340,7 +246,7 @@ public class GUI extends JFrame {
         pasteAction.setText("Paste");
         pasteAction.setIcon(pasteIcon);
         editMenu.add(pasteAction);
-        editMenu.add(new JSeparator());
+        editMenu.addSeparator();
         clearWindow = new JMenuItem();
         editMenu.add(clearWindow);
         clearAllWindows = new JMenuItem();
@@ -349,21 +255,21 @@ public class GUI extends JFrame {
         windowMenu.add(previousTab);
         nextTab = new JMenuItem();
         windowMenu.add(nextTab);
-        windowMenu.add(new JSeparator());
+        windowMenu.addSeparator();
         moveTabLeft = new JMenuItem();
         windowMenu.add(moveTabLeft);
         moveTabRight = new JMenuItem();
         windowMenu.add(moveTabRight);
         closeTab = new JMenuItem();
         windowMenu.add(closeTab);
-        windowMenu.add(new JSeparator());
+        windowMenu.addSeparator();
         channelList = new JMenuItem();
         windowMenu.add(channelList);
         serverList = new JMenuItem();
         fileMenu.add(serverList);
         quickConnect = new JMenuItem();
         fileMenu.add(quickConnect);
-        fileMenu.add(new JSeparator());
+        fileMenu.addSeparator();
         disconnect = new JMenuItem();
         fileMenu.add(disconnect);
         identity = new JMenuItem();
@@ -376,7 +282,7 @@ public class GUI extends JFrame {
         fileMenu.add(reconnect);
         joinChannel = new JMenuItem();
         fileMenu.add(joinChannel);
-        fileMenu.add(new JSeparator());
+        fileMenu.addSeparator();
         globalAway = new JMenuItem();
         fileMenu.add(globalAway);
         fileMenu.addSeparator();
@@ -570,8 +476,8 @@ public class GUI extends JFrame {
                 int index = pane.getSelectedIndex();
                 if (index == -1) return;
                 ChannelPanel channel = (ChannelPanel) tabbedPane.getComponentAt(index);
-                if (!channel.connection.isConnected) pane.setForegroundAt(index, Color.gray);
-                else pane.setForegroundAt(index, Color.BLACK);
+                //if (!channel.connection.isConnected) pane.setForegroundAt(index, Color.gray);
+                //else pane.setForegroundAt(index, Color.BLACK);
                 if (index == 0) {
                     moveTabLeft.setForeground(Color.gray);
                     previousTab.setForeground(Color.gray);
@@ -872,7 +778,7 @@ public class GUI extends JFrame {
         @Override
         public void actionPerformed(ActionEvent e) {
             final ChannelPanel channel = (ChannelPanel) tabbedPane.getSelectedComponent();
-
+            if (channel == null) return;
             JDialog dialog = new JDialog(frame, "Channel List - " + channel.connection.title, true);
             SpringLayout layout = new SpringLayout();
             JPanel panel = new JPanel(layout);
@@ -956,12 +862,13 @@ public class GUI extends JFrame {
 
             JScrollPane scrollPane = new JScrollPane(table);
             scrollPane.setViewportView(table);
+            scrollPane.getViewport().setBackground(Color.white);
+
 
             contentpane.add(scrollPane);
             contentpane.add(joinButton);
             contentpane.add(refreshList);
             contentpane.add(filterArea);
-            filterArea.setBorder(BorderFactory.createLineBorder(Color.gray));
 
             scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
             scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -1227,14 +1134,14 @@ public class GUI extends JFrame {
             layout.putConstraint(SpringLayout.NORTH, chatFontLabel, 15, SpringLayout.NORTH, dialog);
             layout.putConstraint(SpringLayout.WEST, chatFontField, 33, SpringLayout.EAST, chatFontLabel);
             layout.putConstraint(SpringLayout.NORTH, chatFontField, 10, SpringLayout.NORTH, dialog);
-            layout.putConstraint(SpringLayout.NORTH, chatFontButton, 8, SpringLayout.NORTH, dialog);
+            layout.putConstraint(SpringLayout.NORTH, chatFontButton, 11, SpringLayout.NORTH, dialog);
             layout.putConstraint(SpringLayout.WEST, chatFontButton, 5, SpringLayout.EAST, chatFontField);
 
             layout.putConstraint(SpringLayout.WEST, userListFontLabel, 10, SpringLayout.WEST, dialog);
             layout.putConstraint(SpringLayout.NORTH, userListFontLabel, 20, SpringLayout.SOUTH, chatFontLabel);
-            layout.putConstraint(SpringLayout.WEST, userListFontField, 14, SpringLayout.EAST, userListFontLabel);
+            layout.putConstraint(SpringLayout.WEST, userListFontField, 0, SpringLayout.WEST, chatFontField);
             layout.putConstraint(SpringLayout.NORTH, userListFontField, 15, SpringLayout.SOUTH, chatFontLabel);
-            layout.putConstraint(SpringLayout.NORTH, userListFontButton, 13, SpringLayout.SOUTH, chatFontLabel);
+            layout.putConstraint(SpringLayout.NORTH, userListFontButton, 16, SpringLayout.SOUTH, chatFontLabel);
             layout.putConstraint(SpringLayout.WEST, userListFontButton, 5, SpringLayout.EAST, userListFontField);
 
 
@@ -1403,7 +1310,7 @@ public class GUI extends JFrame {
             JButton OKButton = new JButton("OK");
             OKButton.setPreferredSize(new Dimension(70, 30));
 
-            layout.putConstraint(SpringLayout.EAST, OKButton, -15, SpringLayout.EAST, dialog);
+            layout.putConstraint(SpringLayout.EAST, OKButton, -25, SpringLayout.EAST, dialog);
             layout.putConstraint(SpringLayout.SOUTH, OKButton, -35, SpringLayout.SOUTH, dialog);
             layout.putConstraint(SpringLayout.EAST, cancelButton, -5, SpringLayout.WEST, OKButton);
             layout.putConstraint(SpringLayout.SOUTH, cancelButton, 0, SpringLayout.SOUTH, OKButton);
@@ -1564,7 +1471,7 @@ public class GUI extends JFrame {
             JPanel panel = new JPanel(layout);
 
             dialog.add(panel);
-            dialog.setPreferredSize(new Dimension(240, 100));
+            dialog.setPreferredSize(new Dimension(240, 120));
             dialog.setResizable(false);
 
             Container contentPane = dialog.getContentPane();
@@ -2113,7 +2020,7 @@ public class GUI extends JFrame {
             final JDialog dialog = new JDialog(frame, "Identity", true);
             SpringLayout layout = new SpringLayout();
             dialog.getContentPane().setLayout(layout);
-            dialog.setPreferredSize(new Dimension(200, 290));
+            dialog.setPreferredSize(new Dimension(200, 310));
 
             JLabel realNameLabel = new JLabel(" Real Name");
             realNameLabel.setPreferredSize(new Dimension(175, 25));
@@ -2165,7 +2072,7 @@ public class GUI extends JFrame {
             layout.putConstraint(SpringLayout.NORTH, thirdNameField, 0, SpringLayout.SOUTH, thirdChoiceLabel);
 
             layout.putConstraint(SpringLayout.EAST, saveButton, -35, SpringLayout.EAST, dialog);
-            layout.putConstraint(SpringLayout.SOUTH, saveButton, -35, SpringLayout.SOUTH, dialog);
+            layout.putConstraint(SpringLayout.SOUTH, saveButton, -45, SpringLayout.SOUTH, dialog);
 
             dialog.add(realNameLabel);
             dialog.add(realNameField);
@@ -2247,7 +2154,7 @@ public class GUI extends JFrame {
 
 
             final JDialog dialog = new JDialog(frame, "Join Channel", true);
-            dialog.setSize(new Dimension(300, 180));
+            dialog.setSize(new Dimension(300, 190));
             SpringLayout layout = new SpringLayout();
             JPanel panel = new JPanel(layout);
             dialog.setResizable(false);
@@ -2495,10 +2402,10 @@ public class GUI extends JFrame {
 
             final JDialog dialog = new JDialog(frame, "Quick Connect", true);
             dialog.getContentPane().setLayout(layout);
-            dialog.setPreferredSize(new Dimension(200, 320));
+            dialog.setPreferredSize(new Dimension(200, 340));
             final JButton connectButton = new JButton("Connect");
             JButton cancelButton = new JButton("Cancel");
-            connectButton.setPreferredSize(new Dimension(70, 30));
+            connectButton.setPreferredSize(new Dimension(80, 30));
             cancelButton.setPreferredSize(new Dimension(70, 30));
 
             JLabel networkNameLabel = new JLabel("Network Name");
@@ -2549,10 +2456,10 @@ public class GUI extends JFrame {
             layout.putConstraint(SpringLayout.NORTH, passField, 5, SpringLayout.SOUTH, passLabel);
 
             layout.putConstraint(SpringLayout.WEST, cancelButton, 15, SpringLayout.WEST, dialog);
-            layout.putConstraint(SpringLayout.SOUTH, cancelButton, -35, SpringLayout.SOUTH, dialog);
+            layout.putConstraint(SpringLayout.SOUTH, cancelButton, -55, SpringLayout.SOUTH, dialog);
 
             layout.putConstraint(SpringLayout.WEST, connectButton, 10, SpringLayout.EAST, cancelButton);
-            layout.putConstraint(SpringLayout.SOUTH, connectButton, -35, SpringLayout.SOUTH, dialog);
+            layout.putConstraint(SpringLayout.SOUTH, connectButton, -55, SpringLayout.SOUTH, dialog);
 
             dialog.add(networkNameLabel);
             dialog.add(networkNameField);
@@ -2789,6 +2696,7 @@ public class GUI extends JFrame {
             JScrollPane scrollPane = new JScrollPane(table);
             scrollPane.setPreferredSize(new Dimension(540, 150));
             scrollPane.setViewportView(table);
+            scrollPane.getViewport().setBackground(Color.white);
 
             final JButton add = new JButton("Add");
             JButton edit = new JButton("Edit");
@@ -2796,8 +2704,8 @@ public class GUI extends JFrame {
             JButton connect = new JButton("Connect");
             add.setPreferredSize(new Dimension(70, 30));
             edit.setPreferredSize(new Dimension(70, 30));
-            remove.setPreferredSize(new Dimension(70, 30));
-            connect.setPreferredSize(new Dimension(70, 30));
+            remove.setPreferredSize(new Dimension(80, 30));
+            connect.setPreferredSize(new Dimension(80, 30));
 
             scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
             scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);

@@ -62,9 +62,7 @@ public class ChannelPanel extends JSplitPane {
         TextMotionListener tml = new TextMotionListener(chatPane);
         chatPane.addMouseMotionListener(tml);
         chatPane.addMouseListener(tcl);
-        chatPane.getStyledDocument().addDocumentListener(new LimitLinesDocumentListener(20));
-
-
+        chatPane.getStyledDocument().addDocumentListener(new LimitLinesDocumentListener(1000));
     }
 
 
@@ -86,11 +84,11 @@ public class ChannelPanel extends JSplitPane {
         JMenuItem ULpopPing = new JMenuItem("Ping", GUI.popupPingIcon);
         JMenuItem ULpopIgnore = new JMenuItem("Ignore", GUI.popupIgnoreIcon);
         ULpopup.add(ULpopOpenQuery);
-        ULpopup.add(new JSeparator());
+        ULpopup.addSeparator();
         ULpopup.add(ULpopWhois);
         ULpopup.add(ULpopVersion);
         ULpopup.add(ULpopPing);
-        ULpopup.add(new JSeparator());
+        ULpopup.addSeparator();
         ULpopup.add(ULpopIgnore);
         userListPane.setComponentPopupMenu(ULpopup);
         ULpopOpenQuery.addActionListener(new ActionListener() {
@@ -223,7 +221,7 @@ public class ChannelPanel extends JSplitPane {
         CIPpopup.add(CIPCut);
         CIPpopup.add(CIPCopy);
         CIPpopup.add(CIPPaste);
-        CIPpopup.add(new JSeparator());
+        CIPpopup.addSeparator();
         CIPpopup.add(CIPClear);
         CIPpopup.add(CIPSelectAll);
         GUI.getChatInputPane().setComponentPopupMenu(CIPpopup);

@@ -8,8 +8,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="commons-lang3-3.3.2" level="project" />
-    <orderEntry type="library" exported="" name="aspectj-1.8.1" level="application" />
-    <orderEntry type="library" name="aspectjrt" level="project" />
   </component>
 </module>
 
